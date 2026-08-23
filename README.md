@@ -3,6 +3,24 @@
 本项目是“面向生成式模型的高质量数据特征扩充技术研究”的结题版工程化系统。
 它不是另起炉灶，而是在原 OCTree 表格特征扩充基础上，继续扩展 Math 和 Code 两类数据。
 
+## Code 多专家阶段一
+
+当前开发分支新增了五专家代码路由：同一条样本由 `cot/style/ast/variable/control_flow`
+五个专家分别生成候选，通过编译、签名、安全和单元测试硬门控后，再融合共享 Reward 与
+Teacher-Student token NLL advantage，输出 Top-1 伪标签、Top-2 诊断权重和 MT-OPD
+训练交接 JSONL。
+
+- [English design and run guide](docs/STAGE1_MULTI_EXPERT.md)
+- [中文设计与运行说明](docs/STAGE1_MULTI_EXPERT.zh-CN.md)
+
+本地无模型 smoke test：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run_stage1_smoke.ps1
+```
+
+Mock 输出只用于验证工程闭环，文件中会明确标记 `formal_training_result=false`。
+
 ## 三类数据分别扩充什么
 
 Tabular：扩充新特征列和特征生成代码。流程是 LLM 生成候选特征，沙盒检查，模型评估，再根据指标和决策树规则反馈下一轮。

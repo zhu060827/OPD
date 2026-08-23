@@ -7,5 +7,6 @@ __all__ = [
     "quality",
     "feedback",
     "pipeline",
+    "multi_expert",
     "visualization",
 ]

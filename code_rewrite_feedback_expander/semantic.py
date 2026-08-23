@@ -5,6 +5,7 @@ import hashlib
 import subprocess
 import sys
 import tempfile
+import textwrap
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -182,7 +183,7 @@ class SemanticEquivalenceChecker:
             script += "\n    return True\n\n__run_tests__()\n"
         else:
             for test in tests:
-                script += f"\n    {test}"
+                script += "\n" + textwrap.indent(test.rstrip(), "    ")
             script += "\n    return True\n\n__run_tests__()\n"
         with tempfile.TemporaryDirectory(prefix=f"code_rewrite_{digest}_") as tmpdir:
             path = Path(tmpdir) / "candidate_test.py"

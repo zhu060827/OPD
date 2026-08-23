@@ -27,12 +27,14 @@ def read_jsonl(path: str) -> List[CodeRecord]:
                     code=str(
                         data.get("expanded_code")
                         or data.get("code")
+                        or data.get("reference_code")
                         or data.get("solution")
                         or data.get("answer")
+                        or data.get("starter_code")
                         or ""
                     ),
                     reasoning=_parse_reasoning(data),
-                    tests=[str(item) for item in data.get("tests", [])],
+                    tests=_parse_tests(data),
                     language=str(data.get("language", "python")),
                     metadata=dict(data.get("metadata", {})),
                 )
@@ -55,6 +57,20 @@ def _parse_reasoning(data: Dict) -> List[str]:
         lines = [line.strip() for line in value.replace("\r\n", "\n").split("\n") if line.strip()]
         return lines if lines else ([value.strip()] if value.strip() else [])
     return []
+
+
+def _parse_tests(data: Dict) -> List[str]:
+    """Normalize list-style assertions and HumanEval-style test scripts.
+
+    Some project datasets store the complete HumanEval harness as one string.
+    Iterating that value would silently turn it into one test per character.
+    """
+    value = data.get("tests") or data.get("test") or data.get("test_code") or []
+    if isinstance(value, list):
+        return [str(item) for item in value if str(item).strip()]
+    if isinstance(value, str):
+        return [value] if value.strip() else []
+    return [str(value)] if value else []
 
 
 def write_jsonl(path: str, records: Iterable[Dict]) -> None:
