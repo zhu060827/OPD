@@ -1,0 +1,68 @@
+# Format checks enforced on CI:
+# 1. Comments must appear above each field.
+# 2. There must be a blank line between each field.
+# 3. Inline comments (after a field on the same line) are not allowed.
+# 4. Indentation level is respected for nested fields.
+
+# Target class for the Hugging Face model configuration
+_target_: verl.workers.config.HFModelConfig
+
+# Path to the Hugging Face model
+path: ~/models/deepseek-llm-7b-chat
+
+# Optional path to a distinct Hugging Face model config
+hf_config_path: null
+
+# Optional path to a distinct tokenizer
+tokenizer_path: null
+
+# Whether to stage model files in shared memory
+use_shm: False
+
+# Whether to trust custom model code
+trust_remote_code: False
+
+# Optional custom tokenizer chat template
+custom_chat_template: null
+
+# Optional external model implementation package
+external_lib: null
+
+# Hugging Face configuration overrides
+override_config: {}
+
+# Whether to checkpoint transformer activations during training
+enable_gradient_checkpointing: True
+
+# Whether to offload activations to CPU
+enable_activation_offload: False
+
+# Whether to remove padding before model forward passes
+use_remove_padding: False
+
+# Positive values enable LoRA; zero keeps full-parameter training
+lora_rank: 0
+
+# LoRA scaling factor
+lora_alpha: 16
+
+# Modules targeted by LoRA when enabled
+target_modules: all-linear
+
+# Modules excluded from LoRA when enabled
+exclude_modules: null
+
+# Optional existing LoRA adapter path
+lora_adapter_path: null
+
+# Whether to use Liger kernels
+use_liger: False
+
+# Whether to use fused model kernels
+use_fused_kernels: False
+
+# Fused-kernel implementation settings
+fused_kernel_options:
+
+  # Backend used by fused kernels
+  impl_backend: torch

@@ -1,0 +1,49 @@
+/home/asus/miniconda3/envs/llm_reviewer/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+2026-08-27 13:43:09,679 | INFO | Loaded 500 MBPP tasks from /home/asus/OPD/-OPD/OPD-main/datasets/mbpp_opd/test.parquet
+2026-08-27 13:43:15,379 | INFO | Loading tokenizer from /home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step300_hf
+The tokenizer you are loading from '/home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step300_hf' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+2026-08-27 13:43:15,959 | INFO | Loading model from /home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step300_hf (device=cuda:0, dtype=bfloat16, attention=sdpa)
+2026-08-27 13:43:28,612 | INFO | Model ready; input device=cuda:0
+2026-08-27 13:43:28,666 | INFO | Evaluation target: 500 tasks x 1 samples; pending tasks=0
+2026-08-27 13:43:28,744 | INFO | Evaluation finished: {"status": "complete", "model_path": "/home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step300_hf", "dataset_path": "/home/asus/OPD/-OPD/OPD-main/datasets/mbpp_opd/test.parquet", "tasks_target": 500, "tasks_with_any_result": 500, "tasks_complete": 500, "samples_per_task": 1, "completions_evaluated": 500, "passed_completions": 193, "sample_pass_rate": 0.386, "pass@1": 0.386, "solved_at_least_once": 193, "solved_at_least_once_rate": 0.386, "solve_none": 307, "solve_all": 193, "code_extraction_rate": 1.0, "syntax_valid_rate": 0.996, "interface_match_rate": 0.982, "max_token_clip_ratio": 0.002, "error_counts": {"none": 193, "syntax_error": 2, "test_failure": 305}, "error_rates": {"none": 0.386, "syntax_error": 0.004, "test_failure": 0.61}, "avg_prompt_tokens": 98.8, "avg_generated_tokens": 254.57, "median_generated_tokens": 211.5, "avg_generation_seconds": 14.509242201874963, "median_generation_seconds": 12.189492076460738, "avg_grading_seconds": 0.12874532705545425, "total_generation_seconds": 7254.621100937482, "total_grading_seconds": 64.37266352772713, "generation_tokens_per_second": 17.545368425037598}
+{
+  "status": "complete",
+  "model_path": "/home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step300_hf",
+  "dataset_path": "/home/asus/OPD/-OPD/OPD-main/datasets/mbpp_opd/test.parquet",
+  "tasks_target": 500,
+  "tasks_with_any_result": 500,
+  "tasks_complete": 500,
+  "samples_per_task": 1,
+  "completions_evaluated": 500,
+  "passed_completions": 193,
+  "sample_pass_rate": 0.386,
+  "pass@1": 0.386,
+  "solved_at_least_once": 193,
+  "solved_at_least_once_rate": 0.386,
+  "solve_none": 307,
+  "solve_all": 193,
+  "code_extraction_rate": 1.0,
+  "syntax_valid_rate": 0.996,
+  "interface_match_rate": 0.982,
+  "max_token_clip_ratio": 0.002,
+  "error_counts": {
+    "none": 193,
+    "syntax_error": 2,
+    "test_failure": 305
+  },
+  "error_rates": {
+    "none": 0.386,
+    "syntax_error": 0.004,
+    "test_failure": 0.61
+  },
+  "avg_prompt_tokens": 98.8,
+  "avg_generated_tokens": 254.57,
+  "median_generated_tokens": 211.5,
+  "avg_generation_seconds": 14.509242201874963,
+  "median_generation_seconds": 12.189492076460738,
+  "avg_grading_seconds": 0.12874532705545425,
+  "total_generation_seconds": 7254.621100937482,
+  "total_grading_seconds": 64.37266352772713,
+  "generation_tokens_per_second": 17.545368425037598
+}

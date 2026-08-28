@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560" role="img" aria-labelledby="title desc">
+  <title id="title">独立单次生成 Pass@1 对比</title>
+  <desc id="desc">未训练学生 34.4%，Step 100 为 42.2%，Step 200 为 42.8%，Step 300 为 38.6%，Step 400 为 40.8%，教师模型为 50.8%。</desc>
+  <rect width="1000" height="560" fill="#ffffff"/>
+  <text x="500" y="35" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#172033">独立单次生成 Pass@1（MBPP 500 题）</text>
+  <text x="500" y="62" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#536078">每题生成一个样本，数值越高越好</text>
+
+  <g stroke="#dbe1ea" stroke-width="1">
+    <line x1="90" y1="450" x2="960" y2="450"/>
+    <line x1="90" y1="390" x2="960" y2="390"/>
+    <line x1="90" y1="330" x2="960" y2="330"/>
+    <line x1="90" y1="270" x2="960" y2="270"/>
+    <line x1="90" y1="210" x2="960" y2="210"/>
+    <line x1="90" y1="150" x2="960" y2="150"/>
+    <line x1="90" y1="90" x2="960" y2="90"/>
+  </g>
+  <g font-family="sans-serif" font-size="14" fill="#536078" text-anchor="end">
+    <text x="78" y="455">0%</text>
+    <text x="78" y="395">10%</text>
+    <text x="78" y="335">20%</text>
+    <text x="78" y="275">30%</text>
+    <text x="78" y="215">40%</text>
+    <text x="78" y="155">50%</text>
+    <text x="78" y="95">60%</text>
+  </g>
+
+  <g>
+    <rect x="115" y="243.6" width="95" height="206.4" rx="5" fill="#7f8da8"/>
+    <rect x="260" y="196.8" width="95" height="253.2" rx="5" fill="#3d7eff"/>
+    <rect x="405" y="193.2" width="95" height="256.8" rx="5" fill="#18a36b"/>
+    <rect x="550" y="218.4" width="95" height="231.6" rx="5" fill="#3d7eff"/>
+    <rect x="695" y="205.2" width="95" height="244.8" rx="5" fill="#3d7eff"/>
+    <rect x="840" y="145.2" width="95" height="304.8" rx="5" fill="#8b5cf6"/>
+  </g>
+  <g font-family="sans-serif" font-size="17" font-weight="700" fill="#172033" text-anchor="middle">
+    <text x="162.5" y="232">34.4%</text>
+    <text x="307.5" y="185">42.2%</text>
+    <text x="452.5" y="181">42.8%</text>
+    <text x="597.5" y="207">38.6%</text>
+    <text x="742.5" y="193">40.8%</text>
+    <text x="887.5" y="133">50.8%</text>
+  </g>
+  <g font-family="sans-serif" font-size="15" fill="#293348" text-anchor="middle">
+    <text x="162.5" y="480">未训练学生</text>
+    <text x="307.5" y="480">Step 100</text>
+    <text x="452.5" y="480">Step 200</text>
+    <text x="597.5" y="480">Step 300</text>
+    <text x="742.5" y="480">Step 400</text>
+    <text x="887.5" y="480">教师模型</text>
+  </g>
+  <g font-family="sans-serif" font-size="13" fill="#536078">
+    <rect x="320" y="515" width="15" height="15" rx="2" fill="#18a36b"/>
+    <text x="343" y="528">最佳蒸馏学生</text>
+    <rect x="520" y="515" width="15" height="15" rx="2" fill="#8b5cf6"/>
+    <text x="543" y="528">教师参考</text>
+  </g>
+</svg>

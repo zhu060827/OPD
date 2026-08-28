@@ -1,0 +1,40 @@
+{
+  "status": "complete",
+  "model_path": "/home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step400_hf",
+  "dataset_path": "/home/asus/OPD/-OPD/OPD-main/datasets/mbpp_opd/test.parquet",
+  "tasks_target": 500,
+  "tasks_with_any_result": 500,
+  "tasks_complete": 500,
+  "samples_per_task": 1,
+  "completions_evaluated": 500,
+  "passed_completions": 204,
+  "sample_pass_rate": 0.408,
+  "pass@1": 0.408,
+  "solved_at_least_once": 204,
+  "solved_at_least_once_rate": 0.408,
+  "solve_none": 296,
+  "solve_all": 204,
+  "code_extraction_rate": 1.0,
+  "syntax_valid_rate": 0.994,
+  "interface_match_rate": 0.986,
+  "max_token_clip_ratio": 0.0,
+  "error_counts": {
+    "none": 204,
+    "syntax_error": 3,
+    "test_failure": 293
+  },
+  "error_rates": {
+    "none": 0.408,
+    "syntax_error": 0.006,
+    "test_failure": 0.586
+  },
+  "avg_prompt_tokens": 98.8,
+  "avg_generated_tokens": 235.364,
+  "median_generated_tokens": 185.0,
+  "avg_generation_seconds": 13.685493619034999,
+  "median_generation_seconds": 10.885620769986417,
+  "avg_grading_seconds": 0.14885519874677994,
+  "total_generation_seconds": 6842.746809517499,
+  "total_grading_seconds": 74.42759937338997,
+  "generation_tokens_per_second": 17.198064355722973
+}

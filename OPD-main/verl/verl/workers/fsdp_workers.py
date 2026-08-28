@@ -1768,6 +1768,10 @@ class RewardModelWorker(Worker, DistProfilerExtension):
             )
 
             reward_module.to(model_dtype)
+            # The reward model is the frozen OPD teacher. It is queried only for
+            # token distributions and must never receive gradients or optimizer updates.
+            reward_module.requires_grad_(False)
+            reward_module.eval()
 
         auto_wrap_policy = get_fsdp_wrap_policy(module=reward_module, config=self.config.model.fsdp_config)
 

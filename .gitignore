@@ -15,11 +15,20 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+*.whl
 
-# Model weights and training checkpoints
-model/
-models/
+# Ignore metadata from the locally cloned MBPP source dataset while keeping
+# its small parquet files available to fresh project clones.
+/dataset/.git/
+
+# Model weights and training checkpoints. Keep these root/project weight folders
+# ignored without hiding source packages such as verl/verl/models or config/model.
+/model/
+/models/
+/OPD-main/model/
+/Math/OPD-main/model/
 checkpoints/
+OPD-main/datasets/mbpp_opd/
 *.bin
 *.safetensors
 *.pt

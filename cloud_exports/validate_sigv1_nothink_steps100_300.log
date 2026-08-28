@@ -1,0 +1,23 @@
+/home/asus/miniconda3/envs/llm_reviewer/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+The tokenizer you are loading from '/home/asus/OPD/cloud_exports/cloud_export_sigv1_nothink_step100/actor/huggingface' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+The tokenizer you are loading from '/home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step100_hf' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+The tokenizer you are loading from '/home/asus/OPD/cloud_exports/cloud_export_sigv1_nothink_step300/actor/huggingface' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+The tokenizer you are loading from '/home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step300_hf' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+step=100
+  architecture=['Qwen3ForCausalLM']
+  config_vocab_size=151936
+  tokenizer_vocab_size=151669
+  tensor_keys=311
+  parameter_count=2031739904
+  dtypes=['torch.bfloat16']
+  raw_vs_merged=EXACT_MATCH
+step=300
+  architecture=['Qwen3ForCausalLM']
+  config_vocab_size=151936
+  tokenizer_vocab_size=151669
+  tensor_keys=311
+  parameter_count=2031739904
+  dtypes=['torch.bfloat16']
+  raw_vs_merged=EXACT_MATCH
+Step 100 and step 300 merged-model validation passed.

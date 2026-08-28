@@ -1,0 +1,11 @@
+[
+  "code_rewrite_feedback_expander/test_evaluate_mbpp_local.py::MBPPLocalEvaluationTest::test_evaluate_writes_results_and_resumes",
+  "code_rewrite_feedback_expander/test_evaluate_mbpp_local.py::MBPPLocalEvaluationTest::test_load_mbpp_rows_selects_slice",
+  "code_rewrite_feedback_expander/test_evaluate_mbpp_local.py::MBPPLocalEvaluationTest::test_pass_at_k_estimator",
+  "code_rewrite_feedback_expander/test_evaluate_mbpp_local.py::MBPPLocalEvaluationTest::test_summary_uses_only_complete_task_groups",
+  "code_rewrite_feedback_expander/test_mbpp_opd.py::MBPPOPDDatasetTest::test_code_extraction_rejects_thinking_text",
+  "code_rewrite_feedback_expander/test_mbpp_opd.py::MBPPOPDDatasetTest::test_conversion_produces_verl_schema",
+  "code_rewrite_feedback_expander/test_mbpp_opd.py::MBPPOPDDatasetTest::test_required_interface_includes_class_constructor",
+  "code_rewrite_feedback_expander/test_mbpp_opd.py::MBPPOPDDatasetTest::test_required_interface_matches_test_target_not_first_helper",
+  "code_rewrite_feedback_expander/test_mbpp_opd.py::MBPPOPDDatasetTest::test_reward_accepts_canonical_and_rejects_bad_code"
+]

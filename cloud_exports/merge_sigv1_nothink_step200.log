@@ -1,0 +1,32 @@
+/home/asus/miniconda3/envs/llm_reviewer/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+`torch_dtype` is deprecated! Use `dtype` instead!
+The tokenizer you are loading from '/home/asus/OPD/cloud_export_sigv1_nothink_step200/actor/huggingface' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+The tokenizer you are loading from '/home/asus/OPD/cloud_export_sigv1_nothink_step200/actor/huggingface' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+Loaded 311 mmap-backed state tensors from /home/asus/OPD/cloud_export_sigv1_nothink_step200/actor/model_world_size_1_rank_0.pt
+Saving model to /home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step200_hf
+Saving tokenizer to /home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step200_hf
+Merge completed: /home/asus/OPD/cloud_exports/mbpp_sigv1_nothink_step200_hf
+	Command being timed: "/home/asus/miniconda3/envs/llm_reviewer/bin/python -"
+	User time (seconds): 14.87
+	System time (seconds): 74.20
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:29.71
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4888184
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1424
+	Minor (reclaiming a frame) page faults: 218784
+	Voluntary context switches: 1890
+	Involuntary context switches: 22676
+	Swaps: 0
+	File system inputs: 6513603
+	File system outputs: 7967664
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

@@ -170,3 +170,196 @@ Additional references used by the semantic checks:
 - [Ren et al., 2020](https://arxiv.org/abs/2009.10297) for syntax and data-flow overlap.
 
 Implementation note: some metrics are lightweight pure-Python approximations of the standard definitions so the project stays dependency-free.
+
+## MBPP OPD Training
+
+The root `OPD-main` integration includes a dedicated Qwen3 teacher/student training path. It converts the local
+Hugging Face MBPP parquet files to verl format, supports an explicit Qwen3 thinking-mode setting, evaluates generated
+Python with the supplied MBPP assertions, and uses OPD-main's teacher top-k token rewards on the student's own
+rollout.
+
+Use a dedicated CUDA training environment; the `llm_reviewer` environment used for ModelScope downloads is not
+a verl training environment. On a host with sufficient GPU and system memory, install the repository's pinned
+vLLM/Transformers stack as follows:
+
+```bash
+conda create -n verl python=3.12 -y
+conda activate verl
+cd OPD-main/verl
+USE_MEGATRON=0 USE_SGLANG=0 bash scripts/install_vllm_sglang_mcore.sh
+cd ../..
+```
+
+Prepare the full MBPP splits:
+
+```bash
+OPD_PYTHON=/path/to/verl/python bash OPD-main/train_mbpp_opd.sh prepare
+```
+
+The converter derives every test-visible function/class interface from the canonical code and the supplied
+tests/setup, then inserts implementation-free signatures into every train, validation, and test prompt. Conversion
+fails rather than emitting an underspecified row if no test/setup call can be matched to a canonical top-level
+definition. The same `prepare` command must therefore be run after pulling data-conversion changes and before a
+strict train/evaluation-distribution-consistent experiment.
+
+Compose the exact Hydra configuration without loading either model:
+
+```bash
+OPD_PYTHON=/path/to/verl/python bash OPD-main/train_mbpp_opd.sh config
+```
+
+Run all environment, model, tokenizer, dataset, batch, GPU, and RAM checks:
+
+```bash
+OPD_PYTHON=/path/to/verl/python bash OPD-main/train_mbpp_opd.sh preflight
+```
+
+Start training:
+
+```bash
+OPD_PYTHON=/path/to/verl/python bash OPD-main/train_mbpp_opd.sh train
+```
+
+The defaults are:
+
+- student: `student_model` (Qwen3-1.7B)
+- teacher: `teacher_model` (Qwen3-4B)
+- `trainer.total_training_steps=200`
+- global batch size `32`
+- per-device actor micro-batch size `8`
+- gradient accumulation `4` on one data-parallel GPU
+- one student rollout per MBPP prompt
+- Qwen3 thinking mode controlled by `ENABLE_THINKING` (default: `true`)
+- union top-k (`k=16`) with teacher-probability weighting
+- teacher inference under `torch.no_grad()` with no teacher optimizer
+
+These models require substantially more memory than an 8GB GPU plus 8GB system RAM for full-parameter OPD.
+The preflight check therefore stops on undersized hosts. `ALLOW_LOW_MEMORY=1` only bypasses that guard; it does
+not make an otherwise impossible allocation fit. A 24GB GPU and 32GB system RAM are the practical target for
+this configuration, with larger memory preferred.
+
+### Local MBPP evaluation
+
+After merging the trained actor to Hugging Face format, run a deterministic 10-task smoke evaluation first:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+python -m code_rewrite_feedback_expander.evaluate_mbpp_local \
+  --model-path /home/asus/OPD/cloud_exports \
+  --dataset-path OPD-main/datasets/mbpp_opd/test.parquet \
+  --output-dir /home/asus/OPD/cloud_exports/mbpp_eval_smoke \
+  --max-samples 10 \
+  --batch-size 1 \
+  --max-new-tokens 1024 \
+  --enable-thinking \
+  --seed 42
+```
+
+If the smoke run succeeds, evaluate all 500 test tasks by omitting `--max-samples` and selecting a fresh output
+directory:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+python -m code_rewrite_feedback_expander.evaluate_mbpp_local \
+  --model-path /home/asus/OPD/cloud_exports \
+  --dataset-path OPD-main/datasets/mbpp_opd/test.parquet \
+  --output-dir /home/asus/OPD/cloud_exports/mbpp_eval_step200 \
+  --batch-size 1 \
+  --max-new-tokens 1024 \
+  --enable-thinking \
+  --seed 42
+```
+
+The command appends each completion to `predictions.jsonl`, can resume an interrupted run with the
+same arguments, writes failed completions to `failures.jsonl`, and continuously refreshes `metrics.json`.
+Deterministic one-sample evaluation reports execution accuracy as `pass@1`. For sampled pass@k evaluation, set
+`--samples-per-task K --temperature 1.0`; pass@1 through pass@K use the standard unbiased estimator.
+
+### Iterative execution-feedback repair
+
+Standard `pass@k` draws `k` candidates independently from the same problem prompt. It does not let a later candidate
+observe an earlier failure. The optional execution-feedback strategy instead evaluates one candidate, retains its code
+and failure signal as short-lived task memory, and asks the same model for a corrected replacement only when that
+candidate fails:
+
+```text
+Problem -> Attempt 1 -> Restricted execution
+                     -> failure category + previous draft
+                     -> Attempt 2 -> Restricted execution
+                                  -> failure category + previous draft
+                                  -> Attempt 3
+```
+
+Run a three-attempt, hidden-test-safe smoke evaluation as follows:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+python -m code_rewrite_feedback_expander.evaluate_mbpp_local \
+  --model-path /path/to/merged_hf_model \
+  --dataset-path OPD-main/datasets/mbpp_opd/test.parquet \
+  --output-dir /path/to/mbpp_iterative_feedback_smoke \
+  --max-samples 10 \
+  --samples-per-task 3 \
+  --generation-strategy execution_feedback \
+  --execution-feedback summary \
+  --max-prompt-tokens 4096 \
+  --batch-size 1 \
+  --max-new-tokens 1024 \
+  --temperature 1.0 \
+  --top-p 1.0 \
+  --disable-thinking \
+  --device cuda:0 \
+  --dtype bfloat16 \
+  --attn-implementation sdpa \
+  --seed 42
+```
+
+`summary` feedback exposes syntax, safety, timeout, missing-code, required-interface, and generic held-out-test failure
+categories, but deliberately withholds hidden assertion source and expected values. `--execution-feedback full` also
+injects the raw executor output; because that output can reveal held-out assertions, the run is labelled
+`oracle-assisted` and must not be compared directly with a standard benchmark result.
+
+Conditional repair attempts are not independent samples, so the evaluator does not claim that their cumulative result
+is the standard unbiased `pass@3`. It reports `pass@1` for the first attempt and
+`iterative_solve_rate@1` through `iterative_solve_rate@3`, with `iterative_pass@k` retained only as an explicitly
+labelled conditional-repair alias. It additionally reports `repair_gain@3`, repaired-task count, repair success after
+an initial failure, attempts-to-solve, and total inference cost. Generation stops for a task immediately after its first
+passing attempt. Every prediction stores `attempt_id`, `previous_attempt_id`, `feedback_used`, and the feedback mode so
+the trajectory is auditable and resumable.
+
+This strategy is test-time in-context repair: it does not update model parameters. Existing OPD checkpoints are valid
+for measuring emergent repair ability and should be retained as controls. Training a model to internalize repair
+behavior requires a separate trajectory-training experiment containing `(problem, failed code, execution feedback,
+corrected code)` examples, as in CYCLE or reinforcement learning from execution feedback; it must not overwrite the
+single-turn OPD checkpoints.
+
+References used for iterative execution-feedback repair:
+
+- [Shinn et al., 2023, Reflexion (NeurIPS)](https://proceedings.neurips.cc/paper_files/paper/2023/hash/1b44b878bb782e6954cd888628510e90-Abstract-Conference.html) for retaining verbal feedback as episodic context across attempts.
+- [Madaan et al., 2023, Self-Refine (NeurIPS)](https://proceedings.neurips.cc/paper_files/paper/2023/hash/91edff07232fb1b55a505a9e9f6c0ff3-Abstract-Conference.html) for the iterative feedback-refinement-stopping loop without parameter updates.
+- [Chen et al., 2024, Teaching Large Language Models to Self-Debug (ICLR)](https://openreview.net/pdf?id=KuPixIqPiq) for reusing failed predictions and execution results in MBPP code repair.
+- [Le et al., 2022, CodeRL (NeurIPS)](https://proceedings.neurips.cc/paper_files/paper/2022/hash/8636419dea1aa9fbd25fc4248e702da4-Abstract-Conference.html) for unit-test/critic feedback and feedback-aware regeneration.
+- [Ding et al., 2024, CYCLE (PACMPL/OOPSLA)](https://doi.org/10.1145/3649825) for training code models on developing logs of faulty generations, execution feedback, and iterative correction.
+- [Gehring et al., 2024, RLEF](https://arxiv.org/abs/2410.02089) for reinforcement learning that teaches code models to condition future generations on execution feedback; this is cited as a preprint rather than a journal publication.
+- [Dou et al., 2024, Re-ReST](https://arxiv.org/abs/2406.01495) for reflection-reinforced self-training from low-quality attempts and environmental feedback; this is cited as a preprint.
+
+The summary also reports task/completion counts, sample pass rate, solved-at-least-once rate, code extraction and
+syntax validity and required-interface match rates, max-token clipping, error counts/rates, average and median token
+counts and latencies, and generation throughput. Each JSONL prediction retains the full response, extracted code,
+required and defined entrypoints, execution result, error type, truncated test output, token counts, and timings for
+failure analysis.
+
+For strict distribution consistency, do not reuse a checkpoint trained on an older prompt schema. Regenerate all
+three splits, select a new experiment/checkpoint directory, train from the original student model, merge the final
+actor, and evaluate that merged checkpoint on the regenerated test parquet. Using a new experiment name prevents
+verl's automatic checkpoint resume from loading the previous run.
+
+The earlier 1024-token thinking-mode smoke run clipped most generations before a complete implementation. For the
+signature-v1 retraining experiment, use `ENABLE_THINKING=false` during OPD training and `--disable-thinking` during
+both smoke and full test evaluation. Keep `--max-new-tokens 1024`; use `--temperature 1.0 --top-p 1.0` when strict
+rollout-policy matching with training is required, or deterministic temperature 0 only as a separately named
+greedy-decoding report.
+
+Generated code is checked for forbidden operations and executed in an isolated child Python process with CPU,
+address-space, file-size, file-descriptor, and wall-time limits. This is defense in depth, not a hardened security
+sandbox; only evaluate models and datasets you trust.

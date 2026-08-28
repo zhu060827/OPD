@@ -1,0 +1,40 @@
+{
+  "status": "complete",
+  "model_path": "/root/autodl-tmp/OPD/teacher_model",
+  "dataset_path": "/root/autodl-tmp/OPD/OPD-main/datasets/mbpp_opd/test.parquet",
+  "tasks_target": 500,
+  "tasks_with_any_result": 500,
+  "tasks_complete": 500,
+  "samples_per_task": 1,
+  "completions_evaluated": 500,
+  "passed_completions": 254,
+  "sample_pass_rate": 0.508,
+  "pass@1": 0.508,
+  "solved_at_least_once": 254,
+  "solved_at_least_once_rate": 0.508,
+  "solve_none": 246,
+  "solve_all": 254,
+  "code_extraction_rate": 1.0,
+  "syntax_valid_rate": 0.996,
+  "interface_match_rate": 0.992,
+  "max_token_clip_ratio": 0.0,
+  "error_counts": {
+    "none": 254,
+    "syntax_error": 2,
+    "test_failure": 244
+  },
+  "error_rates": {
+    "none": 0.508,
+    "syntax_error": 0.004,
+    "test_failure": 0.488
+  },
+  "avg_prompt_tokens": 98.8,
+  "avg_generated_tokens": 194.39,
+  "median_generated_tokens": 158.0,
+  "avg_generation_seconds": 3.7748707604333758,
+  "median_generation_seconds": 3.0818493077531457,
+  "avg_grading_seconds": 0.09240883672982454,
+  "total_generation_seconds": 1887.435380216688,
+  "total_grading_seconds": 46.20441836491227,
+  "generation_tokens_per_second": 51.49580272721256
+}
