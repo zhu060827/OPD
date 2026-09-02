@@ -3,9 +3,23 @@
 本项目是“面向生成式模型的高质量数据特征扩充技术研究”的结题版工程化系统。
 它不是另起炉灶，而是在原 OCTree 表格特征扩充基础上，继续扩展 Math 和 Code 两类数据。
 
-## Code 多专家阶段一
+## Code 五教师 Open-MOPD 正式框架
 
-当前开发分支新增了五专家代码路由：同一条样本由 `cot/style/ast/variable/control_flow`
+正式训练路径现在要求五个真实、互不相同的本地 Teacher checkpoint，并调用固定版本的
+Open-MOPD `mt_opd.sh`。训练数据的 `domain` 字段采用
+`cot/style/ast/variable/control_flow`，按标签 hard routing；token-share balancing、
+gap-following allocation 和 reward refresh 会作为显式训练参数传入。当前未执行 GPU
+训练，但不再使用单 Teacher `opd.sh` 冒充多教师训练。
+
+- [English Stage-2 guide](docs/STAGE2_OPEN_MOPD_FIVE_TEACHER.md)
+- [中文 Stage-2 说明](docs/STAGE2_OPEN_MOPD_FIVE_TEACHER.zh-CN.md)
+- 配置模板：`configs/stage2_open_mopd_five_teacher.example.json`
+
+`verl_example/opd.sh` 继续保留，仅作为单 Teacher 对照组。
+
+## Code 多专家阶段一（可选路由消融）
+
+这个模块是可选的无标签路由实验，不是 Open-MOPD 标准训练入口。同一条样本由 `cot/style/ast/variable/control_flow`
 五个专家分别生成候选，通过编译、签名、安全和单元测试硬门控后，再融合共享 Reward 与
 Teacher-Student token NLL advantage，输出 Top-1 伪标签、Top-2 诊断权重和 MT-OPD
 训练交接 JSONL。

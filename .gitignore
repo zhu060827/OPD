@@ -35,3 +35,6 @@ swanlog/
 ray_results/
 *.log
 *.tmp
+
+# Pinned external training backend, fetched by scripts/fetch_open_mopd.sh
+third_party/Open-MOPD/

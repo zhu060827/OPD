@@ -1,0 +1,44 @@
+{
+  "schema_version": "2.0",
+  "experiment_name": "code_five_teacher_open_mopd",
+  "open_mopd_backend": {
+    "root": "/root/autodl-tmp/Open-MOPD",
+    "expected_commit": "4809a96cf85a869106ff0ff3f37d0a51e12010ae"
+  },
+  "models": {
+    "student_path": "/root/autodl-tmp/models/qwen-student-base",
+    "teachers": [
+      {"domain": "cot", "teacher_path": "/root/autodl-tmp/models/teacher-cot"},
+      {"domain": "style", "teacher_path": "/root/autodl-tmp/models/teacher-style"},
+      {"domain": "ast", "teacher_path": "/root/autodl-tmp/models/teacher-ast"},
+      {"domain": "variable", "teacher_path": "/root/autodl-tmp/models/teacher-variable"},
+      {"domain": "control_flow", "teacher_path": "/root/autodl-tmp/models/teacher-control-flow"}
+    ]
+  },
+  "data": {
+    "train_file": "/root/autodl-tmp/data/code_multi_expert_train.parquet",
+    "val_file": "/root/autodl-tmp/data/code_multi_expert_val.parquet"
+  },
+  "output_dir": "/root/autodl-tmp/runs/code-five-teacher-open-mopd",
+  "runtime": {
+    "gpus": 1,
+    "nodes": 1
+  },
+  "method": {
+    "label_policy": "recorded_method",
+    "target_gradient_shares": {
+      "cot": 0.2,
+      "style": 0.2,
+      "ast": 0.2,
+      "variable": 0.2,
+      "control_flow": 0.2
+    },
+    "gap_following_alpha": 1.0,
+    "reward_refresh": true,
+    "conflict_policy": "none"
+  },
+  "extra_overrides": [
+    "data.train_batch_size=32",
+    "actor_rollout_ref.rollout.n=1"
+  ]
+}

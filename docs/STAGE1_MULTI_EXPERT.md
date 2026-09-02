@@ -1,5 +1,9 @@
 # Stage-1 Code Multi-Expert Routing
 
+> Experimental ablation only. This module discovers pseudo method labels; it is
+> not the formal Open-MOPD training path. Its fixed utility weights are project
+> hypotheses, not formulas published by Open-MOPD.
+
 ## Purpose
 
 This stage discovers an auditable pseudo method label for each code sample before
@@ -35,7 +39,7 @@ Correctness is a hard constraint. A candidate that fails the gate receives zero
 routing weight regardless of its reward or NLL advantage. If every candidate
 fails, the sample is marked `no_valid_expert`; no label is fabricated.
 
-### Shared routing reward
+### Shared routing utility
 
 The reward is computed only to rank feasible candidates:
 
@@ -46,9 +50,11 @@ R = 0.40 * method_alignment
   + 0.10 * changed_candidate
 ```
 
-All components and metric deltas are retained. This is explicitly marked as a
-project-level routing utility that requires ablation. It is not presented as a
-universal code quality score.
+All components and metric deltas are retained. The concrete weights have no
+direct literature provenance and require Reward-only, Advantage-only,
+equal-weight, and sensitivity ablations. This is explicitly marked as a
+project-level routing utility that requires ablation. It is not the Open-MOPD
+token reward or a universal code quality score.
 
 ### Teacher advantage
 
