@@ -7,6 +7,7 @@ from typing import Iterable
 
 from ..io_utils import read_jsonl, write_jsonl
 from .backends import build_generator, build_trajectory_scorer
+from .calibration import fit_robust_advantage_calibration, read_jsonl_dicts, write_calibration
 from .config import load_config
 from .pipeline import MultiExpertStage1Pipeline
 from .reporting import build_mt_opd_handoff, build_summary
@@ -25,6 +26,13 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--input", required=True)
     run.add_argument("--output-dir", required=True)
     run.add_argument("--limit", type=int, default=0)
+    calibrate = subparsers.add_parser(
+        "fit-calibration", help="Fit robust per-Teacher advantage calibration."
+    )
+    calibrate.add_argument("--config", required=True)
+    calibrate.add_argument("--input", required=True)
+    calibrate.add_argument("--output", required=True)
+    calibrate.add_argument("--min-samples", type=int, default=20)
     return parser
 
 
@@ -36,6 +44,15 @@ def main() -> None:
             f"Valid config: {config.experiment_name}; "
             f"experts={len(config.enabled_experts)}"
         )
+        return
+    if args.command == "fit-calibration":
+        calibration = fit_robust_advantage_calibration(
+            read_jsonl_dicts(args.input),
+            [item.expert_id for item in config.enabled_experts],
+            min_samples=args.min_samples,
+        )
+        write_calibration(args.output, calibration)
+        print(f"Wrote robust Teacher calibration to {Path(args.output).resolve()}")
         return
     run(config_path=args.config, input_path=args.input, output_dir=args.output_dir, limit=args.limit)
 

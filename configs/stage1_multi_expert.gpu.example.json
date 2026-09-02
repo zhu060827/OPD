@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.0",
-  "experiment_name": "code_stage1_five_expert_local_models",
+  "schema_version": "1.2",
+  "experiment_name": "code_stage1_three_tier_local_models",
   "seed": 20260823,
   "expected_expert_count": 5,
   "experts": [
@@ -44,5 +44,24 @@
   "trajectory_backend": {"type": "external", "external_factory": "code_rewrite_feedback_expander.multi_expert.transformers_backend:create_trajectory_scorer"},
   "gate": {"require_tests": true, "require_candidate_change": true, "minimum_unit_test_pass_rate": 1.0, "score_failed_candidates": false},
   "reward": {"quality_gain_scale": 0.05, "regression_tolerance": 0.05, "method_alignment_weight": 0.4, "general_quality_weight": 0.3, "non_regression_weight": 0.2, "change_weight": 0.1},
-  "routing": {"reward_weight": 0.55, "nll_advantage_weight": 0.45, "top_k": 2, "softmax_temperature": 0.2, "minimum_margin": 0.05, "abstain_on_low_confidence": false}
+  "routing": {
+    "policy": "three_tier",
+    "recorded_label_fields": ["method", "domain", "rewrite_method"],
+    "calibration": {
+      "expert_cot": {"location": 0.0, "scale": 1.0},
+      "expert_style": {"location": 0.0, "scale": 1.0},
+      "expert_ast": {"location": 0.0, "scale": 1.0},
+      "expert_variable": {"location": 0.0, "scale": 1.0},
+      "expert_control_flow": {"location": 0.0, "scale": 1.0}
+    },
+    "shared_completion_source": "student_generate",
+    "student_max_new_tokens": 512,
+    "reward_weight": 0.55,
+    "nll_advantage_weight": 0.45,
+    "top_k": 2,
+    "softmax_temperature": 0.2,
+    "minimum_margin": 0.05,
+    "abstain_on_low_confidence": true,
+    "fallback_expert_id": null
+  }
 }

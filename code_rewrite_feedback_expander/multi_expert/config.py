@@ -35,12 +35,20 @@ class RewardConfig:
 
 @dataclass(frozen=True)
 class RoutingConfig:
+    policy: str = "heuristic_ablation"
+    recorded_label_fields: List[str] = field(
+        default_factory=lambda: ["method", "domain", "rewrite_method"]
+    )
+    calibration: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    shared_completion_source: str = "record_code"
+    student_max_new_tokens: int = 512
     reward_weight: float = 0.55
     nll_advantage_weight: float = 0.45
     top_k: int = 2
     softmax_temperature: float = 0.20
     minimum_margin: float = 0.05
     abstain_on_low_confidence: bool = False
+    fallback_expert_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -111,6 +119,29 @@ class Stage1Config:
             raise ValueError("routing.top_k must be between 1 and the enabled expert count")
         if self.routing.softmax_temperature <= 0.0:
             raise ValueError("softmax_temperature must be positive")
+        if self.routing.policy not in {"three_tier", "heuristic_ablation"}:
+            raise ValueError("routing.policy must be three_tier or heuristic_ablation")
+        if self.routing.shared_completion_source not in {"record_code", "student_generate"}:
+            raise ValueError(
+                "routing.shared_completion_source must be record_code or student_generate"
+            )
+        if self.routing.student_max_new_tokens <= 0:
+            raise ValueError("routing.student_max_new_tokens must be positive")
+        if not self.routing.recorded_label_fields:
+            raise ValueError("routing.recorded_label_fields must not be empty")
+        if self.routing.fallback_expert_id not in {None, *expert_ids}:
+            raise ValueError("routing.fallback_expert_id must name an enabled expert")
+        if self.routing.policy == "three_tier":
+            missing = set(expert_ids) - set(self.routing.calibration)
+            if missing:
+                raise ValueError(
+                    "three_tier routing requires calibration for every expert: "
+                    + ", ".join(sorted(missing))
+                )
+            for expert_id in expert_ids:
+                entry = self.routing.calibration[expert_id]
+                if float(entry.get("scale", 0.0)) <= 0.0:
+                    raise ValueError(f"Calibration scale must be positive for {expert_id}")
         for backend in (self.generation_backend, self.trajectory_backend):
             if backend.backend_type not in {"mock", "openai_compatible", "external"}:
                 raise ValueError(f"Unsupported backend_type: {backend.backend_type}")

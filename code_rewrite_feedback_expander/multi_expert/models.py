@@ -74,7 +74,8 @@ class RoutingDecision:
     margin: float = 0.0
     usable_for_training: bool = False
     reason: str = ""
-    router_design: str = "hard_gate_then_reward_and_nll_advantage"
+    router_design: str = "three_tier_recorded_label_then_calibrated_opd"
+    routing_source: str = ""
 
 
 @dataclass
@@ -117,7 +118,7 @@ class Stage1RecordResult:
                 "domain": self.routing.pseudo_method_label,
                 "teacher_id": self.routing.selected_expert_id,
                 "teacher_weights": self.routing.expert_weights,
-                "routing_source": "stage1_code_reward_nll_pseudo_label",
+                "routing_source": self.routing.routing_source,
                 "usable_for_training": self.routing.usable_for_training,
             },
         }

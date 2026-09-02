@@ -72,6 +72,12 @@ contain all five canonical labels. Prefer labels recorded by the augmentation
 pipeline for the first formal baseline. Pseudo labels from Stage 1 are an
 explicit later ablation.
 
+The upstream route should follow this precedence: recorded augmentation label,
+then calibrated same-trajectory five-Teacher scoring for unlabeled records,
+then abstention/fallback for low-confidence cases. Open-MOPD itself still trains
+from the resulting hard domain label; it does not consume the router's Top-2
+diagnostic weights.
+
 ## Preflight and execution
 
 Strict validation only:

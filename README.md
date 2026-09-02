@@ -19,10 +19,11 @@ gap-following allocation 和 reward refresh 会作为显式训练参数传入。
 
 ## Code 多专家阶段一（可选路由消融）
 
-这个模块是可选的无标签路由实验，不是 Open-MOPD 标准训练入口。同一条样本由 `cot/style/ast/variable/control_flow`
-五个专家分别生成候选，通过编译、签名、安全和单元测试硬门控后，再融合共享 Reward 与
-Teacher-Student token NLL advantage，输出 Top-1 伪标签、Top-2 诊断权重和 MT-OPD
-训练交接 JSONL。
+这个模块是 Open-MOPD 之前的可选路由层：有 `method/domain/rewrite_method`
+来源标签时直接 hard routing；只有无标签样本才让五个 Teacher 对同一条
+completion 做对齐 OPD advantage 评分，经各 Teacher 独立校准后选 Top-1。
+Top-1/Top-2 差距太小时默认拒绝伪标签。原先固定权重的 Reward+advantage
+逻辑仍保留为 `heuristic_ablation`，不再是默认方案。
 
 - [English design and run guide](docs/STAGE1_MULTI_EXPERT.md)
 - [中文设计与运行说明](docs/STAGE1_MULTI_EXPERT.zh-CN.md)

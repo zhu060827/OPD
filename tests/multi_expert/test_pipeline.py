@@ -46,6 +46,9 @@ class ScriptedScorer(ExpertTrajectoryScorer):
     ADVANTAGE = {"cot": 0.1, "style": 0.2, "ast": 0.8, "variable": 0.3, "control_flow": 0.4}
 
     def score(self, expert, record, candidate):
+        if not hasattr(self, "calls"):
+            self.calls = []
+        self.calls.append((expert.expert_id, candidate.code))
         advantage = self.ADVANTAGE[expert.strategy]
         return [
             TokenDistribution(
@@ -57,6 +60,18 @@ class ScriptedScorer(ExpertTrajectoryScorer):
                 aspect_weights={expert.strategy: 1.0},
             )
         ]
+
+    def generate_student_completion(self, record, max_new_tokens):
+        self.generation_calls = getattr(self, "generation_calls", 0) + 1
+        code = VALID_CODES["style"]
+        return RewriteCandidate(
+            code=code,
+            reasoning=[],
+            rationale="scripted Student rollout",
+            strategy="shared_trajectory",
+            raw_response=code,
+            metadata={"shared_across_teachers": True},
+        )
 
 
 def sample_record():
@@ -116,6 +131,64 @@ class MultiExpertPipelineTests(unittest.TestCase):
         self.assertEqual(sample_record().prompt, student_prompt)
         self.assertNotIn("expert_", student_prompt)
         self.assertNotIn(sample_record().code, student_prompt)
+
+    def test_recorded_label_routes_directly_without_generating_five_candidates(self):
+        raw = valid_raw_config()
+        raw["routing"] = three_tier_routing()
+        generator = ScriptedGenerator()
+        scorer = ScriptedScorer()
+        record = sample_record()
+        record.metadata["method"] = "variable"
+        result = MultiExpertStage1Pipeline(
+            Stage1Config.from_dict(raw), generator, scorer
+        ).process(record)
+        self.assertEqual([], generator.record_snapshots)
+        self.assertEqual([("expert_variable", record.code)], scorer.calls)
+        self.assertEqual("recorded_label", result.routing.status)
+        self.assertEqual("expert_variable", result.routing.selected_expert_id)
+
+    def test_unlabeled_record_scores_one_shared_completion_with_all_teachers(self):
+        raw = valid_raw_config()
+        raw["routing"] = three_tier_routing()
+        generator = ScriptedGenerator()
+        scorer = ScriptedScorer()
+        record = sample_record()
+        result = MultiExpertStage1Pipeline(
+            Stage1Config.from_dict(raw), generator, scorer
+        ).process(record)
+        self.assertEqual([], generator.record_snapshots)
+        self.assertEqual(5, len(scorer.calls))
+        self.assertEqual({record.code}, {code for _, code in scorer.calls})
+        self.assertEqual("expert_ast", result.routing.selected_expert_id)
+        self.assertEqual("calibrated_same_trajectory_opd", result.routing.routing_source)
+
+    def test_unlabeled_gpu_path_generates_exactly_one_student_rollout(self):
+        raw = valid_raw_config()
+        raw["routing"] = {
+            **three_tier_routing(),
+            "shared_completion_source": "student_generate",
+        }
+        scorer = ScriptedScorer()
+        result = MultiExpertStage1Pipeline(
+            Stage1Config.from_dict(raw), ScriptedGenerator(), scorer
+        ).process(sample_record())
+        self.assertEqual(1, scorer.generation_calls)
+        self.assertEqual(5, len(scorer.calls))
+        self.assertEqual({VALID_CODES["style"]}, {code for _, code in scorer.calls})
+        self.assertTrue(result.routing.usable_for_training)
+
+
+def three_tier_routing():
+    return {
+        "policy": "three_tier",
+        "top_k": 2,
+        "minimum_margin": 0.05,
+        "abstain_on_low_confidence": True,
+        "calibration": {
+            f"expert_{name}": {"location": 0.0, "scale": 1.0}
+            for name in ("cot", "style", "ast", "variable", "control_flow")
+        },
+    }
 
 
 if __name__ == "__main__":

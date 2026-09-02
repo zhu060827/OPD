@@ -18,7 +18,7 @@ def valid_raw_config():
         ],
         "generation_backend": {"type": "mock"},
         "trajectory_backend": {"type": "mock"},
-        "routing": {"top_k": 2},
+        "routing": {"policy": "heuristic_ablation", "top_k": 2},
     }
 
 
@@ -37,6 +37,12 @@ class Stage1ConfigTests(unittest.TestCase):
         raw = valid_raw_config()
         raw["experts"].pop()
         with self.assertRaisesRegex(ValueError, "Expected 5"):
+            Stage1Config.from_dict(raw)
+
+    def test_three_tier_requires_per_teacher_calibration(self):
+        raw = valid_raw_config()
+        raw["routing"] = {"policy": "three_tier", "top_k": 2, "calibration": {}}
+        with self.assertRaisesRegex(ValueError, "calibration for every expert"):
             Stage1Config.from_dict(raw)
 
 

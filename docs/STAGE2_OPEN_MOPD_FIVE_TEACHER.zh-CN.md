@@ -40,3 +40,7 @@ bash scripts/run_stage2_open_mopd.sh \
 
 第一组正式实验优先使用数据增强过程记录的真实 method 标签。Stage 1 自动生成的伪标签
 必须作为后续独立实验，并与 Reward-only、Advantage-only 和不同融合权重进行消融。
+
+更新后的上游路由顺序是：已记录 method 标签 > 无标签样本的同轨迹五 Teacher
+校准评分 > 低置信度拒绝/fallback。Open-MOPD 本身仍只接收最终 hard domain
+标签，不使用路由层的 Top-2 诊断权重。

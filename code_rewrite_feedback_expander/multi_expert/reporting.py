@@ -88,6 +88,7 @@ def build_mt_opd_handoff(result: Stage1RecordResult) -> Dict[str, Any] | None:
             "routing_status": result.routing.status,
             "routing_margin": result.routing.margin,
             "top_k": result.routing.top_k,
+            "routing_source": result.routing.routing_source,
             "formal_training_result": False,
         },
     }

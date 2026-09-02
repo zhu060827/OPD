@@ -66,6 +66,36 @@ class MultiExpertRouterTests(unittest.TestCase):
         self.assertIsNone(decision.pseudo_method_label)
         self.assertFalse(decision.usable_for_training)
 
+    def test_calibration_prevents_raw_scale_from_deciding_the_route(self):
+        items = [assessment("expert_cot", 0.5, 2.0), assessment("expert_ast", 0.5, 1.0)]
+        config = RoutingConfig(
+            policy="three_tier",
+            calibration={
+                "expert_cot": {"location": 2.0, "scale": 2.0},
+                "expert_ast": {"location": 0.0, "scale": 0.5},
+            },
+            top_k=2,
+        )
+        decision = MultiExpertRouter(config, ["expert_cot", "expert_ast"]).route(items)
+        self.assertEqual("expert_ast", decision.selected_expert_id)
+
+    def test_low_calibrated_margin_abstains(self):
+        items = [assessment("expert_cot", 0.5, 0.5), assessment("expert_ast", 0.5, 0.5)]
+        config = RoutingConfig(
+            policy="three_tier",
+            calibration={
+                "expert_cot": {"location": 0.0, "scale": 1.0},
+                "expert_ast": {"location": 0.0, "scale": 1.0},
+            },
+            top_k=2,
+            minimum_margin=0.1,
+            abstain_on_low_confidence=True,
+        )
+        decision = MultiExpertRouter(config, ["expert_cot", "expert_ast"]).route(items)
+        self.assertEqual("abstained_low_confidence", decision.status)
+        self.assertFalse(decision.usable_for_training)
+        self.assertIsNone(decision.pseudo_method_label)
+
 
 if __name__ == "__main__":
     unittest.main()

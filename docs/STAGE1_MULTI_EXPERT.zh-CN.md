@@ -1,11 +1,11 @@
 # 阶段一：代码多专家路由
 
-> 本模块仅用于无 method 标签的实验性伪路由，不是正式 Open-MOPD 训练入口。下述固定
-> 权重是项目假设，不是 Open-MOPD 发表的公式。
+> 本模块是正式 Open-MOPD 训练前的可选路由层：优先使用已记录的 method
+> 标签，只对无标签数据做伪路由。
 
 ## 目标
 
-本阶段在正式多教师 OPD 训练前，为每条代码样本生成可审计的“改写方法伪标签”。
+本阶段实现三级策略，并为每条路由保留可审计证据。
 它不更新 Student；Mock 跑通结果也不属于真实训练结果。
 
 五个专家分别对应：`cot`、`style`、`ast`、`variable` 和
@@ -15,22 +15,32 @@
 ## 核心流程
 
 ```text
-同一条不可变的原始样本
-  -> 五个专家分别生成候选
-  -> 编译/签名/安全/单元测试硬门控
-  -> 所有专家共用同一套确定性路由 Reward
-  -> 计算 Teacher 相对 Student 的 token NLL advantage
-  -> 归一化融合两类证据
-  -> Top-1 方法伪标签 + Top-2 诊断权重
-  -> 输出 MT-OPD 交接 JSONL
+1. 有 method/domain/rewrite_method 来源标签：直接 one-hot 路由
+2. 无标签且通过正确性门控：五个 Teacher 评分同一条 completion
+3. 校准后 Top-1/Top-2 差距过小：拒绝伪标签（或使用明确配置的 fallback）
 ```
 
-正确性是硬约束。候选只要未通过门控，无论 Reward 或 NLL advantage 多高，路由权重
-都为零。如果五个候选全部失败，样本标记为 `no_valid_expert`，不会强行制造标签。
+无标签路由不再让五个专家各生成一次。五个 Teacher 看到完全相同的 prompt、
+token ID 和 completion，因此评分可直接比较，生成成本也从五次降为一条共享轨迹。
+本地 smoke 配置复用数据中已有 code；GPU 配置使用
+`shared_completion_source=student_generate`，让当前 Student 只 rollout 一次，
+五个冻结 Teacher 再评分同一条 on-policy 轨迹，且不会重复加载 Student。
+生成时的 prompt/completion token ID 会被原样保留并复用，不会用 decode 后的文本重新
+tokenize 来假冒原 on-policy 轨迹。
 
-## 评分方法
+对每个 Teacher 先在独立 validation split 拟合中位数和 MAD，再路由：
 
-共享 routing utility 只用于在正确候选之间排序：
+```text
+raw_advantage_e = mean_t[log p_teacher_e(y_t|s_t) - log p_student(y_t|s_t)]
+calibrated_advantage_e = (raw_advantage_e - median_e) / (1.4826 * MAD_e)
+route = argmax_e calibrated_advantage_e
+```
+
+校准可防止某个 Teacher 仅因概率尺度或锐度不同而长期占据路由。
+
+## 旧启发式消融
+
+原来的 routing utility 仍然保留在 `routing.policy=heuristic_ablation`：
 
 ```text
 R = 0.40 * 方法对应指标改善
@@ -59,15 +69,17 @@ route_score = 0.55 * 归一化 Reward
             + 0.45 * 归一化 NLL advantage
 ```
 
-Top-1 是第一轮 MT-OPD 使用的 hard route；Top-2 权重只作为诊断和后续消融。
+它现在只用于对照，不再是默认路由。Top-2 权重始终只是诊断，不做 Teacher
+参数合并或 logits 平均。
 
 ## 与 Open-MOPD 的关系
 
 Open-MOPD 已知每条样本的领域标签，因此可以直接使用 one-hot 权重选择领域 Teacher，
 再让这个冻结 Teacher 在 Student 自己的 token trajectory 上评分。本项目将问题拆成两层：
 
-1. 阶段一解决代码数据没有改写方法标签的问题，生成伪标签；
-2. 阶段二使用该标签选择冻结 Teacher，并执行真实 OPD/PPO 更新。
+1. 已记录的改写方法直接作为 Open-MOPD hard route；
+2. 只有无标签数据进入校准后的同轨迹五 Teacher 评分；
+3. 阶段二使用最终 hard label 执行真实 Open-MOPD 更新。
 
 因此本阶段是“路由标签发现层”，不会替代正式 OPD loss。
 
@@ -109,13 +121,27 @@ checkpoint。Student 与五个 Teacher 必须拥有完全相同的 tokenizer voc
 正式运行前设置 Student 路径、五个 Teacher 路径和 `DISTILLATION_TOPK=16`。代码会
 冻结 Teacher，并在完全对齐的 token ID 上计算 Student/Teacher 分布。
 
+配置中的 `location=0, scale=1` 只是 smoke test 占位值。真实无标签实验前，必须用
+独立校准集拟合每个 Teacher 的统计量，再写回正式配置：
+
+```bash
+python -m code_rewrite_feedback_expander.multi_expert fit-calibration \
+  --config configs/stage1_multi_expert.gpu.example.json \
+  --input outputs/calibration_pass/routing_labels.jsonl \
+  --output outputs/teacher_advantage_calibration.json \
+  --min-samples 20
+```
+
+不能用最终测试集拟合 calibration。
+
 ## 测试
 
 ```bash
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-测试覆盖统一配置、正确性硬门控、五专家输入一致、Top-1、Top-2 权重归一化、
+测试覆盖统一配置、正确性硬门控、已有标签优先、五 Teacher 共享同一 completion、
+稳健校准、低置信度拒绝、旧启发式消融、Top-1、Top-2 诊断，
 无有效专家处理、Student prompt 中无 Teacher/路由/参考答案泄漏，以及 MT-OPD 交接
 schema。
 

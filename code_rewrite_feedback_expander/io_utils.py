@@ -36,7 +36,14 @@ def read_jsonl(path: str) -> List[CodeRecord]:
                     reasoning=_parse_reasoning(data),
                     tests=_parse_tests(data),
                     language=str(data.get("language", "python")),
-                    metadata=dict(data.get("metadata", {})),
+                    metadata={
+                        **dict(data.get("metadata", {})),
+                        **{
+                            key: data[key]
+                            for key in ("method", "domain", "rewrite_method")
+                            if key in data and data[key] is not None
+                        },
+                    },
                 )
             )
     return records

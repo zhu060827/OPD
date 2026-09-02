@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.1",
-  "experiment_name": "code_stage1_five_expert_pseudo_routing_ablation",
+  "schema_version": "1.2",
+  "experiment_name": "code_stage1_three_tier_routing_smoke",
   "seed": 20260823,
   "expected_expert_count": 5,
   "experts": [
@@ -63,11 +63,23 @@
     "change_weight": 0.1
   },
   "routing": {
+    "policy": "three_tier",
+    "recorded_label_fields": ["method", "domain", "rewrite_method"],
+    "calibration": {
+      "expert_cot": {"location": 0.0, "scale": 1.0},
+      "expert_style": {"location": 0.0, "scale": 1.0},
+      "expert_ast": {"location": 0.0, "scale": 1.0},
+      "expert_variable": {"location": 0.0, "scale": 1.0},
+      "expert_control_flow": {"location": 0.0, "scale": 1.0}
+    },
+    "shared_completion_source": "record_code",
+    "student_max_new_tokens": 512,
     "reward_weight": 0.55,
     "nll_advantage_weight": 0.45,
     "top_k": 2,
     "softmax_temperature": 0.2,
     "minimum_margin": 0.05,
-    "abstain_on_low_confidence": false
+    "abstain_on_low_confidence": true,
+    "fallback_expert_id": null
   }
 }

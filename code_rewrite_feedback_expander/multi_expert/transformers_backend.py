@@ -37,6 +37,7 @@ class LocalTransformersMultiExpertScorer(ExpertTrajectoryScorer):
         AutoModelForCausalLM = transformers.AutoModelForCausalLM
         AutoTokenizer = transformers.AutoTokenizer
         self.top_k = top_k
+        self._routing_policy = "three_tier"
         self.tokenizer = AutoTokenizer.from_pretrained(
             student_model_path, trust_remote_code=True
         )
@@ -64,6 +65,39 @@ class LocalTransformersMultiExpertScorer(ExpertTrajectoryScorer):
                 parameter.requires_grad_(False)
             self.teachers[expert_id] = teacher
 
+    def generate_student_completion(
+        self, record: CodeRecord, max_new_tokens: int
+    ) -> RewriteCandidate:
+        prompt_ids = self.tokenizer(
+            record.prompt, add_special_tokens=True, return_tensors="pt"
+        )["input_ids"]
+        student_device = next(self.student.parameters()).device
+        prompt_ids = prompt_ids.to(student_device)
+        with self.torch.inference_mode():
+            generated = self.student.generate(
+                input_ids=prompt_ids,
+                attention_mask=self.torch.ones_like(prompt_ids),
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                pad_token_id=self.tokenizer.eos_token_id,
+            )
+        completion_ids = generated[0, prompt_ids.shape[1] :].cpu()
+        completion = self.tokenizer.decode(completion_ids, skip_special_tokens=True)
+        return RewriteCandidate(
+            code=completion,
+            reasoning=[],
+            rationale="One deterministic current-Student rollout shared by all Teachers.",
+            strategy="shared_trajectory",
+            raw_response=completion,
+            metadata={
+                "provider": "local_student_model",
+                "shared_across_teachers": True,
+                "generated_token_count": int(completion_ids.numel()),
+                "student_prompt_token_ids": prompt_ids[0].detach().cpu().tolist(),
+                "student_completion_token_ids": completion_ids.tolist(),
+            },
+        )
+
     def score(
         self,
         expert: ExpertConfig,
@@ -73,13 +107,24 @@ class LocalTransformersMultiExpertScorer(ExpertTrajectoryScorer):
         teacher = self.teachers.get(expert.expert_id)
         if teacher is None:
             raise KeyError(f"No loaded Teacher for {expert.expert_id}")
-        prefix = build_rewrite_prompt(record, expert.strategy, feedback="") + "\nCandidate code:\n"
-        prefix_ids = self.tokenizer(
-            prefix, add_special_tokens=True, return_tensors="pt"
-        )["input_ids"]
-        response_ids = self.tokenizer(
-            candidate.code, add_special_tokens=False, return_tensors="pt"
-        )["input_ids"]
+        # All Teachers must see the same state in the canonical router. An
+        # expert-specific prompt is retained only for the legacy ablation.
+        if self._routing_policy == "three_tier":
+            prefix = record.prompt.rstrip() + "\nCandidate code:\n"
+        else:
+            prefix = build_rewrite_prompt(record, expert.strategy, feedback="") + "\nCandidate code:\n"
+        exact_prompt_ids = candidate.metadata.get("student_prompt_token_ids")
+        exact_completion_ids = candidate.metadata.get("student_completion_token_ids")
+        if exact_prompt_ids is not None and exact_completion_ids is not None:
+            prefix_ids = self.torch.tensor([exact_prompt_ids], dtype=self.torch.long)
+            response_ids = self.torch.tensor([exact_completion_ids], dtype=self.torch.long)
+        else:
+            prefix_ids = self.tokenizer(
+                prefix, add_special_tokens=True, return_tensors="pt"
+            )["input_ids"]
+            response_ids = self.tokenizer(
+                candidate.code, add_special_tokens=False, return_tensors="pt"
+            )["input_ids"]
         student_device = next(self.student.parameters()).device
         student_input = self.torch.cat([prefix_ids, response_ids], dim=1).to(student_device)
         with self.torch.inference_mode():
@@ -148,10 +193,12 @@ def create_trajectory_scorer(config: Stage1Config) -> LocalTransformersMultiExpe
                 "set scoring.teacher_model_path or scoring.teacher_model_env"
             )
         teacher_paths[expert.expert_id] = str(path)
-    return LocalTransformersMultiExpertScorer(
+    scorer = LocalTransformersMultiExpertScorer(
         student_model_path=student_model,
         teacher_model_paths=teacher_paths,
         top_k=int(os.getenv("DISTILLATION_TOPK", "16")),
         device=os.getenv("STAGE1_MODEL_DEVICE", "auto"),
         torch_dtype=os.getenv("STAGE1_MODEL_DTYPE", "auto"),
     )
+    scorer._routing_policy = config.routing.policy
+    return scorer

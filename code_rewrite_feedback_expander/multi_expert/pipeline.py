@@ -35,60 +35,93 @@ class MultiExpertStage1Pipeline:
         )
 
     def process(self, record: CodeRecord) -> Stage1RecordResult:
-        assessments: List[ExpertAssessment] = []
-        for expert in self.config.enabled_experts:
-            baseline_candidate = RewriteCandidate(
+        if self.config.routing.policy == "three_tier":
+            return self._process_three_tier(record)
+        return self._process_heuristic_ablation(record)
+
+    def _process_three_tier(self, record: CodeRecord) -> Stage1RecordResult:
+        recorded_expert_id = self.router.recorded_label(record.metadata)
+        experts = self.config.enabled_experts
+        if recorded_expert_id:
+            experts = [item for item in experts if item.expert_id == recorded_expert_id]
+        if self.config.routing.shared_completion_source == "student_generate":
+            shared_candidate = self.trajectory_scorer.generate_student_completion(
+                record, self.config.routing.student_max_new_tokens
+            )
+        else:
+            shared_candidate = RewriteCandidate(
                 code=record.code,
                 reasoning=list(record.reasoning),
-                rationale="Original code baseline.",
-                strategy=expert.strategy,
+                rationale="Shared recorded completion used for aligned five-Teacher scoring.",
+                strategy="shared_trajectory",
                 raw_response=record.code,
-                metadata={"provider": "original", "expert_id": expert.expert_id},
+                metadata={"provider": "record", "shared_across_teachers": True},
             )
-            baseline_quality = self.quality_evaluator.evaluate(
-                record, baseline_candidate, record.code
-            )
+        assessments = [
+            self._assess(expert, record, shared_candidate, require_change=False)
+            for expert in experts
+        ]
+        decision = self.router.route(assessments, recorded_expert_id=recorded_expert_id)
+        return self._result(record, assessments, decision)
+
+    def _process_heuristic_ablation(self, record: CodeRecord) -> Stage1RecordResult:
+        assessments: List[ExpertAssessment] = []
+        for expert in self.config.enabled_experts:
             candidate = self.generator.generate(expert, record)
-            semantic = self.semantic_checker.check(record, candidate)
-            quality = self.quality_evaluator.evaluate(record, candidate, record.code)
-            changed = candidate.code.strip() != record.code.strip()
-            gate = build_gate_evidence(
-                semantic=semantic,
-                tests_present=bool(record.tests),
-                changed=changed,
-                require_tests=self.config.gate.require_tests,
-                require_candidate_change=self.config.gate.require_candidate_change,
-                minimum_unit_test_pass_rate=self.config.gate.minimum_unit_test_pass_rate,
-            )
-            reward = self.reward_scorer.score(
-                strategy=expert.strategy,
-                baseline=baseline_quality,
-                candidate=quality,
-                changed=changed,
-            )
-            if gate.passed or self.config.gate.score_failed_candidates:
-                try:
-                    trajectory = summarize_trajectory(
-                        self.trajectory_scorer.score(expert, record, candidate)
-                    )
-                except Exception as exc:  # Preserve the sample and make failure auditable.
-                    trajectory = unavailable_trajectory(exc)
-            else:
-                trajectory = unavailable_trajectory("skipped_by_hard_gate")
-            assessments.append(
-                ExpertAssessment(
-                    expert_id=expert.expert_id,
-                    strategy=expert.strategy,
-                    candidate=candidate,
-                    semantic_result=semantic.to_dict(),
-                    quality_result=quality.to_dict(),
-                    gate=gate,
-                    reward=reward,
-                    trajectory=trajectory,
-                )
-            )
+            assessments.append(self._assess(expert, record, candidate, require_change=True))
 
         decision = self.router.route(assessments)
+        return self._result(record, assessments, decision)
+
+    def _assess(self, expert, record, candidate, require_change: bool) -> ExpertAssessment:
+        baseline_candidate = RewriteCandidate(
+            code=record.code,
+            reasoning=list(record.reasoning),
+            rationale="Original code baseline.",
+            strategy=expert.strategy,
+            raw_response=record.code,
+            metadata={"provider": "original", "expert_id": expert.expert_id},
+        )
+        baseline_quality = self.quality_evaluator.evaluate(record, baseline_candidate, record.code)
+        semantic = self.semantic_checker.check(record, candidate)
+        quality = self.quality_evaluator.evaluate(record, candidate, record.code)
+        changed = candidate.code.strip() != record.code.strip()
+        gate = build_gate_evidence(
+            semantic=semantic,
+            tests_present=bool(record.tests),
+            changed=changed,
+            require_tests=self.config.gate.require_tests,
+            require_candidate_change=require_change and self.config.gate.require_candidate_change,
+            minimum_unit_test_pass_rate=self.config.gate.minimum_unit_test_pass_rate,
+        )
+        reward = self.reward_scorer.score(
+            strategy=expert.strategy,
+            baseline=baseline_quality,
+            candidate=quality,
+            changed=changed,
+        )
+        if gate.passed or self.config.gate.score_failed_candidates:
+            try:
+                trajectory = summarize_trajectory(
+                    self.trajectory_scorer.score(expert, record, candidate)
+                )
+            except Exception as exc:
+                trajectory = unavailable_trajectory(exc)
+        else:
+            trajectory = unavailable_trajectory("skipped_by_hard_gate")
+        return ExpertAssessment(
+            expert_id=expert.expert_id,
+            strategy=expert.strategy,
+            candidate=candidate,
+            semantic_result=semantic.to_dict(),
+            quality_result=quality.to_dict(),
+            gate=gate,
+            reward=reward,
+            trajectory=trajectory,
+        )
+
+    @staticmethod
+    def _result(record, assessments, decision) -> Stage1RecordResult:
         return Stage1RecordResult(
             task_id=record.task_id,
             prompt=record.prompt,

@@ -31,6 +31,13 @@ class ExpertTrajectoryScorer(ABC):
     ) -> list[TokenDistribution]:
         raise NotImplementedError
 
+    def generate_student_completion(
+        self, record: CodeRecord, max_new_tokens: int
+    ) -> RewriteCandidate:
+        raise NotImplementedError(
+            "This trajectory backend does not implement current-Student generation"
+        )
+
 
 class RewriteClientExpertGenerator(ExpertCandidateGenerator):
     def __init__(
