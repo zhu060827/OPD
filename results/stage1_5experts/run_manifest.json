@@ -1,0 +1,8 @@
+{
+  "input": "/root/OPD-stage1-multi-expert/code_rewrite_feedback_expander/data/code_real_16.jsonl",
+  "record_count": 16,
+  "generation_backend": "local_transformers",
+  "trajectory_backend": "local_transformers",
+  "formal_training_result": true,
+  "note": "Full local mode: generation + scoring using shared Qwen 7B model"
+}

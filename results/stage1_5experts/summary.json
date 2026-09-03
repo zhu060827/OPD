@@ -1,0 +1,68 @@
+{
+  "schema_version": "stage1_multi_expert.summary.v1",
+  "formal_training_result": false,
+  "total_records": 16,
+  "usable_for_training": 16,
+  "routing_status_distribution": {
+    "low_confidence": 5,
+    "routed": 11
+  },
+  "pseudo_label_distribution": {
+    "ast": 1,
+    "style": 4,
+    "variable": 11
+  },
+  "mean_top1_margin": 0.12499722207718539,
+  "experts": {
+    "expert_ast": {
+      "attempted": 16,
+      "hard_gate_passed": 16,
+      "trajectory_available": 16,
+      "selected_top1": 1,
+      "selected_top2": 8,
+      "hard_gate_pass_rate": 1.0,
+      "mean_reward_score": 0.6462973226204182,
+      "mean_nll_advantage": -0.03061147572940033
+    },
+    "expert_control_flow": {
+      "attempted": 16,
+      "hard_gate_passed": 16,
+      "trajectory_available": 16,
+      "selected_top1": 0,
+      "selected_top2": 0,
+      "hard_gate_pass_rate": 1.0,
+      "mean_reward_score": 0.6462973226204182,
+      "mean_nll_advantage": -0.13344758901499335
+    },
+    "expert_cot": {
+      "attempted": 16,
+      "hard_gate_passed": 16,
+      "trajectory_available": 16,
+      "selected_top1": 0,
+      "selected_top2": 0,
+      "hard_gate_pass_rate": 1.0,
+      "mean_reward_score": 0.59728119874212,
+      "mean_nll_advantage": 0.0011277456683331112
+    },
+    "expert_style": {
+      "attempted": 16,
+      "hard_gate_passed": 16,
+      "trajectory_available": 16,
+      "selected_top1": 4,
+      "selected_top2": 9,
+      "hard_gate_pass_rate": 1.0,
+      "mean_reward_score": 0.6716123662652879,
+      "mean_nll_advantage": -0.08456510765698369
+    },
+    "expert_variable": {
+      "attempted": 16,
+      "hard_gate_passed": 15,
+      "trajectory_available": 16,
+      "selected_top1": 11,
+      "selected_top2": 15,
+      "hard_gate_pass_rate": 0.9375,
+      "mean_reward_score": 0.6424618575778752,
+      "mean_nll_advantage": 0.01234661619682634
+    }
+  }
+}
