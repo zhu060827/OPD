@@ -182,3 +182,77 @@ OPENAI_MODEL=模型名
 ```
 
 可以先复制 `.env.example` 并改名为 `.env`，再填写自己的配置。`.env` 已被 `.gitignore` 排除，不要把完整 API Key 发到群里、写进截图或放进压缩包。
+
+## ✅ 多专家阶段一：5 个独立模型方案（已完成）
+
+### 模型选型
+| 角色 | 模型 | 参数量 |
+|------|------|--------|
+| Student（生成） | Qwen2.5-Coder-1.5B-Instruct | 1.5B |
+| CoT 专家 | Qwen2.5-Coder-7B-Instruct | 7B |
+| Style 专家 | Qwen2.5-Coder-3B-Instruct | 3B |
+| AST 专家 | Qwen2.5-Coder-14B-Instruct | 14B |
+| Variable 专家 | Qwen2.5-Coder-0.5B-Instruct | 0.5B |
+| Control Flow 专家 | Qwen2.5-Coder-3B-Instruct | 3B |
+
+### 硬件环境
+- GPU：NVIDIA GeForce RTX 4090 (24GB)
+- 推理框架：HuggingFace Transformers + 4bit 量化
+- 模型下载源：ModelScope（国内镜像）
+
+### 运行结果（16 条真实代码样本）
+- 总样本：16
+- 成功路由：14 条
+- 低置信度：2 条
+- 失败：0 条
+- 可用训练样本：16/16 (100%)
+
+### 专家分布
+| 专家 | 选择次数 |
+|------|---------|
+| variable | 9 |
+| style | 5 |
+| ast | 1 |
+| cot | 0 |
+| control_flow | 0 |
+
+### 核心结论
+5 个独立模型的多专家阶段一已在真实代码数据（HumanEval + MBPP）上完整跑通，输出文件可直接用于下一阶段 OPD 训练。
+
+### 结果文件
+- `results/stage1_5experts/summary.json` — 汇总报告
+- `results/stage1_5experts/mt_opd_handoff.jsonl` — 可训练数据
+- `results/stage1_5experts/routing_labels.jsonl` — 完整路由证据
+- `results/stage1_5experts/run_manifest.json` — 运行记录
+
+### 如何复现
+```bash
+# 安装依赖
+pip install -r requirements.txt
+pip install transformers accelerate bitsandbytes modelscope
+
+# 下载模型（ModelScope 国内镜像）
+python -c "from modelscope import snapshot_download; snapshot_download('Qwen/Qwen2.5-Coder-7B-Instruct', cache_dir='/root/autodl-tmp/models')"
+python -c "from modelscope import snapshot_download; snapshot_download('Qwen/Qwen2.5-Coder-3B-Instruct', cache_dir='/root/autodl-tmp/models')"
+python -c "from modelscope import snapshot_download; snapshot_download('Qwen/Qwen2.5-Coder-14B-Instruct', cache_dir='/root/autodl-tmp/models')"
+python -c "from modelscope import snapshot_download; snapshot_download('Qwen/Qwen2.5-Coder-0.5B-Instruct', cache_dir='/root/autodl-tmp/models')"
+python -c "from modelscope import snapshot_download; snapshot_download('Qwen/Qwen2.5-Coder-1.5B-Instruct', cache_dir='/root/autodl-tmp/models')"
+
+# 设置环境变量
+export STAGE1_STUDENT_MODEL="/root/autodl-tmp/models/qwen2.5-coder-1.5b"
+export STAGE1_TEACHER_COT_MODEL="/root/autodl-tmp/models/qwen2.5-coder-7b"
+export STAGE1_TEACHER_STYLE_MODEL="/root/autodl-tmp/models/qwen2.5-coder-3b"
+export STAGE1_TEACHER_AST_MODEL="/root/autodl-tmp/models/qwen2.5-coder-14b"
+export STAGE1_TEACHER_VARIABLE_MODEL="/root/autodl-tmp/models/qwen2.5-coder-0.5b"
+export STAGE1_TEACHER_CONTROL_FLOW_MODEL="/root/autodl-tmp/models/qwen2.5-coder-3b"
+export DISTILLATION_TOPK=16
+export STAGE1_LOAD_IN_4BIT="true"
+export STAGE1_MODEL_DEVICE="cuda"
+
+# 运行
+python -m code_rewrite_feedback_expander.multi_expert run \
+  --config configs/stage1_multi_expert.local.json \
+  --input code_rewrite_feedback_expander/data/code_real_16.jsonl \
+  --output-dir outputs/your_output \
+  --limit 16 \
+  --local
