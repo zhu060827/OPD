@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "experiment_name": "code_stage1_local_full",
+  "seed": 20260831,
+  "expected_expert_count": 5,
+  "experts": [
+    {
+      "expert_id": "expert_cot",
+      "strategy": "cot",
+      "enabled": true,
+      "generation": {},
+      "scoring": {"teacher_model_env": "STAGE1_TEACHER_COT_MODEL"}
+    },
+    {
+      "expert_id": "expert_style",
+      "strategy": "style",
+      "enabled": true,
+      "generation": {},
+      "scoring": {"teacher_model_env": "STAGE1_TEACHER_STYLE_MODEL"}
+    },
+    {
+      "expert_id": "expert_ast",
+      "strategy": "ast",
+      "enabled": true,
+      "generation": {},
+      "scoring": {"teacher_model_env": "STAGE1_TEACHER_AST_MODEL"}
+    },
+    {
+      "expert_id": "expert_variable",
+      "strategy": "variable",
+      "enabled": true,
+      "generation": {},
+      "scoring": {"teacher_model_env": "STAGE1_TEACHER_VARIABLE_MODEL"}
+    },
+    {
+      "expert_id": "expert_control_flow",
+      "strategy": "control_flow",
+      "enabled": true,
+      "generation": {},
+      "scoring": {"teacher_model_env": "STAGE1_TEACHER_CONTROL_FLOW_MODEL"}
+    }
+  ],
+  "generation_backend": {
+    "type": "external",
+    "external_factory": "code_rewrite_feedback_expander.multi_expert.local_generator:create_local_generator"
+  },
+  "trajectory_backend": {
+    "type": "external",
+    "external_factory": "code_rewrite_feedback_expander.multi_expert.transformers_backend:create_trajectory_scorer"
+  },
+  "gate": {
+    "require_tests": false,
+    "require_candidate_change": true,
+    "minimum_unit_test_pass_rate": 0.0,
+    "score_failed_candidates": true
+  },
+  "reward": {
+    "quality_gain_scale": 0.05,
+    "regression_tolerance": 0.05,
+    "method_alignment_weight": 0.4,
+    "general_quality_weight": 0.3,
+    "non_regression_weight": 0.2,
+    "change_weight": 0.1
+  },
+  "routing": {
+    "reward_weight": 0.55,
+    "nll_advantage_weight": 0.45,
+    "top_k": 2,
+    "softmax_temperature": 0.2,
+    "minimum_margin": 0.05,
+    "abstain_on_low_confidence": false
+  }
+}

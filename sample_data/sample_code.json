@@ -1,0 +1,24 @@
+[
+  {
+    "task_id": "sample_add_rewrite",
+    "prompt": "Write a function add(a, b) that returns the sum of a and b.",
+    "reasoning": [
+      "The function receives two input values a and b.",
+      "The required result is the arithmetic sum of the two inputs.",
+      "Returning a + b satisfies the examples."
+    ],
+    "code": "def add(a, b):\n    return a + b\n",
+    "tests": [
+      "assert add(1, 2) == 3",
+      "assert add(-1, 1) == 0",
+      "assert add(10, 5) == 15",
+      "print('ok')"
+    ]
+  },
+  {
+    "task_id": "sample_close_generate",
+    "prompt": "Return True if any two numbers are closer than threshold.",
+    "starter_code": "def has_close_elements(numbers, threshold):\n    pass\n",
+    "tests": "assert has_close_elements([1.0, 2.0, 3.0], 0.5) is False\nassert has_close_elements([1.0, 2.0, 3.0], 1.1) is True\nprint('ok')"
+  }
+]

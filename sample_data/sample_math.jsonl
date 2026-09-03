@@ -1,0 +1,2 @@
+{"question":"A class has 12 boys and 8 girls. What fraction of the class are girls?","solution":"There are 12 + 8 = 20 students in total.\nThe girls are 8 of the 20 students.\nSo the fraction is 8/20 = 2/5.","answer":"2/5"}
+{"problem":"Tom has 3 bags with 4 apples in each bag. He gives away 5 apples. How many apples are left?","response":"Tom starts with 3 * 4 = 12 apples.\nHe gives away 5 apples.\nThen 12 - 5 = 7 apples remain.","final_answer":"7"}

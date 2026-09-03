@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300">
+<rect width="760" height="300" fill="#f8fafc"/>
+<text x="36" y="42" font-family="Arial" font-size="24" font-weight="700" fill="#0f172a">Code Rewrite Quality</text>
+<text x="36" y="78" font-family="Arial" font-size="13" fill="#334155">Original quality: 0.850</text><rect x="36" y="88" width="520" height="22" rx="7" fill="#e5e7eb"/><rect x="36" y="88" width="442" height="22" rx="7" fill="#94a3b8"/><text x="36" y="132" font-family="Arial" font-size="13" fill="#334155">Expanded quality: 1.000</text><rect x="36" y="142" width="520" height="22" rx="7" fill="#e5e7eb"/><rect x="36" y="142" width="520" height="22" rx="7" fill="#2563eb"/>
+<text x="36" y="220" font-family="Arial" font-size="14" fill="#334155">Retained rewrites: 1 / attempts: 7</text>
+<text x="36" y="246" font-family="Arial" font-size="14" fill="#334155">Reasoning steps: 3 -> 3</text>
+<text x="36" y="272" font-family="Arial" font-size="14" fill="#334155">Code lines: 9 -> 10</text>
+</svg>

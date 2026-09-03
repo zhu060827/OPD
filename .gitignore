@@ -1,0 +1,37 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+
+# Local environments and package caches
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editors and operating-system files
+.DS_Store
+.vscode/
+.idea/
+
+# Model weights and training checkpoints
+model/
+models/
+checkpoints/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+
+# Generated runtime artifacts
+outputs/
+uploads/
+logs/
+wandb/
+swanlog/
+ray_results/
+*.log
+*.tmp

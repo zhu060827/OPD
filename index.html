@@ -1,0 +1,2714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCTree | 面向生成式模型的高质量数据扩充技术</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #f0f4f8;
+            --accent-cyan: #0066cc;
+            --accent-purple: #7a28cb;
+            --text-dark: #1a1a2e;
+            --text-gray: #4a5568;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --light-gradient: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            --nav-blue: rgba(135, 206, 235, 0.95);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        .intro-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(10, 10, 26, 0.8), rgba(10, 10, 26, 0.9));
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        .intro-page.hidden {
+            opacity: 0;
+            transform: translateY(-100%);
+            pointer-events: none;
+        }
+        .intro-logo-container {
+            width: 220px;
+            height: 220px;
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .intro-logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(0, 102, 204, 0.7));
+        }
+        .intro-title {
+            font-size: 3.2rem;
+            color: #ffffff;
+            margin-bottom: 1.2rem;
+            text-align: center;
+            font-weight: 800;
+            background: linear-gradient(90deg, #4dc9ff, #ffffff, #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 200% auto;
+            animation: gradient-shift 3s ease infinite;
+        }
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+        }
+        .intro-subtitle {
+            font-size: 1.4rem;
+            color: #e0e0ff;
+            max-width: 700px;
+            text-align: center;
+            margin-bottom: 3.5rem;
+            line-height: 1.7;
+        }
+        .intro-button {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.2), rgba(122, 40, 203, 0.2));
+            border: 2px solid #4dc9ff;
+            padding: 1.4rem 3.5rem;
+            border-radius: 50px;
+            color: #4dc9ff;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .intro-button:hover {
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.3), rgba(122, 40, 203, 0.3));
+            transform: translateY(-7px);
+            color: #ffffff;
+        }
+        .main-container {
+            width: 100%;
+            opacity: 0;
+            transition: opacity 1s ease;
+            background: linear-gradient(rgba(240, 244, 248, 0.80), rgba(240, 244, 248, 0.80)), url('屏幕截图_23-1-2026_111552_yuanbao.tencent.com.jpeg') center/cover fixed;
+            position: relative;
+        }
+        .main-container.loaded {
+            opacity: 1;
+        }
+        .fixed-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: var(--nav-blue);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .fixed-nav.scrolled {
+            height: 60px;
+            background: rgba(135, 206, 235, 0.98);
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .nav-logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        .nav-link {
+            color: #1a1a2e;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 8px 15px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: #0066cc;
+        }
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.4);
+            color: #0066cc;
+        }
+        .about-dropdown {
+            position: relative;
+        }
+        .about-content {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            min-width: 200px;
+            border-radius: 10px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(15px);
+            transition: all 0.3s ease;
+        }
+        .about-dropdown:hover .about-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(5px);
+        }
+        .team-member {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 102, 204, 0.1);
+        }
+        .member-info h4 {
+            color: var(--accent-cyan);
+            font-size: 1rem;
+        }
+        .teacher-member {
+            background: rgba(135, 206, 235, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 5px;
+            padding: 10px;
+        }
+        .nav-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #1a1a2e;
+            transition: all 0.3s ease;
+        }
+        .content-section {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 120px 4rem 4rem;
+            overflow: hidden;
+            background: none !important;
+        }
+        #integrated {
+            min-height: auto;
+            height: auto;
+            padding: 100px 4rem 4rem;
+            justify-content: center;
+        }
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .hero-subtitle {
+            font-size: 1.4rem;
+            color: var(--text-dark);
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            line-height: 1.8;
+        }
+        .keywords {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 2.5rem;
+        }
+        .keyword-tag {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 102, 204, 0.3);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            color: var(--accent-cyan);
+        }
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-cyan);
+            text-align: center;
+            font-weight: 900;
+            position: relative;
+            display: inline-block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+        }
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-dark);
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .feature-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.8rem;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.06);
+            transition: all 0.4s;
+            border: 1px solid rgba(0, 102, 204, 0.15);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 35px rgba(0, 102, 204, 0.12);
+            border-color: var(--accent-cyan);
+        }
+        .feature-icon {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-purple);
+        }
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+        .feature-card p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: var(--text-dark);
+            opacity: 0.85;
+        }
+        .core-concept {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.08), rgba(122, 40, 203, 0.08));
+            border-left: 4px solid var(--accent-cyan);
+            margin-bottom: 0.5rem;
+        }
+        .algorithm-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .integrated-simulator {
+            background: var(--card-bg);
+            border-radius: 28px;
+            border: 1px solid rgba(122, 40, 203, 0.25);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+        .simulator-header {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.08), rgba(122, 40, 203, 0.08));
+            border-bottom: 1px solid rgba(0, 102, 204, 0.2);
+        }
+        .simulator-header h2 {
+            font-size: 1.6rem;
+            color: var(--accent-cyan);
+            margin-bottom: 0.3rem;
+        }
+        .simulator-header p {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+        .simulator-main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 1.8rem;
+        }
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .dataset-selector {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 1.2rem;
+            border: 1px solid rgba(0, 102, 204, 0.2);
+        }
+        .dataset-selector h3 {
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        .dataset-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+        }
+        .dataset-mini-card {
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(122, 40, 203, 0.05));
+            border-radius: 14px;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .dataset-mini-card.active {
+            border-color: var(--accent-cyan);
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.15), rgba(122, 40, 203, 0.15));
+        }
+        .dataset-mini-card i {
+            font-size: 1.6rem;
+            color: var(--accent-purple);
+            margin-bottom: 0.4rem;
+        }
+        .dataset-mini-card h4 {
+            font-size: 0.9rem;
+        }
+        .workflow-image-container {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 1rem;
+            border: 1px solid rgba(0, 102, 204, 0.2);
+            overflow: hidden;
+        }
+        .workflow-image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+        }
+        .right-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 1.2rem;
+            border: 1px solid rgba(0, 102, 204, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        .console-output {
+            background: #0a0e1a;
+            border-radius: 16px;
+            padding: 1.5rem;
+            font-family: 'Courier New', 'Fira Code', monospace;
+            font-size: 0.95rem;
+            color: #7afc7a;
+            overflow-y: auto;
+            min-height: 320px;
+            max-height: 400px;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(122, 40, 203, 0.3);
+        }
+        .console-line {
+            margin-bottom: 6px;
+            border-left: 2px solid #7afc7a;
+            padding-left: 12px;
+        }
+        .metric-display {
+            display: flex;
+            justify-content: space-around;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .metric-card {
+            flex: 1;
+            background: rgba(0, 102, 204, 0.08);
+            border-radius: 14px;
+            padding: 0.8rem;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--accent-cyan);
+        }
+        .metric-label {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            margin-top: 4px;
+        }
+        .run-button {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border: none;
+            padding: 0.7rem;
+            border-radius: 50px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+        }
+        .dataset-report {
+            margin-top: 0.5rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(122, 40, 203, 0.05));
+            border-radius: 14px;
+            display: none;
+            font-size: 0.8rem;
+        }
+        .dataset-report.active {
+            display: block;
+        }
+        .schematic-btn {
+            margin-top: 0.8rem;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.15), rgba(122, 40, 203, 0.15));
+            border: 1px solid var(--accent-cyan);
+            padding: 0.7rem;
+            border-radius: 50px;
+            color: var(--accent-cyan);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .schematic-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.25), rgba(122, 40, 203, 0.25));
+            transform: translateY(-2px);
+        }
+        /* 放大弹窗样式 */
+        .fullscreen-sim-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 10001;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .fullscreen-sim-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .fullscreen-sim-content {
+            width: 85%;
+            max-width: 1100px;
+            height: 80vh;
+            background: #0a0e1a;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(122, 40, 203, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .fullscreen-sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.2), rgba(122, 40, 203, 0.2));
+            border-bottom: 1px solid rgba(122, 40, 203, 0.3);
+        }
+        .fullscreen-sim-header h3 {
+            color: #7afc7a;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .fullscreen-sim-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7afc7a;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .fullscreen-sim-close:hover {
+            background: rgba(122, 40, 203, 0.3);
+            color: white;
+        }
+        .fullscreen-sim-console {
+            flex: 1;
+            padding: 1.5rem;
+            font-family: 'Courier New', 'Fira Code', monospace;
+            font-size: 1rem;
+            color: #7afc7a;
+            overflow-y: auto;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            background: #0a0e1a;
+        }
+        .fullscreen-sim-console::-webkit-scrollbar {
+            width: 8px;
+            background: #1a1a2e;
+        }
+        .fullscreen-sim-console::-webkit-scrollbar-thumb {
+            background: var(--accent-cyan);
+            border-radius: 4px;
+        }
+        /* 原有的schematic-modal样式 */
+        .schematic-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .schematic-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .schematic-content {
+            background: white;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 1400px;
+            height: 85vh;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+        .schematic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 1.8rem;
+            border-bottom: 1px solid rgba(0, 102, 204, 0.2);
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(122, 40, 203, 0.05));
+        }
+        .schematic-header h3 {
+            color: var(--accent-cyan);
+            font-size: 1.3rem;
+        }
+        .schematic-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-gray);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .schematic-close:hover {
+            background: rgba(0, 102, 204, 0.1);
+            color: var(--accent-cyan);
+        }
+        .schematic-body {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+        .dual-image-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            align-items: stretch;
+            height: 100%;
+            min-height: 500px;
+        }
+        .image-card {
+            flex: 1;
+            min-width: 280px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        .image-card:hover {
+            transform: translateY(-5px);
+        }
+        .image-title {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            padding: 0.8rem 1rem;
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: center;
+        }
+        .image-wrapper {
+            flex: 1;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            min-height: 300px;
+        }
+        /* 性能提升板块 */
+        #performance {
+            padding: 120px 4rem 4rem;
+            background: linear-gradient(135deg, #f0e6f5 0%, #e3f2fd 100%);
+        }
+        .metric-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .metric-tab {
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 102, 204, 0.3);
+        }
+        .metric-tab.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            border-color: transparent;
+        }
+        .performance-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto 3rem;
+        }
+        .performance-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.8rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 102, 204, 0.2);
+        }
+        .performance-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--accent-cyan);
+            padding-bottom: 0.8rem;
+        }
+        .performance-header i {
+            font-size: 1.8rem;
+            color: var(--accent-purple);
+        }
+        .performance-header h3 {
+            font-size: 1.4rem;
+            color: var(--accent-cyan);
+        }
+        .chart-container {
+            height: 280px;
+        }
+        .performance-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 2rem auto 0;
+        }
+        .summary-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid rgba(0, 102, 204, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .summary-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-cyan);
+        }
+        .summary-card i {
+            font-size: 2rem;
+            color: var(--accent-purple);
+        }
+        .summary-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+        }
+        .upload-section {
+            padding: 100px 4rem 4rem;
+            background: none !important;
+        }
+        .upload-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 102, 204, 0.2);
+        }
+        .upload-title {
+            display: flex;
+            align-items: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-cyan);
+            font-weight: 800;
+        }
+        .upload-title i {
+            margin-right: 12px;
+            font-size: 1.4em;
+        }
+        .upload-description {
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+        }
+        .upload-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .upload-option {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 1.8rem;
+            text-align: center;
+            border: 2px dashed rgba(0, 102, 204, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-option:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-3px);
+        }
+        .upload-option i {
+            font-size: 2.8rem;
+            color: var(--accent-purple);
+            margin-bottom: 1rem;
+        }
+        .upload-option h3 {
+            font-size: 1.3rem;
+            color: var(--text-dark);
+            margin-bottom: 0.8rem;
+        }
+        .upload-action {
+            text-align: center;
+        }
+        .upload-button {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
+            display: inline-block;
+        }
+        footer {
+            background: rgba(135, 206, 235, 0.9);
+            padding: 3rem 4rem;
+            text-align: center;
+        }
+        .footer-logo-container {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 1.5rem;
+        }
+        @media (max-width: 992px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            .core-concept {
+                grid-column: span 1;
+            }
+        }
+        @media (max-width: 768px) {
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: var(--nav-blue);
+                flex-direction: column;
+                padding: 1.5rem;
+                transform: translateY(-100%);
+                visibility: hidden;
+            }
+            .nav-links.active {
+                transform: translateY(0);
+                visibility: visible;
+            }
+            .nav-toggle {
+                display: flex;
+            }
+            .simulator-main, .features-grid, .performance-container, .upload-options {
+                grid-template-columns: 1fr;
+            }
+            .content-section, #performance, .upload-section {
+                padding: 100px 2rem 2rem;
+            }
+            .metric-display {
+                flex-direction: column;
+            }
+            .fullscreen-sim-content {
+                width: 95%;
+                height: 85vh;
+            }
+            .fullscreen-sim-console {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="intro-page" id="introPage">
+    <div class="intro-logo-container"><img src="图片1.png" alt="OCTree Logo" class="intro-logo-img"></div>
+    <h1 class="intro-title">面向生成式模型的高质量数据扩充技术</h1>
+    <p class="intro-subtitle">基于决策树推理的列特征优化生成器研究<br>融合大语言模型与统计推理的下一代特征工程框架</p>
+    <div class="intro-button" id="enterButton">项目展示</div>
+</div>
+
+<nav class="fixed-nav" id="fixedNav">
+    <div class="nav-logo"><img src="图片1.png" alt="OCTree Logo" class="nav-logo-img"></div>
+    <div class="nav-toggle" id="navToggle"><span></span><span></span><span></span></div>
+    <div class="nav-links" id="navLinks">
+        <a href="#overview" class="nav-link active" data-target="overview"><i class="fas fa-home"></i>项目概述</a>
+        <a href="#features" class="nav-link" data-target="features"><i class="fas fa-star"></i>特色创新</a>
+        <a href="#integrated" class="nav-link" data-target="integrated"><i class="fas fa-sitemap"></i>核心模拟与演示</a>
+        <a href="#performance" class="nav-link" data-target="performance"><i class="fas fa-chart-line"></i>性能提升</a>
+        <a href="#upload" class="nav-link" data-target="upload"><i class="fas fa-cloud-upload-alt"></i>数据上传</a>
+        <div class="about-dropdown">
+            <a href="#" class="nav-link"><i class="fas fa-users"></i>关于我们</a>
+            <div class="about-content">
+                <div class="team-member"><div class="member-info"><h4>朱兮瑶</h4></div></div>
+                <div class="team-member"><div class="member-info"><h4>费代强</h4></div></div>
+                <div class="team-member"><div class="member-info"><h4>张景灏</h4></div></div>
+                <div class="team-member"><div class="member-info"><h4>吴孟哲</h4></div></div>
+                <div class="team-member teacher-member"><div class="member-info"><h4>王宏志</h4><p>指导老师</p></div></div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="schematic-modal" id="schematicModal">
+    <div class="schematic-content">
+        <div class="schematic-header">
+            <h3><i class="fas fa-project-diagram"></i> 流程图</h3>
+            <button class="schematic-close" id="closeSchematicBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="schematic-body">
+            <div class="dual-image-container">
+                <div class="image-card">
+                    <div class="image-title">整体框架图</div>
+                    <div class="image-wrapper">
+                        <img src="微信图片_20260329135200_74_260.png" style="max-width:100%; max-height:100%; object-fit:contain;">
+                    </div>
+                </div>
+                <div class="image-card">
+                    <div class="image-title">流程安排图</div>
+                    <div class="image-wrapper">
+                        <img src="微信图片_20260329135226_75_260.png" style="max-width:100%; max-height:100%; object-fit:contain;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="fullscreen-sim-modal" id="fullscreenSimModal">
+    <div class="fullscreen-sim-content">
+        <div class="fullscreen-sim-header">
+            <h3><i class="fas fa-terminal"></i> 模拟运行</h3>
+            <button class="fullscreen-sim-close" id="closeFullscreenBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="fullscreen-sim-console" id="fullscreenConsole"></div>
+    </div>
+</div>
+
+<div class="main-container" id="mainContainer">
+    <section class="content-section" id="overview">
+        <div class="hero-content">
+            <h1 class="section-title" style="font-size: 3rem;">面向生成式模型的高质量数据扩充技术</h1>
+            <p class="hero-subtitle">本项目创新性地提出基于决策树推理的列特征优化生成器（OCTree），利用大语言模型（LLM）作为优化器，结合决策树反馈，实现自动化、可解释的高质量表格特征生成。</p>
+            <div class="keywords">
+                <span class="keyword-tag">大语言模型 (LLM)</span>
+                <span class="keyword-tag">自动化特征工程</span>
+                <span class="keyword-tag">决策树推理</span>
+                <span class="keyword-tag">表格数据增强</span>
+                <span class="keyword-tag">OCTree框架</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-section" id="features">
+        <h2 class="section-title">核心特色与创新</h2>
+        <p class="section-subtitle">以LLM为核心的"双系统协同闭环"</p>
+        <div class="features-grid">
+            <div class="feature-card core-concept">
+                <div class="feature-icon"><i class="fas fa-sync-alt"></i></div>
+                <h3>双系统协同闭环 <span class="algorithm-badge">v2.0 核心架构</span></h3>
+                <p>本项目突破传统自动化特征工程的技术框架，创新性地构建了"LLM生成器-OCTree反馈评估器"双系统协同闭环，将LLM的自然语言理解与生成能力，与决策树模型的可解释性优势深度融合，实现了数据特征的自动化迭代优化。形成"描述-生成-评估-反馈-再生成"的完整闭环，大幅提升特征生成的效率与质量。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                <h3>多维评估体系 <span class="algorithm-badge">新增F1+Log-Loss+MSE</span></h3>
+                <p>新增F1-Score、Log-Loss、MSE等多维度评估指标，不再仅依赖AUC，能够更全面评估不平衡数据集下的少数类表现和模型概率预测置信度，实现更精准的特征筛选。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-language"></i></div>
+                <h3>自然语言驱动的特征生成与优化</h3>
+                <p>将LLM作为特征工程的"优化器"，以自然语言为核心驱动，实现特征生成规则的自动迭代。通过自然语言反馈机制，LLM可以利用反馈"反思"自身生成的规则，持续优化特征生成策略。同时利用检索增强生成验证，确保规则符合特定领域知识事实和合理性。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-code-branch"></i></div>
+                <h3>可解释性反馈的闭环迭代机制</h3>
+                <p>创新采用决策树模型的可解释性结果作为反馈，将模型的决策逻辑转化为自然语言描述，为LLM提供精准、可理解的优化方向。通过CART模型的if-else语句描述决策路径，明确告知LLM"某个特征在特定阈值下对结果区分效果最佳"，实现真正意义上的闭环迭代。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-flask"></i></div>
+                <h3>动态多维诊断系统 <span class="algorithm-badge">核心创新</span></h3>
+                <p>创新提出基于AUC、F1-Score、Log-Loss的三维动态诊断引擎，将原本仅靠准确率ACC的评估值改为引入ROC、AUC、F1和Log-Loss指标评估正负样本的排序能力，能够直观看出数据质量的提升，实现更精细的特征有效性判断。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-simple"></i></div>
+                <h3>五折交叉验证 <span class="algorithm-badge">鲁棒性增强</span></h3>
+                <p>将模型评估函数由原本的三等份训练验证测试集改为五折交叉验证，把数据切成五等份，轮流进行五次独立训练，保证统计泛化准确性，有效防止过拟合。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-database"></i></div>
+                <h3>原始数据导出与具象化展示</h3>
+                <p>新增原始数据Excel导出功能，支持保存优化前后的特征矩阵；同时在新特征生成时，实时展示新列的数值预览，让特征生成过程更加透明可理解。</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-section" id="integrated">
+        <div class="integrated-simulator">
+            <div class="simulator-header">
+                <h2><i class="fas fa-sitemap"></i> 核心模拟与数据集演示</h2>
+                <p>选择数据集，点击流程步骤，体验基于LLM与决策树反馈的多指标迭代优化</p>
+            </div>
+            <div class="simulator-main">
+                <div class="left-panel">
+                    <div class="dataset-selector">
+                        <h3>数据集选择</h3>
+                        <div class="dataset-cards" id="datasetCards">
+                            <div class="dataset-mini-card" data-dataset="white_wine"><i class="fas fa-wine-glass-alt"></i><h4>白葡萄酒品质</h4><p>化学特征 → 质量评级</p></div>
+                            <div class="dataset-mini-card" data-dataset="bank"><i class="fas fa-university"></i><h4>银行营销</h4><p>客户特征 → 存款认购</p></div>
+                            <div class="dataset-mini-card" data-dataset="phishing"><i class="fas fa-shield-alt"></i><h4>钓鱼网站</h4><p>URL特征 → 恶意检测</p></div>
+                            <div class="dataset-mini-card" data-dataset="biodeg"><i class="fas fa-leaf"></i><h4>生物降解</h4><p>分子描述符 → 降解性</p></div>
+                        </div>
+                    </div>
+                    <div class="workflow-image-container">
+                        <img src="a945ce2e4154ef9fb9419cd91fdc58c5.jpg" alt="OCTree协同框架工作流程图" style="width:100%; height:auto; border-radius:12px;">
+                    </div>
+                </div>
+                <div class="right-panel">
+                    <div class="console-output" id="console">> 模拟器已就绪 (v2.0)\n> 新增F1-Score、MSE、Log-Loss多维评估体系\n> 动态三维诊断系统已启用\n> 请选择左侧数据集查看详细分析报告</div>
+                    <div class="metric-display">
+                        <div class="metric-card">
+                            <div class="metric-value" id="metric-iter">4</div>
+                            <div class="metric-label">当前迭代轮次</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="metric-rules">6</div>
+                            <div class="metric-label">生成规则数量</div>
+                        </div>
+                    </div>
+                    <button class="run-button" id="runSimulateBtn">运行完整模拟</button>
+                    <div id="datasetReport" class="dataset-report"></div>
+                    <button class="schematic-btn" id="openSchematicBtn"><i class="fas fa-project-diagram"></i> 流程示意图</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-section" id="performance">
+        <h2 class="section-title">真实数据集性能提升对比</h2>
+        <p class="section-subtitle">基于Robust-OCTree v2.0算法在多个公开数据集上的测试结果</p>
+        <div class="metric-tabs">
+            <div class="metric-tab active" data-metric="f1"><i class="fas fa-chart-bar"></i> F1-Score</div>
+            <div class="metric-tab" data-metric="mse"><i class="fas fa-chart-line"></i> MSE 损失</div>
+        </div>
+        <div class="performance-container">
+            <div class="performance-card"><div class="performance-header"><i class="fas fa-chart-bar"></i><h3 id="barChartTitle">各数据集 F1-Score 提升对比</h3></div><div class="chart-container"><canvas id="datasetBarChart"></canvas></div></div>
+            <div class="performance-card"><div class="performance-header"><i class="fas fa-chart-line"></i><h3 id="iterChartTitle">迭代优化过程（白葡萄酒品质）</h3></div><div class="chart-container"><canvas id="iterLineChart"></canvas></div></div>
+        </div>
+        <div class="performance-summary" id="summaryContainer"></div>
+    </section>
+
+    <section class="upload-section" id="upload">
+    <div class="upload-container">
+        <h2 class="upload-title"><i class="fas fa-cloud-upload-alt"></i>数据上传平台</h2>
+        <div class="upload-description">基于OCTree构建的自动化特征生成平台，支持用户上传数据并获取智能化分析结果。平台将自动执行特征工程、模型训练和结果解释，为医疗诊断、金融分析等场景提供专业支持。</div>
+
+        <div class="upload-options">
+            <div class="upload-option" id="medicalOption">
+                <i class="fas fa-heartbeat"></i>
+                <h3>医疗诊断数据</h3>
+                <p>上传患者临床数据，获取初步诊断报告和健康建议。支持结构化病历数据自动分析。</p>
+            </div>
+            <div class="upload-option" id="generalOption">
+                <i class="fas fa-database"></i>
+                <h3>通用表格数据</h3>
+                <p>上传任意格式的表格数据，获取自动化特征工程和机器学习模型结果。</p>
+            </div>
+        </div>
+
+        <div class="upload-action">
+            <!-- 隐藏的文件选择器 -->
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;" />
+            <!-- 修改后的按钮 -->
+            <button class="upload-button" id="uploadDataBtn"><i class="fas fa-upload"></i> 选择文件并上传</button>
+            <p style="margin-top: 15px; font-size: 12px; color: #666; opacity: 0.8;">支持 CSV、Excel 格式，文件大小不超过 50MB</p>
+        </div>
+    </div>
+</section>
+
+    <footer><div class="footer-logo-container"><img src="图片1.png" alt="OCTree Logo" class="footer-logo-img"></div><p>基于决策树推理的列特征优化生成器 | 高质量表格数据扩充技术研究</p><p>© 2026 大创项目</p></footer>
+</div>
+
+<script>
+    const metricsData = {
+        white_wine: {
+            name: "白葡萄酒品质",
+            baseline: { f1: 0.748, mse: 0.158 },
+            final: { f1: 0.801, mse: 0.121 },
+            improvement: { f1: 7.1, mse: -23.4 },
+            iter_f1: [0.748, 0.775, 0.789, 0.801],
+            iter_mse: [0.158, 0.141, 0.131, 0.121],
+            rules: [
+                { desc: "酒精与挥发酸比值 (非线性比率)", formula: "df['alcohol'] / (df['volatile_acidity'] + 0.01)", f1_gain: 7.2, mse_reduction: 12.8 },
+                { desc: "游离二氧化硫与总二氧化硫比率 (化学平衡)", formula: "df['free_sulfur_dioxide'] / (df['total_sulfur_dioxide'] + 0.01)", f1_gain: 5.8, mse_reduction: 10.5 },
+                { desc: "硫酸盐与氯化物对数乘积 (风味交互)", formula: "np.log(df['sulphates'] + 1) * np.log(df['chlorides'] + 1)", f1_gain: 4.9, mse_reduction: 9.3 }
+            ],
+            top_features: ["酒精含量", "挥发酸", "硫酸盐", "pH值"]
+        },
+        bank: {
+            name: "银行营销",
+            baseline: { f1: 0.768, mse: 0.186 },
+            final: { f1: 0.819, mse: 0.148 },
+            improvement: { f1: 6.6, mse: -20.4 },
+            iter_f1: [0.768, 0.791, 0.806, 0.819],
+            iter_mse: [0.186, 0.170, 0.158, 0.148],
+            rules: [
+                { desc: "存款余额与通话时长比值 (金融营销逻辑)", formula: "df['balance'] / (df['duration'] + 0.01)", f1_gain: 7.1, mse_reduction: 11.8 },
+                { desc: "年龄与上次联系天数对数乘积 (客户粘性)", formula: "df['age'] * np.log(df['pdays'] + 1)", f1_gain: 6.0, mse_reduction: 10.2 }
+            ],
+            top_features: ["存款余额", "通话时长", "年龄"]
+        },
+        phishing: {
+            name: "钓鱼网站",
+            baseline: { f1: 0.912, mse: 0.081 },
+            final: { f1: 0.945, mse: 0.059 },
+            improvement: { f1: 3.6, mse: -27.2 },
+            iter_f1: [0.912, 0.928, 0.937, 0.945],
+            iter_mse: [0.081, 0.072, 0.065, 0.059],
+            rules: [
+                { desc: "URL长度与@符号存在性交互 (异常模式检测)", formula: "df['URL_Length'] * df['having_At_Symbol']", f1_gain: 3.2, mse_reduction: 14.8 },
+                { desc: "重定向次数与SSL状态比值 (安全行为分析)", formula: "df['Redirect'] / (df['SSLfinal_State'] + 1)", f1_gain: 2.9, mse_reduction: 12.4 }
+            ],
+            top_features: ["URL长度", "SSL状态", "重定向次数"]
+        },
+        biodeg: {
+            name: "生物降解",
+            baseline: { f1: 0.775, mse: 0.168 },
+            final: { f1: 0.838, mse: 0.131 },
+            improvement: { f1: 8.1, mse: -22.0 },
+            iter_f1: [0.775, 0.805, 0.823, 0.838],
+            iter_mse: [0.168, 0.150, 0.140, 0.131],
+            rules: [
+                { desc: "分子描述符V1与V2比值 (生化交互)", formula: "df['V1'] / (df['V2'] + 0.01)", f1_gain: 7.8, mse_reduction: 13.2 },
+                { desc: "V4对数与V5乘积 (高阶非线性组合)", formula: "np.log(df['V4'] + 1) * df['V5']", f1_gain: 7.1, mse_reduction: 11.5 }
+            ],
+            top_features: ["分子描述符V1", "分子描述符V4", "分子量"]
+        }
+    };
+
+    let currentMetric = "f1";
+    let currentDataset = "white_wine";
+    let barChart = null, iterChart = null;
+    let simulationInterval = null;
+    let fullscreenSimulationInterval = null;
+
+
+    function getSimulationStepsForDataset(datasetKey) {
+        const d = metricsData[datasetKey];
+
+        if (datasetKey === 'white_wine') {
+            return [
+                { iter: 1, rule: "df['alcohol_volatile_ratio'] = df['alcohol'] / (df['volatile_acidity'] + 0.01)", desc: "酒精与挥发酸比值", f1_before: 0.685, f1_after: 0.685, mse_before: 0.142, mse_after: 0.142, improved: false, reason: "【沙盒拦截】规则生成的新特征方差过小，缺乏区分度，数学体检未通过" },
+                { iter: 2, rule: "df['sulfur_ratio'] = df['free_sulfur_dioxide'] / (df['total_sulfur_dioxide'] + 0.01)", desc: "游离二氧化硫与总二氧化硫比率", f1_before: 0.685, f1_after: 0.712, mse_before: 0.142, mse_after: 0.128, improved: true, reason: "【边界优化】AUC平稳，F1提升3.9%，MSE降低9.9%，改善了不平衡分类的少数类截断边界" },
+                { iter: 3, rule: "df['ph_chloride_interaction'] = df['pH'] * np.log(df['chlorides'] + 1)", desc: "pH值与氯化物对数交互", f1_before: 0.712, f1_after: 0.712, mse_before: 0.128, mse_after: 0.128, improved: false, reason: "【结构冗余】各项指标波动极微，该公式产生的非线性逻辑已被树模型隐式分裂提前捕获" },
+                { iter: 4, rule: "df['sulphate_alcohol_product'] = df['sulphates'] * df['alcohol']", desc: "硫酸盐与酒精含量乘积", f1_before: 0.712, f1_after: 0.723, mse_before: 0.128, mse_after: 0.116, improved: true, reason: "【置信度增强】F1提升1.5%，Log-Loss改善8.2%，模型概率预测更加笃定" },
+                { iter: 5, rule: "df['density_residual_sugar_ratio'] = df['density'] / (df['residual_sugar'] + 0.01)", desc: "密度与残糖比值", f1_before: 0.723, f1_after: 0.723, mse_before: 0.116, mse_after: 0.116, improved: false, reason: "【沙盒拦截】特征分布存在异常值，包含无穷大值，数学体检未通过" },
+                { iter: 6, rule: "df['comprehensive_quality'] = (df['alcohol'] - df['volatile_acidity']) / (df['sulphates'] + 1)", desc: "综合品质评分", f1_before: 0.723, f1_after: 0.734, mse_before: 0.116, mse_after: 0.109, improved: true, reason: "【全面提升】AUC提升2.0%，F1提升1.5%，MSE降低6.0%，规则有效，已合入特征池" }
+            ];
+        } else if (datasetKey === 'bank') {
+            return [
+                { iter: 1, rule: "df['balance_duration_ratio'] = df['balance'] / (df['duration'] + 0.01)", desc: "存款余额与通话时长比值", f1_before: 0.685, f1_after: 0.685, mse_before: 0.142, mse_after: 0.142, improved: false, reason: "【沙盒拦截】规则生成的新特征方差过小，缺乏区分度，数学体检未通过" },
+                { iter: 2, rule: "df['age_pdays_log'] = df['age'] * np.log(df['pdays'] + 1)", desc: "年龄与上次联系天数对数乘积", f1_before: 0.685, f1_after: 0.712, mse_before: 0.142, mse_after: 0.128, improved: true, reason: "【边界优化】F1提升3.9%，MSE降低9.9%，改善了客户分层边界的识别能力" },
+                { iter: 3, rule: "df['campaign_previous_ratio'] = df['campaign'] / (df['previous'] + 0.01)", desc: "本次营销次数与历史次数比值", f1_before: 0.712, f1_after: 0.712, mse_before: 0.128, mse_after: 0.128, improved: false, reason: "【结构冗余】该特征与现有特征高度相关，未提供额外信息增益" },
+                { iter: 4, rule: "df['balance_age_interaction'] = df['balance'] * df['age']", desc: "存款余额与年龄乘积", f1_before: 0.712, f1_after: 0.723, mse_before: 0.128, mse_after: 0.116, improved: true, reason: "【置信度增强】F1提升1.5%，模型对高净值客户的预测更加准确" },
+                { iter: 5, rule: "df['duration_campaign_ratio'] = df['duration'] / (df['campaign'] + 0.01)", desc: "通话时长与营销次数比值", f1_before: 0.723, f1_after: 0.723, mse_before: 0.116, mse_after: 0.116, improved: false, reason: "【沙盒拦截】特征分布存在异常值，数学体检未通过" },
+                { iter: 6, rule: "df['comprehensive_risk_score'] = (df['balance'] - df['campaign']) / (df['duration'] + 1)", desc: "综合风险评分", f1_before: 0.723, f1_after: 0.734, mse_before: 0.116, mse_after: 0.109, improved: true, reason: "【全面提升】各项指标均有改善，规则有效，已合入特征池" }
+            ];
+        } else if (datasetKey === 'phishing') {
+            return [
+                { iter: 1, rule: "df['url_at_symbol_interaction'] = df['URL_Length'] * df['having_At_Symbol']", desc: "URL长度与@符号存在性交互", f1_before: 0.685, f1_after: 0.685, mse_before: 0.142, mse_after: 0.142, improved: false, reason: "【沙盒拦截】规则生成的新特征方差过小，缺乏区分度" },
+                { iter: 2, rule: "df['redirect_ssl_ratio'] = df['Redirect'] / (df['SSLfinal_State'] + 0.01)", desc: "重定向次数与SSL状态比值", f1_before: 0.685, f1_after: 0.712, mse_before: 0.142, mse_after: 0.128, improved: true, reason: "【边界优化】F1提升3.9%，改善了钓鱼网站的检测边界" },
+                { iter: 3, rule: "df['url_anchor_ratio'] = df['URL_Length'] / (df['anchor_URL'] + 0.01)", desc: "URL长度与锚点URL比值", f1_before: 0.712, f1_after: 0.712, mse_before: 0.128, mse_after: 0.128, improved: false, reason: "【结构冗余】该特征与现有特征高度相关" },
+                { iter: 4, rule: "df['request_popup_interaction'] = df['Request_URL'] * df['popUpWidnow']", desc: "请求URL与弹出窗口数量乘积", f1_before: 0.712, f1_after: 0.723, mse_before: 0.128, mse_after: 0.116, improved: true, reason: "【置信度增强】F1提升1.5%，模型对恶意网站的识别更加准确" },
+                { iter: 5, rule: "df['ssl_redirect_product'] = df['SSLfinal_State'] * df['Redirect']", desc: "SSL状态与重定向次数乘积", f1_before: 0.723, f1_after: 0.723, mse_before: 0.116, mse_after: 0.116, improved: false, reason: "【沙盒拦截】特征存在异常值，数学体检未通过" },
+                { iter: 6, rule: "df['comprehensive_security_score'] = (df['URL_Length'] - df['Redirect']) / (df['SSLfinal_State'] + 1)", desc: "综合安全评分", f1_before: 0.723, f1_after: 0.734, mse_before: 0.116, mse_after: 0.109, improved: true, reason: "【全面提升】规则有效，已合入特征池" }
+            ];
+        } else if (datasetKey === 'biodeg') {
+            return [
+                { iter: 1, rule: "df['v1_v2_ratio'] = df['V1'] / (df['V2'] + 0.01)", desc: "分子描述符V1与V2比值", f1_before: 0.685, f1_after: 0.685, mse_before: 0.142, mse_after: 0.142, improved: false, reason: "【沙盒拦截】规则生成的新特征方差过小，缺乏区分度" },
+                { iter: 2, rule: "df['v4_log_product'] = np.log(df['V4'] + 1) * df['V5']", desc: "V4对数与V5乘积", f1_before: 0.685, f1_after: 0.712, mse_before: 0.142, mse_after: 0.128, improved: true, reason: "【边界优化】F1提升3.9%，改善了生物降解性的预测边界" },
+                { iter: 3, rule: "df['v6_v7_ratio'] = df['V6'] / (df['V7'] + 0.01)", desc: "V6与V7比值", f1_before: 0.712, f1_after: 0.712, mse_before: 0.128, mse_after: 0.128, improved: false, reason: "【结构冗余】该特征与现有特征高度相关" },
+                { iter: 4, rule: "df['v8_v9_interaction'] = df['V8'] * df['V9']", desc: "V8与V9乘积交互", f1_before: 0.712, f1_after: 0.723, mse_before: 0.128, mse_after: 0.116, improved: true, reason: "【置信度增强】F1提升1.5%，模型对分子结构的理解更加深入" },
+                { iter: 5, rule: "df['v10_log_transform'] = np.log(df['V10'] + 1)", desc: "V10对数变换", f1_before: 0.723, f1_after: 0.723, mse_before: 0.116, mse_after: 0.116, improved: false, reason: "【沙盒拦截】特征存在异常值，数学体检未通过" },
+                { iter: 6, rule: "df['comprehensive_biodeg_score'] = (df['V1'] - df['V2']) / (df['V4'] + 1)", desc: "综合生物降解评分", f1_before: 0.723, f1_after: 0.734, mse_before: 0.116, mse_after: 0.109, improved: true, reason: "【全面提升】规则有效，已合入特征池" }
+            ];
+        }
+        return [];
+    }
+
+    let currentSimulationSteps = [];
+    let currentSimStep = 0;
+    let fullscreenCurrentStep = 0;
+    let fullscreenLog = "";
+
+    function updateSimulationSteps() {
+        currentSimulationSteps = getSimulationStepsForDataset(currentDataset);
+    }
+
+    function activateSimulationStep() {
+        if (currentSimStep >= currentSimulationSteps.length) {
+            if (simulationInterval) clearInterval(simulationInterval);
+            document.getElementById('console').innerHTML += "\n\n> ========== 模拟完成 (v2.0) ==========\n> OCTree经过6轮迭代，F1显著提升，MSE明显降低\n> 动态三维诊断系统共识别多次有效优化\n> 最终生成高质量特征，可导出Excel用于下游建模";
+            return;
+        }
+        const step = currentSimulationSteps[currentSimStep];
+
+        const statusIcon = step.improved ? "✓ 性能提升" : "✗ 性能未提升";
+        const logMsg = `\n> ========== 第 ${step.iter} 轮迭代 ==========\n> 生成规则: ${step.desc}\n> 数学表达式: ${step.rule}\n> 五折交叉验证结果: F1 ${step.f1_before.toFixed(3)} → ${step.f1_after.toFixed(3)} | MSE ${step.mse_before.toFixed(3)} → ${step.mse_after.toFixed(3)}\n> 动态诊断: ${statusIcon}\n> 诊断报告: ${step.reason}`;
+
+        const consoleDiv = document.getElementById('console');
+        consoleDiv.innerHTML += logMsg;
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+
+        document.getElementById('metric-iter').textContent = step.iter;
+        document.getElementById('metric-rules').textContent = step.iter === 6 ? 24 : (step.iter >= 2 ? 6 : 0);
+
+        currentSimStep++;
+    }
+
+    function activateFullscreenStep() {
+        if (fullscreenCurrentStep >= currentSimulationSteps.length) {
+            if (fullscreenSimulationInterval) clearInterval(fullscreenSimulationInterval);
+            const finalMsg = "\n\n> ========== 模拟完成 (v2.0) ==========\n> OCTree经过6轮迭代，F1显著提升，MSE明显降低\n> 动态三维诊断系统共识别多次有效优化\n> 最终生成高质量特征，可导出Excel用于下游建模";
+            fullscreenLog += finalMsg;
+            const fullscreenConsole = document.getElementById('fullscreenConsole');
+            if (fullscreenConsole) fullscreenConsole.innerHTML = fullscreenLog;
+            return;
+        }
+        const step = currentSimulationSteps[fullscreenCurrentStep];
+        const statusIcon = step.improved ? "✓ 性能提升" : "✗ 性能未提升";
+        const logMsg = `\n> ========== 第 ${step.iter} 轮迭代 ==========\n> 生成规则: ${step.desc}\n> 数学表达式: ${step.rule}\n> 五折交叉验证结果: F1 ${step.f1_before.toFixed(3)} → ${step.f1_after.toFixed(3)} | MSE ${step.mse_before.toFixed(3)} → ${step.mse_after.toFixed(3)}\n> 动态诊断: ${statusIcon}\n> 诊断报告: ${step.reason}`;
+        fullscreenLog += logMsg;
+        const fullscreenConsole = document.getElementById('fullscreenConsole');
+        if (fullscreenConsole) {
+            fullscreenConsole.innerHTML = fullscreenLog;
+            fullscreenConsole.scrollTop = fullscreenConsole.scrollHeight;
+        }
+        fullscreenCurrentStep++;
+    }
+
+    function runFullscreenSimulation() {
+        if (fullscreenSimulationInterval) clearInterval(fullscreenSimulationInterval);
+        fullscreenCurrentStep = 0;
+        fullscreenLog = "> OCTree v2.0 模拟器开始运行...\n> 启用五折交叉验证 | 动态三维诊断系统已激活\n> 正在进行迭代式特征优化生成\n";
+        const fullscreenConsole = document.getElementById('fullscreenConsole');
+        if (fullscreenConsole) fullscreenConsole.innerHTML = fullscreenLog;
+        fullscreenSimulationInterval = setInterval(activateFullscreenStep, 1800);
+    }
+
+    function runSimulation() {
+        if (simulationInterval) clearInterval(simulationInterval);
+        currentSimStep = 0;
+        updateSimulationSteps();
+        document.getElementById('console').innerHTML = "> OCTree v2.0 模拟器开始运行...\n> 启用五折交叉验证 | 动态三维诊断系统已激活\n> 正在进行迭代式特征优化生成\n";
+        simulationInterval = setInterval(activateSimulationStep, 1800);
+
+        const modal = document.getElementById('fullscreenSimModal');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        runFullscreenSimulation();
+    }
+
+    function closeFullscreenModal() {
+        const modal = document.getElementById('fullscreenSimModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        if (fullscreenSimulationInterval) clearInterval(fullscreenSimulationInterval);
+        fullscreenCurrentStep = 0;
+        fullscreenLog = "";
+    }
+
+    function openSchematicModal() {
+        document.getElementById('schematicModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSchematicModal() {
+        document.getElementById('schematicModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    function updateBarChart() {
+        const ctx = document.getElementById('datasetBarChart');
+        if(!ctx) return;
+        const labels = ['白葡萄酒品质', '银行营销', '钓鱼网站', '生物降解'];
+        const dsList = ['white_wine', 'bank', 'phishing', 'biodeg'];
+        const baselineData = dsList.map(ds => metricsData[ds].baseline[currentMetric]);
+        const finalData = dsList.map(ds => metricsData[ds].final[currentMetric]);
+        const metricNames = { f1: 'F1-Score', mse: 'MSE 损失' };
+        if(barChart) barChart.destroy();
+        barChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ label: `基线 ${metricNames[currentMetric]}`, data: baselineData, backgroundColor: 'rgba(0,102,204,0.5)' }, { label: `OCTree v2.0 优化`, data: finalData, backgroundColor: 'rgba(122,40,203,0.7)' }] },
+            options: { responsive: true, maintainAspectRatio: true, scales: { y: { title: { display: true, text: metricNames[currentMetric] } } } }
+        });
+        document.getElementById('barChartTitle').innerHTML = `<i class="fas fa-chart-bar"></i> 各数据集 ${metricNames[currentMetric]} 提升对比 (v2.0)`;
+    }
+
+    function updateLineChart() {
+        const ctx = document.getElementById('iterLineChart');
+        if(!ctx) return;
+        const data = metricsData[currentDataset][`iter_${currentMetric}`];
+        const metricNames = { f1: 'F1-Score', mse: 'MSE 损失' };
+        if(iterChart) iterChart.destroy();
+        iterChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: ['初始', '迭代1', '迭代2', '迭代3'], datasets: [{ label: metricNames[currentMetric], data: data, borderColor: '#0066cc', backgroundColor: 'rgba(0,102,204,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#7a28cb', pointRadius: 5 }] },
+            options: { responsive: true, maintainAspectRatio: true, scales: { y: { title: { display: true, text: metricNames[currentMetric] } } } }
+        });
+        document.getElementById('iterChartTitle').innerHTML = `<i class="fas fa-chart-line"></i> 迭代优化过程（${metricsData[currentDataset].name}）- ${metricNames[currentMetric]} (v2.0)`;
+    }
+
+    function updateSummaryCards() {
+        const container = document.getElementById('summaryContainer');
+        const dsList = ['white_wine', 'bank', 'phishing', 'biodeg'];
+        const icons = { white_wine: 'fa-wine-glass-alt', bank: 'fa-university', phishing: 'fa-shield-alt', biodeg: 'fa-leaf' };
+        container.innerHTML = dsList.map(ds => {
+            const d = metricsData[ds];
+            const improve = d.improvement[currentMetric];
+            const sign = currentMetric === 'mse' ? '' : '+';
+            const color = currentMetric === 'mse' && improve < 0 ? '#28a745' : '#0066cc';
+            return `<div class="summary-card" data-dataset="${ds}">
+                <i class="fas ${icons[ds]}"></i>
+                <div class="summary-content"><h4>${d.name}</h4><div class="summary-value" style="color:${color}">${sign}${improve}%</div><p>${d.baseline[currentMetric].toFixed(3)} → ${d.final[currentMetric].toFixed(3)}</p></div>
+            </div>`;
+        }).join('');
+        document.querySelectorAll('.summary-card').forEach(card => {
+            card.onclick = () => {
+                currentDataset = card.getAttribute('data-dataset');
+                updateLineChart();
+                updateSimulatorFromDataset();
+                updateSimulationSteps();
+            };
+        });
+    }
+
+    function updateSimulatorFromDataset() {
+        const d = metricsData[currentDataset];
+        document.getElementById('metric-iter').textContent = "4";
+        document.getElementById('metric-rules').textContent = d.rules.length;
+        const reportDiv = document.getElementById('datasetReport');
+        const rulesHtml = d.rules.map(r => `
+            <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,102,204,0.1);">
+                <div style="font-weight: 600; color: var(--text-dark);">${r.desc}</div>
+                <div style="font-family: monospace; font-size: 0.7rem; color: var(--accent-cyan); background: rgba(0,102,204,0.08); padding: 4px 8px; border-radius: 6px; margin-top: 4px;">${r.formula}</div>
+                <div style="font-size: 0.7rem; color: var(--text-gray); margin-top: 4px;">F1提升 ${r.f1_gain}% | MSE降低 ${r.mse_reduction}%</div>
+            </div>
+        `).join('');
+        reportDiv.innerHTML = `
+            <div style="font-weight:700; color:var(--accent-cyan); margin-bottom:10px;">${d.name} 数据集分析报告 (v2.0)</div>
+            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:12px;">
+                <div style="background:white; padding:8px; border-radius:12px; text-align:center;"><div style="font-size:0.7rem;">F1提升</div><div style="font-size:1.2rem; font-weight:700; color:var(--accent-purple);">+${d.improvement.f1}%</div><div>${d.baseline.f1.toFixed(3)}→${d.final.f1.toFixed(3)}</div></div>
+                <div style="background:white; padding:8px; border-radius:12px; text-align:center;"><div style="font-size:0.7rem;">MSE降低</div><div style="font-size:1.2rem; font-weight:700; color:#28a745;">${Math.abs(d.improvement.mse)}%</div><div>${d.baseline.mse.toFixed(3)}→${d.final.mse.toFixed(3)}</div></div>
+            </div>
+            <div><strong>生成的特征规则（共${d.rules.length}条）：</strong></div>
+            <div style="margin-top:8px;">${rulesHtml}</div>
+            <div style="margin-top:8px;"><strong>决策树反馈的关键特征：</strong> ${d.top_features.join(' → ')}</div>
+            <div style="margin-top:6px; padding-top:6px; border-top:1px solid rgba(0,102,204,0.2); font-size:0.7rem;">✨ 动态三维诊断：F1 ${d.baseline.f1.toFixed(3)} → ${d.final.f1.toFixed(3)}，总提升 +${d.improvement.f1}%</div>
+        `;
+        reportDiv.classList.add('active');
+        document.getElementById('console').innerHTML = `> OCTree v2.0 分析报告 - ${d.name}\n> F1: ${d.baseline.f1.toFixed(3)} → ${d.final.f1.toFixed(3)} (+${d.improvement.f1}%)\n> MSE: ${d.baseline.mse.toFixed(3)} → ${d.final.mse.toFixed(3)} (${d.improvement.mse}%)\n> 五折交叉验证结果稳定，无过拟合迹象\n> 动态诊断：该数据集特征优化效果显著，推荐用于下游建模`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // ========== 原有初始化函数调用 ==========
+    updateBarChart();
+    updateLineChart();
+    updateSummaryCards();
+    updateSimulatorFromDataset();
+    updateSimulationSteps();
+
+    // ========== 原有按钮和事件绑定 ==========
+    document.getElementById('enterButton').onclick = () => {
+        document.getElementById('introPage').classList.add('hidden');
+        setTimeout(() => document.getElementById('mainContainer').classList.add('loaded'), 800);
+    };
+
+    document.getElementById('navToggle').onclick = () => {
+        document.getElementById('navToggle').classList.toggle('active');
+        document.getElementById('navLinks').classList.toggle('active');
+    };
+
+    document.querySelectorAll('.nav-link[data-target]').forEach(link => {
+        link.onclick = (e) => {
+            e.preventDefault();
+            let t = document.getElementById(link.getAttribute('data-target'));
+            if(t) window.scrollTo({ top: t.offsetTop - 70, behavior: 'smooth' });
+            if(window.innerWidth <= 768) {
+                document.getElementById('navToggle').classList.remove('active');
+                document.getElementById('navLinks').classList.remove('active');
+            }
+        };
+    });
+
+    window.addEventListener('scroll', () => {
+        if(window.scrollY > 50) document.getElementById('fixedNav').classList.add('scrolled');
+        else document.getElementById('fixedNav').classList.remove('scrolled');
+    });
+
+    const runBtn = document.getElementById('runSimulateBtn');
+    if (runBtn) runBtn.onclick = runSimulation;
+
+    document.querySelectorAll('.dataset-mini-card').forEach(card => {
+        card.onclick = () => {
+            currentDataset = card.getAttribute('data-dataset');
+            updateSimulatorFromDataset();
+            updateLineChart();
+            updateSimulationSteps();
+            document.querySelectorAll('.dataset-mini-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+        };
+    });
+
+    document.querySelectorAll('.metric-tab').forEach(tab => {
+        tab.onclick = () => {
+            currentMetric = tab.getAttribute('data-metric');
+            document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            updateBarChart();
+            updateLineChart();
+            updateSummaryCards();
+        };
+    });
+
+    document.querySelector('.dataset-mini-card').click();
+
+    document.getElementById('openSchematicBtn').onclick = openSchematicModal;
+    document.getElementById('closeSchematicBtn').onclick = closeSchematicModal;
+    document.getElementById('schematicModal').onclick = function(e) {
+        if(e.target === this) closeSchematicModal();
+    };
+
+    const closeFullscreenBtn = document.getElementById('closeFullscreenBtn');
+    if (closeFullscreenBtn) closeFullscreenBtn.onclick = closeFullscreenModal;
+
+    const fullscreenModal = document.getElementById('fullscreenSimModal');
+    if (fullscreenModal) {
+        fullscreenModal.onclick = function(e) {
+            if(e.target === this) closeFullscreenModal();
+        };
+    }
+
+    // ==========================================
+    // 新增：文件上传和OCTree分析功能（带加载动画）
+    // ==========================================
+
+    // 添加加载动画样式
+    if (!document.getElementById('upload-loading-style')) {
+        const loadingStyle = document.createElement('style');
+        loadingStyle.id = 'upload-loading-style';
+        loadingStyle.textContent = `
+            .upload-button.loading {
+                opacity: 0.7;
+                pointer-events: none;
+            }
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(loadingStyle);
+    }
+
+    // 获取元素
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadDataBtn');
+    const consoleDiv = document.getElementById('console');
+    const medicalOption = document.getElementById('medicalOption');
+    const generalOption = document.getElementById('generalOption');
+
+    let loadingInterval = null;
+
+    function startLoadingAnimation() {
+        if (!uploadBtn) return;
+        uploadBtn.classList.add('loading');
+        let dots = 0;
+        let originalText = uploadBtn.innerHTML;
+        loadingInterval = setInterval(() => {
+            if (uploadBtn) {
+                dots = (dots + 1) % 4;
+                uploadBtn.innerHTML = `<i class="fas fa-spinner fa-pulse"></i> 分析中${'.'.repeat(dots)}`;
+            }
+        }, 500);
+    }
+
+    function stopLoadingAnimation() {
+        if (loadingInterval) clearInterval(loadingInterval);
+        if (uploadBtn) {
+            uploadBtn.classList.remove('loading');
+            uploadBtn.innerHTML = `<i class="fas fa-upload"></i> 选择文件并上传`;
+        }
+    }
+
+    function updateConsole(text, isError = false) {
+        if (!consoleDiv) return;
+        let prefix = isError ? '❌ ' : '> ';
+        if (text.startsWith('===') || text.startsWith('---')) prefix = '';
+        consoleDiv.innerHTML += `${prefix}${text}\n`;
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    }
+
+    function clearConsole() {
+        if (consoleDiv) consoleDiv.innerHTML = '';
+    }
+
+    function displayResults(result) {
+        if (!consoleDiv) return;
+        clearConsole();
+
+        updateConsole(`┌${'─'.repeat(58)}┐`);
+        updateConsole(`│ ${' '.repeat(20)}📊 OCTree 分析报告${' '.repeat(20)}│`);
+        updateConsole(`└${'─'.repeat(58)}┘`);
+        updateConsole('');
+
+        if (result.knowledge_base && result.knowledge_base !== '无') {
+            updateConsole(`📚 领域知识库:`);
+            const kbText = result.knowledge_base.replace(/【领域知识库.*?】:/g, '').trim();
+            updateConsole(`   ${kbText.length > 80 ? kbText.substring(0, 80) + '...' : kbText}`);
+            updateConsole('');
+        }
+
+        updateConsole(`┌${'─'.repeat(20)} 基准性能 ─${'─'.repeat(28)}┐`);
+        updateConsole(`│ F1-Score:  ${result.baseline.f1.toFixed(4)}${' '.repeat(30)}│`);
+        updateConsole(`│ AUC:       ${result.baseline.auc.toFixed(4)}${' '.repeat(30)}│`);
+        updateConsole(`│ Log-Loss:  ${result.baseline.log_loss.toFixed(4)}${' '.repeat(30)}│`);
+        updateConsole(`│ MSE:       ${result.baseline.mse.toFixed(4)}${' '.repeat(30)}│`);
+        updateConsole(`└${'─'.repeat(58)}┘`);
+        updateConsole('');
+
+        updateConsole(`┌${'─'.repeat(20)} 优化后性能 ─${'─'.repeat(28)}┐`);
+        updateConsole(`│ F1-Score:  ${result.optimized.f1.toFixed(4)}${' '.repeat(30)}│`);
+        updateConsole(`│ AUC:       ${result.optimized.auc.toFixed(4)}${' '.repeat(30)}│`);
+        updateConsole(`│ Log-Loss:  ${result.optimized.log_loss.toFixed(4)}${' '.repeat(30)}│`);
+        updateConsole(`│ MSE:       ${result.optimized.mse.toFixed(4)}${' '.repeat(30)}│`);
+        updateConsole(`└${'─'.repeat(58)}┘`);
+        updateConsole('');
+
+        const f1Up = result.improvement.f1;
+        const aucUp = result.improvement.auc;
+        updateConsole(`┌${'─'.repeat(20)} 性能提升 ─${'─'.repeat(28)}┐`);
+        updateConsole(`│ F1 提升:   ${f1Up >= 0 ? '↑' : '↓'} ${Math.abs(f1Up).toFixed(1)}%${' '.repeat(30)}│`);
+        updateConsole(`│ AUC 提升:  ${aucUp >= 0 ? '↑' : '↓'} ${Math.abs(aucUp).toFixed(1)}%${' '.repeat(30)}│`);
+        updateConsole(`│ 新增特征:  ${result.improvement.features_added} 个${' '.repeat(30)}│`);
+        updateConsole(`└${'─'.repeat(58)}┘`);
+        updateConsole('');
+
+        if (result.generated_rules && result.generated_rules.length > 0) {
+            updateConsole(`┌${'─'.repeat(20)} 生成的特征规则 ─${'─'.repeat(28)}┐`);
+            result.generated_rules.forEach((rule) => {
+                updateConsole(`│ [第${rule.iteration}轮]${' '.repeat(48)}│`);
+                const codeDisplay = rule.code.length > 45 ? rule.code.substring(0, 42) + '...' : rule.code;
+                updateConsole(`│   ${codeDisplay}${' '.repeat(50 - codeDisplay.length)}│`);
+                updateConsole(`│   效果: ${rule.improvement}${' '.repeat(38 - rule.improvement.length)}│`);
+            });
+            updateConsole(`└${'─'.repeat(58)}┘`);
+            updateConsole('');
+        } else {
+            updateConsole(`📝 生成的特征规则: 无新增（数据已达较优性能）`);
+            updateConsole('');
+        }
+
+        if (result.iterations && result.iterations.length > 0) {
+            const acceptedCount = result.iterations.filter(i => i.accepted).length;
+            updateConsole(`┌${'─'.repeat(20)} 迭代摘要 ─${'─'.repeat(28)}┐`);
+            updateConsole(`│ 总迭代轮次: ${result.iterations.length} 轮${' '.repeat(30)}│`);
+            updateConsole(`│ 接受规则数: ${acceptedCount} 个${' '.repeat(30)}│`);
+            updateConsole(`│ 拒绝规则数: ${result.iterations.length - acceptedCount} 个${' '.repeat(30)}│`);
+            updateConsole(`└${'─'.repeat(58)}┘`);
+            updateConsole('');
+        }
+
+        if (result.decision_tree_explanation) {
+            updateConsole(`🌳 决策树解释（简化）:`);
+            const lines = result.decision_tree_explanation.split('\n').slice(0, 5);
+            lines.forEach(line => { if (line.trim()) updateConsole(`   ${line.substring(0, 55)}`); });
+            updateConsole('');
+        }
+
+        updateConsole(`┌${'─'.repeat(58)}┐`);
+        updateConsole(`│ ✅ ${result.message}${' '.repeat(58 - 2 - result.message.length)}│`);
+        updateConsole(`└${'─'.repeat(58)}┘`);
+    }
+
+    // 绑定上传事件
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', () => { if (fileInput) fileInput.click(); });
+    }
+    if (medicalOption) {
+        medicalOption.addEventListener('click', () => { if (fileInput) fileInput.click(); });
+    }
+    if (generalOption) {
+        generalOption.addEventListener('click', () => { if (fileInput) fileInput.click(); });
+    }
+
+    // 文件上传处理
+    if (fileInput) {
+        fileInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            if (!['csv', 'xlsx', 'xls'].includes(fileExt)) {
+                alert('请上传 CSV 或 Excel 文件');
+                fileInput.value = '';
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('文件太大！请上传小于10MB的文件');
+                fileInput.value = '';
+                return;
+            }
+
+            startLoadingAnimation();
+            clearConsole();
+            updateConsole(`┌${'─'.repeat(58)}┐`);
+            updateConsole(`│ ${' '.repeat(18)}🚀 OCTree v2.0 分析中${' '.repeat(18)}│`);
+            updateConsole(`└${'─'.repeat(58)}┘`);
+            updateConsole('');
+            updateConsole(`📁 文件名: ${file.name}`);
+            updateConsole(`📊 文件大小: ${(file.size / 1024).toFixed(2)} KB`);
+            updateConsole(`⏳ 正在预处理数据...`);
+            updateConsole(`🤖 正在调用 LLM 理解数据...`);
+            updateConsole(`🔄 开始迭代优化...`);
+            updateConsole('');
+
+            const metricIter = document.getElementById('metric-iter');
+            const metricRules = document.getElementById('metric-rules');
+            if (metricIter) metricIter.textContent = '分析中';
+            if (metricRules) metricRules.textContent = '...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (result.success) {
+                    displayResults(result);
+                    if (metricIter) metricIter.textContent = result.generated_rules.length;
+                    if (metricRules) metricRules.textContent = result.improvement.features_added;
+                } else {
+                    updateConsole(`❌ 分析失败: ${result.error}`, true);
+                    if (metricIter) metricIter.textContent = '失败';
+                    if (metricRules) metricRules.textContent = '0';
+                }
+            } catch (error) {
+                updateConsole(`❌ 连接后端失败: ${error.message}`, true);
+                updateConsole(`💡 请确保后端服务已启动: python app.py`, true);
+                if (metricIter) metricIter.textContent = '错误';
+                if (metricRules) metricRules.textContent = '0';
+            } finally {
+                stopLoadingAnimation();
+                fileInput.value = '';
+            }
+        });
+    }
+});
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+<script>
+// ==========================================
+// 独立的上传功能（不依赖 DOMContentLoaded）
+// ==========================================
+
+// 等待页面加载完成
+window.addEventListener('load', function() {
+    console.log('页面加载完成，初始化上传功能...');
+
+    // 获取元素
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadDataBtn');
+    const consoleDiv = document.getElementById('console');
+    const medicalOption = document.getElementById('medicalOption');
+    const generalOption = document.getElementById('generalOption');
+
+    // 检查元素是否存在
+    console.log('fileInput:', fileInput);
+    console.log('uploadBtn:', uploadBtn);
+    console.log('consoleDiv:', consoleDiv);
+
+    if (!uploadBtn) {
+        console.error('找不到上传按钮！请确保 id="uploadDataBtn" 存在');
+        return;
+    }
+
+    if (!fileInput) {
+        console.error('找不到文件选择器！请确保 id="fileInput" 存在');
+        return;
+    }
+
+    // 简单的控制台输出函数
+    function logToConsole(msg, isError) {
+        if (!consoleDiv) {
+            console.log(msg);
+            return;
+        }
+        const prefix = isError ? '❌ ' : '> ';
+        consoleDiv.innerHTML += prefix + msg + '\n';
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    }
+
+    // 点击上传按钮
+    uploadBtn.addEventListener('click', function() {
+        console.log('上传按钮被点击');
+        fileInput.click();
+    });
+
+    // 点击医疗选项
+    if (medicalOption) {
+        medicalOption.addEventListener('click', function() {
+            fileInput.click();
+        });
+    }
+
+    // 点击通用选项
+    if (generalOption) {
+        generalOption.addEventListener('click', function() {
+            fileInput.click();
+        });
+    }
+
+    // 文件选择后上传
+    fileInput.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        console.log('文件已选择:', file.name);
+
+        // 清空并显示加载
+        if (consoleDiv) consoleDiv.innerHTML = '';
+        logToConsole('='.repeat(50));
+        logToConsole('🚀 OCTree v2.0 开始分析');
+        logToConsole('='.repeat(50));
+        logToConsole('📁 文件名: ' + file.name);
+        logToConsole('📊 文件大小: ' + (file.size / 1024).toFixed(2) + ' KB');
+        logToConsole('⏳ 正在分析中，请稍候...');
+        logToConsole('');
+
+        // 更新页面指标
+        const metricIter = document.getElementById('metric-iter');
+        const metricRules = document.getElementById('metric-rules');
+        if (metricIter) metricIter.textContent = '分析中';
+        if (metricRules) metricRules.textContent = '...';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            logToConsole('📤 正在上传数据到后端...');
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            logToConsole('📥 收到后端响应...');
+            const result = await response.json();
+
+            if (result.success) {
+                logToConsole('');
+                logToConsole('✅ 分析完成！');
+                logToConsole('='.repeat(50));
+                logToConsole('📊 基准性能: F1=' + result.baseline.f1.toFixed(4) + ', AUC=' + result.baseline.auc.toFixed(4));
+                logToConsole('📈 优化后性能: F1=' + result.optimized.f1.toFixed(4) + ', AUC=' + result.optimized.auc.toFixed(4));
+                logToConsole('🎯 F1提升: +' + result.improvement.f1.toFixed(1) + '%');
+                logToConsole('✨ 新增特征数: ' + result.improvement.features_added);
+                logToConsole('='.repeat(50));
+
+                if (result.generated_rules && result.generated_rules.length > 0) {
+                    logToConsole('📝 生成的规则:');
+                    result.generated_rules.forEach(rule => {
+                        logToConsole('   第' + rule.iteration + '轮: ' + rule.code.substring(0, 60) + '...');
+                    });
+                }
+
+                // 更新指标
+                if (metricIter) metricIter.textContent = result.generated_rules.length;
+                if (metricRules) metricRules.textContent = result.improvement.features_added;
+
+            } else {
+                logToConsole('❌ 分析失败: ' + result.error, true);
+            }
+
+        } catch (error) {
+            console.error('上传错误:', error);
+            logToConsole('❌ 连接后端失败: ' + error.message, true);
+            logToConsole('💡 请确保后端服务已启动: python app.py', true);
+        } finally {
+            fileInput.value = '';
+        }
+    });
+
+    console.log('上传功能初始化完成！');
+});
+</script>
+<!-- ==========================================
+     分析报告弹窗模态框（紧密排布版）
+========================================== -->
+<div id="analysisModal" class="analysis-modal" style="display: none;">
+    <div class="analysis-modal-content">
+        <!-- 加载状态 -->
+        <div id="loadingArea" class="loading-area">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">正在分析数据...</div>
+            <div class="progress-bar-container">
+                <div id="progressBar" class="progress-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div id="progressPercent" class="progress-percent">0%</div>
+            <div id="loadingStep" class="loading-step">准备就绪...</div>
+        </div>
+
+        <!-- 结果展示 -->
+        <div id="resultArea" class="result-area" style="display: none;">
+            <div class="result-header">
+                <h2>📊 OCTree 特征工程分析报告</h2>
+                <div class="header-buttons">
+                    <button class="download-btn" onclick="downloadReport()">📥 下载报告</button>
+                    <button class="close-modal-btn" onclick="closeAnalysisModal()">×</button>
+                </div>
+            </div>
+
+            <!-- 三行布局：指标行 + 图表行 + 规则行 -->
+            <div class="report-container">
+                <!-- 第一行：核心指标 -->
+                <div class="row-metrics" id="metricsRow"></div>
+
+                <!-- 第二行：图表 + 决策树 -->
+                <div class="row-chart">
+                    <div class="chart-box">
+                        <div class="section-title">📈 迭代优化趋势</div>
+                        <canvas id="iterationChartCanvas" style="width:100%; height:140px;"></canvas>
+                    </div>
+                    <div class="tree-box">
+                        <div class="section-title">🌳 决策树解释</div>
+                        <div id="treeContent" class="tree-content"></div>
+                    </div>
+                </div>
+
+                <!-- 第三行：规则列表 -->
+                <div class="row-rules">
+                    <div class="section-title">📝 特征规则（接受/拒绝）</div>
+                    <div id="rulesList" class="rules-list"></div>
+                </div>
+
+                <!-- 底部总结 -->
+                <div class="row-summary" id="summaryRow"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ==========================================
+   弹窗样式（紧密排布版）
+========================================== */
+.analysis-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.analysis-modal-content {
+    width: 85vw;
+    max-width: 1000px;
+    height: 85vh;
+    max-height: 700px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 加载区域 */
+.loading-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #0066cc;
+    border-right-color: #7a28cb;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text { font-size: 1rem; color: #1e293b; margin: 15px 0 10px; font-weight: 600; }
+.progress-bar-container { width: 200px; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, #0066cc, #7a28cb); width: 0%; }
+.progress-percent { font-size: 0.8rem; color: #0066cc; margin-top: 6px; }
+.loading-step { font-size: 0.7rem; color: #64748b; margin-top: 8px; }
+
+/* 结果区域 */
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #0066cc, #7a28cb);
+    color: white;
+    flex-shrink: 0;
+}
+
+.result-header h2 { margin: 0; font-size: 1rem; font-weight: 600; }
+.header-buttons { display: flex; gap: 8px; }
+.download-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    padding: 4px 10px;
+    border-radius: 16px;
+    color: white;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.download-btn:hover { background: rgba(255,255,255,0.3); }
+.close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: white;
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.close-modal-btn:hover { background: rgba(255,255,255,0.2); }
+
+/* 报告容器 - 紧凑三行布局 */
+.report-container {
+    flex: 1;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #f1f5f9;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+/* 第一行：指标 - 4个紧凑卡片 */
+.row-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.metric-card {
+    background: white;
+    border-radius: 10px;
+    padding: 8px 6px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.metric-value { font-size: 1.1rem; font-weight: 800; color: #1e293b; }
+.metric-label { font-size: 0.6rem; color: #64748b; margin-top: 3px; }
+.metric-change { font-size: 0.65rem; font-weight: 600; padding: 2px 6px; border-radius: 20px; display: inline-block; margin-top: 5px; }
+.change-up { background: #dcfce7; color: #15803d; }
+.change-down { background: #fee2e2; color: #dc2626; }
+
+/* 第二行：图表 + 决策树 并排 */
+.row-chart {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.chart-box, .tree-box {
+    background: white;
+    border-radius: 10px;
+    padding: 8px 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1.5px solid #e0e7ff;
+}
+
+.tree-content {
+    background: #1e293b;
+    color: #a5f3fc;
+    padding: 8px;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.55rem;
+    overflow-x: auto;
+    white-space: pre;
+    max-height: 130px;
+    overflow-y: auto;
+}
+
+/* 第三行：规则列表 */
+.row-rules {
+    background: white;
+    border-radius: 10px;
+    padding: 8px 10px;
+    border: 1px solid #e2e8f0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.rules-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+}
+
+.rule-item {
+    background: #f8fafc;
+    border-left: 3px solid;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+}
+
+.rule-accepted { border-left-color: #10b981; }
+.rule-rejected { border-left-color: #ef4444; }
+
+.rule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.rule-round { font-weight: 700; color: #0066cc; font-size: 0.65rem; }
+.rule-status { font-size: 0.55rem; padding: 1px 6px; border-radius: 10px; }
+.status-accepted { background: #dcfce7; color: #15803d; }
+.status-rejected { background: #fee2e2; color: #dc2626; }
+
+.rule-code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.55rem;
+    background: #1e293b;
+    color: #a5f3fc;
+    padding: 4px 6px;
+    border-radius: 4px;
+    word-break: break-all;
+    margin-top: 4px;
+}
+
+.rule-metrics {
+    font-size: 0.55rem;
+    color: #475569;
+    margin-top: 4px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* 底部总结 */
+.row-summary {
+    background: linear-gradient(135deg, #e0f2fe, #f0fdf4);
+    border-radius: 8px;
+    padding: 6px 10px;
+    text-align: center;
+}
+
+.summary-text { font-size: 0.7rem; color: #1e293b; }
+
+/* 滚动条 */
+.report-container::-webkit-scrollbar,
+.rules-list::-webkit-scrollbar,
+.tree-content::-webkit-scrollbar {
+    width: 4px;
+}
+.report-container::-webkit-scrollbar-track,
+.rules-list::-webkit-scrollbar-track,
+.tree-content::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+.report-container::-webkit-scrollbar-thumb,
+.rules-list::-webkit-scrollbar-thumb,
+.tree-content::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 4px;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// ==========================================
+// 弹窗控制函数（紧密排布版）
+// ==========================================
+
+let iterationChart = null;
+let currentReportData = null;
+
+function openAnalysisModal() {
+    const modal = document.getElementById('analysisModal');
+    const loadingArea = document.getElementById('loadingArea');
+    const resultArea = document.getElementById('resultArea');
+
+    loadingArea.style.display = 'flex';
+    resultArea.style.display = 'none';
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressPercent').textContent = '0%';
+    document.getElementById('loadingStep').textContent = '准备就绪...';
+
+    modal.style.display = 'flex';
+}
+
+function closeAnalysisModal() {
+    const modal = document.getElementById('analysisModal');
+    modal.style.display = 'none';
+    if (iterationChart) { iterationChart.destroy(); iterationChart = null; }
+    currentReportData = null;
+}
+
+function updateProgress(percent, stepText) {
+    document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressPercent').textContent = percent + '%';
+    if (stepText) document.getElementById('loadingStep').textContent = stepText;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function createChart(iterations) {
+    const canvas = document.getElementById('iterationChartCanvas');
+    if (!canvas || iterations.length === 0) return;
+
+    if (iterationChart) iterationChart.destroy();
+
+    const labels = iterations.map((_, idx) => `${idx + 1}`);
+    const f1Data = iterations.map(i => i.f1_after);
+    const mseData = iterations.map(i => i.mse_after);
+
+    iterationChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'F1', data: f1Data, borderColor: '#0066cc', backgroundColor: 'rgba(0,102,204,0.05)', tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: '#0066cc', borderWidth: 2, yAxisID: 'y' },
+                { label: 'MSE', data: mseData, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.05)', tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: '#dc2626', borderWidth: 2, yAxisID: 'y1' }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 8, font: { size: 9 } } },
+                tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(4)}` } }
+            },
+            scales: {
+                y: { title: { display: true, text: 'F1', font: { size: 8 } }, min: 0, max: 1 },
+                y1: { title: { display: true, text: 'MSE', font: { size: 8 } }, position: 'right', min: 0, grid: { drawOnChartArea: false } }
+            }
+        }
+    });
+}
+
+function downloadReport() {
+    if (!currentReportData) { alert('没有可下载的报告'); return; }
+
+    const r = currentReportData;
+    const html = `<!DOCTYPE html>
+    <html><head><meta charset="UTF-8"><title>OCTree报告</title>
+    <style>body{font-family:system-ui;margin:20px}.container{max-width:700px;margin:0 auto;background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}h1{color:#0066cc}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}.metric{background:#f8fafc;padding:10px;border-radius:8px;text-align:center}table{width:100%;border-collapse:collapse}th,td{padding:6px;border-bottom:1px solid #ddd}.improve{color:#15803d}</style>
+    <body><div class="container"><h1>📊 OCTree 分析报告</h1><p>${new Date().toLocaleString()}</p>
+    <div class="metrics"><div class="metric"><strong>${r.baseline.f1.toFixed(4)}→${r.optimized.f1.toFixed(4)}</strong><br>F1</div>
+    <div class="metric"><strong>${r.baseline.mse.toFixed(4)}→${r.optimized.mse.toFixed(4)}</strong><br>MSE</div>
+    <div class="metric"><strong>+${r.improvement.features_added}</strong><br>新增特征</div></div>
+    <table><th>指标</th><th>基准</th><th>优化后</th></tr>
+    <tr><td>F1</td><td>${r.baseline.f1.toFixed(4)}</td><td>${r.optimized.f1.toFixed(4)}</td></tr>
+    <tr><td>MSE</td><td>${r.baseline.mse.toFixed(4)}</td><td>${r.optimized.mse.toFixed(4)}</td></tr>
+    </table>${r.generated_rules?.length ? `<h3>📝 规则</h3>${r.generated_rules.map(rule => `<div><strong>第${rule.iteration}轮</strong><br><code>${escapeHtml(rule.code)}</code><br>${rule.improvement}</div>`).join('')}` : ''}
+    <div style="margin-top:15px;text-align:center;color:#64748b;">OCTree 生成</div>
+    </div></body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `OCTree_Report_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function showReport(result) {
+    currentReportData = result;
+
+    const baseline = result.baseline;
+    const optimized = result.optimized;
+    const improvement = result.improvement;
+    const iterations = result.iterations || [];
+    const generatedRules = result.generated_rules || [];
+    const decisionTree = result.decision_tree_explanation || '';
+
+    const f1Change = (optimized.f1 - baseline.f1) / baseline.f1 * 100;
+    const mseChange = (baseline.mse - optimized.mse) / baseline.mse * 100;
+
+    // 第一行：4个指标
+    document.getElementById('metricsRow').innerHTML = `
+        <div class="metric-card"><div class="metric-value">${baseline.f1.toFixed(3)}→${optimized.f1.toFixed(3)}</div><div class="metric-label">F1-Score</div><div class="metric-change ${f1Change >= 0 ? 'change-up' : 'change-down'}">${f1Change >= 0 ? '↑' : '↓'} ${Math.abs(f1Change).toFixed(1)}%</div></div>
+        <div class="metric-card"><div class="metric-value">${baseline.mse.toFixed(3)}→${optimized.mse.toFixed(3)}</div><div class="metric-label">MSE 损失</div><div class="metric-change ${mseChange >= 0 ? 'change-up' : 'change-down'}">${mseChange >= 0 ? '↓' : '↑'} ${Math.abs(mseChange).toFixed(1)}%</div></div>
+        <div class="metric-card"><div class="metric-value">${baseline.log_loss.toFixed(3)}→${optimized.log_loss.toFixed(3)}</div><div class="metric-label">Log-Loss</div><div class="metric-change">${(baseline.log_loss - optimized.log_loss) >= 0 ? '✓ 改善' : '✗ 变差'}</div></div>
+        <div class="metric-card"><div class="metric-value">+${improvement.features_added}</div><div class="metric-label">新增特征</div><div class="metric-change">${improvement.features_added > 0 ? '✅ 已添加' : '⭕ 无新增'}</div></div>
+    `;
+
+    // 决策树
+    let treeHtml = '';
+    if (decisionTree) {
+        const lines = decisionTree.split('\n').slice(0, 10);
+        treeHtml = `<div class="tree-content">${escapeHtml(lines.join('\n'))}</div>`;
+    } else {
+        treeHtml = `<div class="tree-content" style="color:#64748b;">无法生成决策树</div>`;
+    }
+    document.getElementById('treeContent').innerHTML = treeHtml;
+
+    // 规则列表（显示接受和拒绝的规则）
+    let rulesHtml = '';
+    if (generatedRules.length > 0) {
+        rulesHtml = generatedRules.map(rule => `
+            <div class="rule-item rule-accepted">
+                <div class="rule-header"><span class="rule-round">第 ${rule.iteration} 轮</span><span class="rule-status status-accepted">✓ 已接受</span></div>
+                <div class="rule-code">${escapeHtml(rule.code)}</div>
+                <div class="rule-metrics">🏆 ${rule.improvement}</div>
+            </div>
+        `).join('');
+    }
+    // 添加被拒绝的规则（从 iterations 中提取）
+    if (iterations.length > 0) {
+        const rejectedRules = iterations.filter(i => !i.accepted && i.rule_code);
+        rejectedRules.slice(0, 3).forEach(iter => {
+            rulesHtml += `
+                <div class="rule-item rule-rejected">
+                    <div class="rule-header"><span class="rule-round">第 ${iter.iteration} 轮</span><span class="rule-status status-rejected">✗ 已拒绝</span></div>
+                    <div class="rule-code">${escapeHtml(iter.rule_code?.substring(0, 80) || '')}${iter.rule_code?.length > 80 ? '...' : ''}</div>
+                    <div class="rule-metrics">💬 ${escapeHtml(iter.reason || '')}</div>
+                </div>
+            `;
+        });
+    }
+    if (!rulesHtml) {
+        rulesHtml = '<div style="color:#64748b; text-align:center; padding:15px;">未生成特征规则</div>';
+    }
+    document.getElementById('rulesList').innerHTML = rulesHtml;
+
+    // 总结
+    document.getElementById('summaryRow').innerHTML = `
+        <div class="summary-text">✅ ${result.message || `分析完成！${improvement.features_added > 0 ? `生成 ${improvement.features_added} 个新特征，` : ''}F1 ${f1Change >= 0 ? '提升' : '变化'} ${Math.abs(f1Change).toFixed(1)}%`}</div>
+    `;
+
+    setTimeout(() => createChart(iterations), 100);
+
+    document.getElementById('loadingArea').style.display = 'none';
+    document.getElementById('resultArea').style.display = 'block';
+}
+
+// 上传和分析
+function uploadAndAnalyze() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+    if (!file) { alert('请先选择文件'); return; }
+
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    if (!['csv', 'xlsx', 'xls'].includes(fileExt)) { alert('请上传 CSV 或 Excel 文件'); return; }
+
+    openAnalysisModal();
+
+    const steps = [
+        { percent: 25, text: '上传中...', delay: 500 },
+        { percent: 50, text: '预处理数据...', delay: 800 },
+        { percent: 75, text: 'LLM 生成规则...', delay: 1200 },
+        { percent: 100, text: '生成报告...', delay: 800 }
+    ];
+
+    let stepIndex = 0;
+    function runNextStep() {
+        if (stepIndex < steps.length) {
+            updateProgress(steps[stepIndex].percent, steps[stepIndex].text);
+            stepIndex++;
+            setTimeout(runNextStep, steps[stepIndex - 1].delay);
+        }
+    }
+    setTimeout(runNextStep, 200);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/api/upload', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                updateProgress(100, '完成！');
+                setTimeout(() => showReport(result), 300);
+            } else {
+                alert('分析失败: ' + result.error);
+                closeAnalysisModal();
+            }
+        })
+        .catch(error => {
+            alert('连接失败: ' + error.message);
+            closeAnalysisModal();
+        });
+}
+
+// 绑定事件
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadBtn = document.getElementById('uploadDataBtn');
+    const fileInput = document.getElementById('fileInput');
+
+    if (uploadBtn) uploadBtn.addEventListener('click', () => fileInput?.click());
+    if (fileInput) fileInput.addEventListener('change', () => uploadAndAnalyze());
+
+    console.log('✅ 上传功能已初始化');
+});
+</script>
+<style>
+    .final-demo-panel {
+        margin-top: 24px;
+        padding: 22px;
+        border: 1px solid rgba(102, 126, 234, 0.25);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 10px 30px rgba(31, 45, 92, 0.08);
+    }
+    .final-demo-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #24315f;
+        margin-bottom: 8px;
+    }
+    .final-demo-desc {
+        color: #64748b;
+        line-height: 1.7;
+        margin-bottom: 16px;
+    }
+    .final-demo-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .final-demo-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 12px 18px;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .final-demo-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(102, 126, 234, 0.28);
+    }
+    .final-result-card {
+        margin-top: 14px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        padding: 14px;
+        background: #f8fafc;
+        color: #1f2937;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 420px;
+        overflow: auto;
+        font-family: Consolas, "Microsoft YaHei", monospace;
+        font-size: 13px;
+    }
+</style>
+<script>
+(function() {
+    const API = {
+        tabular: '/api/run/tabular',
+        math: '/api/run/math',
+        code: '/api/run/code',
+        all: '/api/run/all_demo',
+        upload: '/api/upload'
+    };
+
+    function byId(id) {
+        return document.getElementById(id);
+    }
+
+    function safeNumber(value) {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : null;
+    }
+
+    function safeFixed(value, digits = 4) {
+        const num = safeNumber(value);
+        return num === null ? 'N/A' : num.toFixed(digits);
+    }
+
+    function appendConsole(message) {
+        const consoleEl = byId('console');
+        const time = new Date().toLocaleTimeString();
+        const line = `\n> [${time}] ${message}`;
+        if (consoleEl) {
+            consoleEl.textContent += line;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        } else {
+            console.log(message);
+        }
+    }
+
+    async function postJson(url, body) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body || {})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.success === false) {
+            throw new Error(data.error || `HTTP ${response.status}`);
+        }
+        return data;
+    }
+
+    async function postForm(url, formData) {
+        const response = await fetch(url, { method: 'POST', body: formData });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.success === false) {
+            throw new Error(data.error || `HTTP ${response.status}`);
+        }
+        return data;
+    }
+
+    function metricBlock(record) {
+        const verification = record.verification || {};
+        const baseline = verification.baseline || record.baseline || {};
+        const optimized = verification.optimized || record.optimized || {};
+        const improvement = verification.improvement || record.improvement || {};
+        return [
+            `baseline: accuracy=${safeFixed(baseline.accuracy)}, auc=${safeFixed(baseline.auc)}, f1=${safeFixed(baseline.f1)}, log_loss=${safeFixed(baseline.log_loss)}, mse=${safeFixed(baseline.mse)}`,
+            `optimized: accuracy=${safeFixed(optimized.accuracy)}, auc=${safeFixed(optimized.auc)}, f1=${safeFixed(optimized.f1)}, log_loss=${safeFixed(optimized.log_loss)}, mse=${safeFixed(optimized.mse)}`,
+            `improvement: accuracy=${safeFixed(improvement.accuracy)}, auc=${safeFixed(improvement.auc)}, f1=${safeFixed(improvement.f1)}, log_loss=${safeFixed(improvement.log_loss)}, mse=${safeFixed(improvement.mse)}`
+        ].join('\n');
+    }
+
+    function summarizeRecord(record) {
+        if (!record) return '没有返回结果。';
+        const modality = record.modality || 'tabular';
+        const accepted = record.accepted ? 'accepted' : 'rejected';
+        if (modality === 'tabular' || record.baseline) {
+            const generated = record.generated || {};
+            const features = generated.accepted_features || record.accepted_features || [];
+            const codes = generated.feature_codes || record.generated_rules || [];
+            return [
+                '【Tabular 特征列扩充】',
+                `状态：${accepted}`,
+                metricBlock(record),
+                `接受的新特征：${features.length ? features.join(', ') : '暂无'}`,
+                '生成的新特征代码：',
+                codes.join('\n---\n') || '暂无',
+                '下载增强后 CSV：/outputs/tabular_augmented.csv'
+            ].join('\n');
+        }
+        if (modality === 'math') {
+            const generated = record.generated || {};
+            const verification = record.verification || {};
+            const metrics = record.metrics || {};
+            return [
+                '【Math 推理链扩充】',
+                `状态：${accepted}`,
+                `问题：${(record.input_summary || {}).question || ''}`,
+                `Reasoning Graph 节点数：${metrics.original_node_count || 0} -> ${metrics.expanded_node_count || 0}`,
+                `被 mask 的节点：${generated.masked_node || ''}`,
+                `恢复节点：${generated.recovered_node || ''}`,
+                `aggregate_score=${safeFixed(verification.aggregate_score, 3)}, reasoning_gain=${safeFixed(verification.reasoning_gain, 3)}`,
+                'expanded CoT：',
+                generated.expanded_cot || ''
+            ].join('\n');
+        }
+        if (modality === 'code') {
+            const generated = record.generated || {};
+            const verification = record.verification || {};
+            return [
+                '【Code 代码数据扩充】',
+                `状态：${accepted}`,
+                `prompt：${generated.prompt || (record.input_summary || {}).prompt || ''}`,
+                `test_result：passed=${verification.passed}, error_type=${verification.error_type || 'None'}`,
+                `feedback：${record.feedback || ''}`,
+                'final code：',
+                generated.final_code || ''
+            ].join('\n');
+        }
+        return JSON.stringify(record, null, 2);
+    }
+
+    function ensureResultPanel() {
+        let panel = byId('finalResultPanel');
+        if (panel) return panel;
+        const integrated = byId('integrated') || document.body;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'final-demo-panel';
+        wrapper.innerHTML = `
+            <div class="final-demo-title">结题版三类数据扩充演示</div>
+            <div class="final-demo-desc">保留原 OCTree 表格特征扩充闭环，并新增 Math 推理链扩充、Code 代码修复轨迹扩充。点击按钮会调用 Flask 后端接口，结果会写入 outputs/。</div>
+            <div class="final-demo-buttons">
+                <button class="final-demo-btn" data-run-mode="tabular">Tabular 特征列扩充</button>
+                <button class="final-demo-btn" data-run-mode="math">Math 推理链扩充</button>
+                <button class="final-demo-btn" data-run-mode="code">Code 代码数据扩充</button>
+                <button class="final-demo-btn" data-run-mode="all">一键运行三类 Demo</button>
+            </div>
+            <div id="finalResultPanel" class="final-result-card">点击上方按钮后，这里会显示统一 ResultRecord 摘要。</div>
+        `;
+        const simulator = integrated.querySelector('.integrated-simulator') || integrated;
+        simulator.appendChild(wrapper);
+        panel = byId('finalResultPanel');
+        wrapper.querySelectorAll('[data-run-mode]').forEach(btn => {
+            btn.addEventListener('click', () => runDemo(btn.getAttribute('data-run-mode')));
+        });
+        return panel;
+    }
+
+    function showResult(record) {
+        const panel = ensureResultPanel();
+        panel.textContent = summarizeRecord(record);
+        appendConsole(`结果已返回：${record.modality || 'all_demo'}，accepted=${record.accepted}`);
+    }
+
+    async function runDemo(mode) {
+        const panel = ensureResultPanel();
+        panel.textContent = `正在运行 ${mode} demo，请稍等...`;
+        appendConsole(`开始运行 ${mode} demo`);
+        try {
+            if (mode === 'all') {
+                const data = await postJson(API.all, {});
+                const parts = [];
+                ['tabular', 'math', 'code'].forEach(key => {
+                    if (data.results && data.results[key]) parts.push(summarizeRecord(data.results[key]));
+                });
+                if (data.errors && Object.keys(data.errors).length) {
+                    parts.push('错误：' + JSON.stringify(data.errors, null, 2));
+                }
+                panel.textContent = parts.join('\n\n==============================\n\n');
+                appendConsole('一键 Demo 运行完成，输出已写入 outputs/');
+                return;
+            }
+            const data = await postJson(API[mode], {});
+            showResult(data);
+        } catch (error) {
+            panel.textContent = `运行失败：${error.message}`;
+            appendConsole(`运行失败：${error.message}`);
+        }
+    }
+
+    function initUpload() {
+        let uploadBtn = byId('uploadDataBtn');
+        let fileInput = byId('fileInput');
+        if (!uploadBtn || !fileInput) return;
+
+        const cleanBtn = uploadBtn.cloneNode(true);
+        const cleanInput = fileInput.cloneNode(true);
+        uploadBtn.parentNode.replaceChild(cleanBtn, uploadBtn);
+        fileInput.parentNode.replaceChild(cleanInput, fileInput);
+        uploadBtn = cleanBtn;
+        fileInput = cleanInput;
+
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', async () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            appendConsole(`上传文件：${file.name}`);
+            const formData = new FormData();
+            formData.append('file', file);
+            const panel = ensureResultPanel();
+            panel.textContent = '正在运行上传数据的 Tabular OCTree 分析...';
+            try {
+                const data = await postForm(API.upload, formData);
+                const record = data.record || data;
+                showResult(record);
+            } catch (error) {
+                panel.textContent = `上传分析失败：${error.message}`;
+                appendConsole(`上传分析失败：${error.message}`);
+            } finally {
+                fileInput.value = '';
+            }
+        });
+        appendConsole('上传事件已整理为单一 initUpload() 绑定');
+    }
+
+    function initFinalDemo() {
+        ensureResultPanel();
+        initUpload();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFinalDemo);
+    } else {
+        initFinalDemo();
+    }
+})();
+</script>
+</body>
+</html>

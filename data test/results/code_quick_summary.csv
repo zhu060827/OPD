@@ -1,0 +1,4 @@
+﻿task_id,accepted,quality_score,retained_count,attempt_count
+HumanEval/0,True,0.9375,2,11
+HumanEval/1,True,0.9075,2,8
+HumanEval/2,True,1.0,1,7

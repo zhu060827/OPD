@@ -1,0 +1,34 @@
+{
+  "sample_count": 16,
+  "selection": "first 8 local-baseline-passing records from each official source",
+  "tracks": {
+    "HumanEval": {
+      "count": 8,
+      "mode": "rewrite"
+    },
+    "MBPP": {
+      "count": 8,
+      "mode": "generate_repair"
+    }
+  },
+  "sources": [
+    {
+      "name": "OpenAI HumanEval",
+      "url": "https://raw.githubusercontent.com/openai/human-eval/master/data/HumanEval.jsonl.gz",
+      "raw_file": "raw\\HumanEval.jsonl.gz",
+      "sha256": "b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef"
+    },
+    {
+      "name": "Google Research sanitized MBPP",
+      "url": "https://raw.githubusercontent.com/google-research/google-research/master/mbpp/sanitized-mbpp.json",
+      "raw_file": "raw\\sanitized-mbpp.json",
+      "sha256": "ca95deaa9a01ef0a6f439f88bcf0dd3db3563d22f22aad6cae04ebb9a8d8c8e9"
+    }
+  ],
+  "all_reference_baselines_passed": true,
+  "notes": [
+    "HumanEval reasoning is an adapter seed, because HumanEval does not contain CoT.",
+    "MBPP reference_code is stored for auditing but is not passed to generate-repair.",
+    "No The Stack v2 sample is used as a correctness benchmark."
+  ]
+}

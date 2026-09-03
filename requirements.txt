@@ -1,0 +1,11 @@
+flask
+flask-cors
+pandas
+numpy
+scikit-learn
+xgboost
+openai
+sympy
+datasets
+python-dotenv
+matplotlib

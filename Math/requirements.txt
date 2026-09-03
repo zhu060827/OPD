@@ -1,0 +1,6 @@
+# Runtime dependencies are intentionally kept to the Python standard library.
+# Optional for future extensions:
+# sympy       # stronger symbolic formula verification
+# openai      # official SDK instead of the built-in OpenAI-compatible HTTP client
+# torch       # required by OPDMainTransformersScorer in the deployed OPD environment
+# transformers # required by OPDMainTransformersScorer
