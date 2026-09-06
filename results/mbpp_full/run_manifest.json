@@ -1,0 +1,8 @@
+{
+  "input": "/root/OPD-stage1-multi-expert/data/mbpp_converted.jsonl",
+  "record_count": 427,
+  "generation_backend": "openai_compatible",
+  "trajectory_backend": "external",
+  "external_paid_api_calls": "not_measured_by_stage1",
+  "formal_training_result": false
+}

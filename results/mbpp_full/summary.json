@@ -1,0 +1,72 @@
+{
+  "schema_version": "stage1_multi_expert.summary.v1",
+  "formal_training_result": false,
+  "total_records": 427,
+  "usable_for_training": 365,
+  "routing_status_distribution": {
+    "low_confidence": 16,
+    "no_valid_expert": 46,
+    "routed": 365
+  },
+  "pseudo_label_distribution": {
+    "ast": 43,
+    "control_flow": 87,
+    "cot": 114,
+    "style": 122,
+    "unrouted": 46,
+    "variable": 15
+  },
+  "mean_top1_margin": 0.2889668032732561,
+  "experts": {
+    "expert_ast": {
+      "attempted": 427,
+      "hard_gate_passed": 322,
+      "trajectory_available": 427,
+      "selected_top1": 43,
+      "selected_top2": 113,
+      "hard_gate_pass_rate": 0.7540983606557377,
+      "mean_reward_score": 0.4390402315897113,
+      "mean_nll_advantage": 0.09704044962446502
+    },
+    "expert_control_flow": {
+      "attempted": 427,
+      "hard_gate_passed": 368,
+      "trajectory_available": 427,
+      "selected_top1": 87,
+      "selected_top2": 173,
+      "hard_gate_pass_rate": 0.8618266978922716,
+      "mean_reward_score": 0.5709839803851456,
+      "mean_nll_advantage": -0.031480450201952614
+    },
+    "expert_cot": {
+      "attempted": 427,
+      "hard_gate_passed": 305,
+      "trajectory_available": 427,
+      "selected_top1": 114,
+      "selected_top2": 199,
+      "hard_gate_pass_rate": 0.7142857142857143,
+      "mean_reward_score": 0.5429175315551876,
+      "mean_nll_advantage": 0.09045317814803898
+    },
+    "expert_style": {
+      "attempted": 427,
+      "hard_gate_passed": 273,
+      "trajectory_available": 427,
+      "selected_top1": 122,
+      "selected_top2": 217,
+      "hard_gate_pass_rate": 0.639344262295082,
+      "mean_reward_score": 0.6997039786461073,
+      "mean_nll_advantage": -0.02929903954875812
+    },
+    "expert_variable": {
+      "attempted": 427,
+      "hard_gate_passed": 66,
+      "trajectory_available": 427,
+      "selected_top1": 15,
+      "selected_top2": 26,
+      "hard_gate_pass_rate": 0.15456674473067916,
+      "mean_reward_score": 0.6485200776154956,
+      "mean_nll_advantage": -0.03621971695516949
+    }
+  }
+}
