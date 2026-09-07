@@ -12,6 +12,7 @@ from dataclasses import dataclass
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import subprocess
 from typing import Any, Iterable, Sequence
@@ -91,9 +92,14 @@ class Stage2OpenMOPDConfig:
         paths = [str(item.teacher_path) for item in self.teachers]
         if len(set(paths)) != len(paths):
             raise ValueError("The five Teacher checkpoint paths must be distinct")
-        if self.label_policy not in {"recorded_method", "pseudo_router_ablation"}:
+        if self.label_policy not in {
+            "recorded_method",
+            "stage1_handoff",
+            "pseudo_router_ablation",
+        }:
             raise ValueError(
-                "label_policy must be recorded_method or pseudo_router_ablation"
+                "label_policy must be recorded_method, stage1_handoff, "
+                "or pseudo_router_ablation"
             )
         if self.gpus < 1 or self.nodes != 1:
             raise ValueError("The local launcher requires gpus >= 1 and nodes == 1")
@@ -136,6 +142,9 @@ def validate_real_run(config: Stage2OpenMOPDConfig) -> dict[str, Any]:
     _validate_domain_counts(train_counts, "training")
     if set(val_counts) - set(EXPECTED_DOMAINS):
         raise ValueError(f"Unknown validation domains: {sorted(set(val_counts) - set(EXPECTED_DOMAINS))}")
+    handoff_report = None
+    if config.label_policy == "stage1_handoff":
+        handoff_report = validate_stage1_handoff(config.train_file)
     return {
         "open_mopd_launcher": str(launcher),
         "teacher_count": len(config.teachers),
@@ -143,6 +152,7 @@ def validate_real_run(config: Stage2OpenMOPDConfig) -> dict[str, Any]:
         "training_domain_counts": dict(train_counts),
         "validation_domain_counts": dict(val_counts),
         "label_policy": config.label_policy,
+        "stage1_handoff": handoff_report,
     }
 
 
@@ -218,6 +228,105 @@ def inspect_dataset_domains(path: str | Path) -> Counter[str]:
         table = pq.read_table(source, columns=["domain"])
         return Counter(str(value) for value in table.column("domain").to_pylist())
     raise ValueError(f"Unsupported dataset format: {source}")
+
+
+def validate_stage1_handoff(path: str | Path) -> dict[str, Any]:
+    """Validate the explicit Stage-1-to-Open-MOPD routing contract.
+
+    Verification status controls augmentation handling, while routing fields
+    control which frozen Teacher scores the next on-policy Student rollout.
+    They are intentionally validated as independent axes.
+    """
+
+    source = Path(path)
+    records = _read_handoff_records(source)
+    verification_counts: Counter[str] = Counter()
+    action_counts: Counter[str] = Counter()
+    expected_experts = {f"expert_{domain}" for domain in EXPECTED_DOMAINS}
+    expected_actions = {
+        "semantic_pass": "positive_augmentation",
+        "semantic_fail": "repair_or_negative",
+        "semantic_unverified": "unverified_pool",
+    }
+    for index, record in enumerate(records, start=1):
+        domain = _domain_of(record)
+        teacher_id = record.get("teacher_id")
+        if teacher_id != f"expert_{domain}":
+            raise ValueError(
+                f"Stage-1 record {index} has inconsistent domain/teacher_id: "
+                f"{domain!r}/{teacher_id!r}"
+            )
+        weights = record.get("teacher_weights")
+        if not isinstance(weights, dict) or set(weights) != expected_experts:
+            raise ValueError(f"Stage-1 record {index} has an invalid Teacher weight schema")
+        numeric_weights = {key: float(value) for key, value in weights.items()}
+        if not math.isclose(sum(numeric_weights.values()), 1.0, abs_tol=1e-8):
+            raise ValueError(f"Stage-1 record {index} Teacher weights must sum to one")
+        if not math.isclose(numeric_weights[teacher_id], 1.0, abs_tol=1e-8) or any(
+            not math.isclose(value, 0.0, abs_tol=1e-8)
+            for key, value in numeric_weights.items()
+            if key != teacher_id
+        ):
+            raise ValueError(f"Stage-1 record {index} must use a one-hot Teacher route")
+        if not isinstance(record.get("routing_source"), str) or not record["routing_source"]:
+            raise ValueError(f"Stage-1 record {index} is missing routing_source")
+        confidence = float(record.get("routing_confidence", float("nan")))
+        if not math.isfinite(confidence) or confidence < 0.0:
+            raise ValueError(f"Stage-1 record {index} has invalid routing_confidence")
+        verification = record.get("verification_status")
+        action = record.get("downstream_action")
+        if verification not in expected_actions:
+            raise ValueError(f"Stage-1 record {index} has invalid verification_status")
+        if action != expected_actions[verification]:
+            raise ValueError(
+                f"Stage-1 record {index} has inconsistent verification/action fields"
+            )
+        if record.get("opd_training_eligible") is not True:
+            raise ValueError(f"Stage-1 record {index} is not OPD-training eligible")
+        verification_counts[verification] += 1
+        action_counts[action] += 1
+    return {
+        "record_count": len(records),
+        "verification_status_distribution": dict(sorted(verification_counts.items())),
+        "downstream_action_distribution": dict(sorted(action_counts.items())),
+    }
+
+
+def convert_stage1_handoff_to_parquet(
+    input_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """Validate Stage-1 JSONL and write the Parquet expected by Open-MOPD."""
+
+    source = Path(input_path)
+    destination = Path(output_path)
+    if source.suffix.lower() not in {".jsonl", ".json"}:
+        raise ValueError("Stage-1 conversion input must be JSON or JSONL")
+    report = validate_stage1_handoff(source)
+    records = _read_json_records(source)
+    try:
+        import pyarrow as pa  # type: ignore
+        import pyarrow.parquet as pq  # type: ignore
+    except ImportError as exc:
+        raise RuntimeError("pyarrow is required to create Open-MOPD Parquet data") from exc
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.Table.from_pylist(records), destination)
+    validate_stage1_handoff(destination)
+    return {**report, "output_parquet": str(destination)}
+
+
+def _read_handoff_records(path: Path) -> list[dict[str, Any]]:
+    if path.suffix.lower() in {".jsonl", ".json"}:
+        return _read_json_records(path)
+    if path.suffix.lower() == ".parquet":
+        try:
+            import pyarrow.parquet as pq  # type: ignore
+        except ImportError as exc:
+            raise RuntimeError("pyarrow is required to validate Parquet handoff data") from exc
+        records = pq.read_table(path).to_pylist()
+        if not all(isinstance(record, dict) for record in records):
+            raise ValueError(f"Dataset must contain records: {path}")
+        return records
+    raise ValueError(f"Unsupported Stage-1 handoff format: {path}")
 
 
 def _read_json_records(path: Path) -> list[dict[str, Any]]:

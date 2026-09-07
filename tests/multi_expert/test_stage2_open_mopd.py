@@ -9,7 +9,9 @@ from code_rewrite_feedback_expander.multi_expert.stage2_open_mopd import (
     EXPECTED_DOMAINS,
     Stage2OpenMOPDConfig,
     build_open_mopd_command,
+    convert_stage1_handoff_to_parquet,
     inspect_dataset_domains,
+    validate_stage1_handoff,
     validate_real_run,
 )
 
@@ -71,6 +73,45 @@ class Stage2OpenMOPDTests(unittest.TestCase):
             raw["models"]["teachers"][1]["teacher_path"] = raw["models"]["teachers"][0]["teacher_path"]
             with self.assertRaisesRegex(ValueError, "distinct"):
                 Stage2OpenMOPDConfig.from_dict(raw)
+
+    def test_stage1_handoff_keeps_routing_and_verification_independent(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "handoff.jsonl"
+            rows = []
+            for index, domain in enumerate(EXPECTED_DOMAINS):
+                verification = "semantic_fail" if index == 0 else "semantic_pass"
+                rows.append(
+                    {
+                        "domain": domain,
+                        "teacher_id": f"expert_{domain}",
+                        "teacher_weights": {
+                            f"expert_{name}": float(name == domain)
+                            for name in EXPECTED_DOMAINS
+                        },
+                        "routing_source": "calibrated_same_trajectory_opd",
+                        "routing_confidence": 0.25,
+                        "verification_status": verification,
+                        "downstream_action": (
+                            "repair_or_negative"
+                            if verification == "semantic_fail"
+                            else "positive_augmentation"
+                        ),
+                        "opd_training_eligible": True,
+                    }
+                )
+            path.write_text(
+                "\n".join(json.dumps(row) for row in rows), encoding="utf-8"
+            )
+            report = validate_stage1_handoff(path)
+            self.assertEqual(5, report["record_count"])
+            self.assertEqual(
+                1, report["verification_status_distribution"]["semantic_fail"]
+            )
+            parquet_path = Path(temp) / "handoff.parquet"
+            converted = convert_stage1_handoff_to_parquet(path, parquet_path)
+            self.assertTrue(parquet_path.is_file())
+            self.assertEqual(5, converted["record_count"])
+            self.assertEqual(5, validate_stage1_handoff(parquet_path)["record_count"])
 
     def test_strict_preflight_accepts_five_distinct_compatible_checkpoints(self):
         with tempfile.TemporaryDirectory() as temp:

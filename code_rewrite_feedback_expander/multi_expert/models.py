@@ -87,6 +87,8 @@ class Stage1RecordResult:
     language: str
     assessments: List[ExpertAssessment]
     routing: RoutingDecision
+    verification_status: str
+    downstream_action: str
 
     def to_dict(self) -> Dict[str, Any]:
         selected = next(
@@ -94,7 +96,7 @@ class Stage1RecordResult:
             None,
         )
         return {
-            "schema_version": "stage1_multi_expert.v1",
+            "schema_version": "stage1_multi_expert.v2",
             "task_id": self.task_id,
             "prompt": self.prompt,
             "original_code": self.original_code,
@@ -103,6 +105,9 @@ class Stage1RecordResult:
             "pseudo_method_label": self.routing.pseudo_method_label,
             "domain": self.routing.pseudo_method_label,
             "selected_expert_id": self.routing.selected_expert_id,
+            "routing_confidence": self.routing.margin,
+            "verification_status": self.verification_status,
+            "downstream_action": self.downstream_action,
             "routing": asdict(self.routing),
             "expert_assessments": [item.to_dict() for item in self.assessments],
             "selected_candidate": (
@@ -119,6 +124,11 @@ class Stage1RecordResult:
                 "teacher_id": self.routing.selected_expert_id,
                 "teacher_weights": self.routing.expert_weights,
                 "routing_source": self.routing.routing_source,
+                "routing_confidence": self.routing.margin,
                 "usable_for_training": self.routing.usable_for_training,
+                "verification_status": self.verification_status,
+                "downstream_action": self.downstream_action,
+                "positive_augmentation_eligible": self.downstream_action
+                == "positive_augmentation",
             },
         }

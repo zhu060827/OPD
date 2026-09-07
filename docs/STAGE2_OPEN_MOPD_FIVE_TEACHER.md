@@ -72,6 +72,24 @@ contain all five canonical labels. Prefer labels recorded by the augmentation
 pipeline for the first formal baseline. Pseudo labels from Stage 1 are an
 explicit later ablation.
 
+When `method.label_policy=stage1_handoff`, preflight additionally validates the
+Stage-1 contract: `domain` must match `teacher_id`, Teacher weights must be
+one-hot, the routing source must be present, and verification status must agree
+with its downstream action. Semantic failure does not invalidate an OPD prompt;
+it only prevents the current completion from entering positive augmentation.
+This keeps routing and data-quality decisions separate without duplicating the
+five-expert implementation inside the official backend.
+Use `configs/stage2_open_mopd_from_stage1.example.json` for this path.
+
+Convert the validated Stage-1 JSONL to the Parquet consumed by the official
+launcher before preflight:
+
+```bash
+python scripts/prepare_stage2_handoff.py \
+  --input outputs/stage1_multi_expert/mt_opd_handoff.jsonl \
+  --output /root/autodl-tmp/data/mt_opd_handoff.parquet
+```
+
 The upstream route should follow this precedence: recorded augmentation label,
 then calibrated same-trajectory five-Teacher scoring for unlabeled records,
 then abstention/fallback for low-confidence cases. Open-MOPD itself still trains

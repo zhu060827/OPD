@@ -24,7 +24,7 @@ original project.
 
 ```text
 1. recorded method/domain label -> direct one-hot Teacher route
-2. unlabeled valid sample -> one shared completion scored by all five Teachers
+2. unlabeled sample -> one shared completion scored by all five Teachers
 3. low calibrated Top-1 margin -> abstain (or explicit configured fallback)
 ```
 
@@ -51,9 +51,21 @@ on-policy rollout. The Student model is reused by the scorer rather than loaded
 twice. Exact generated prompt/completion token IDs are retained and reused;
 decoded text is never re-tokenized as a substitute for the on-policy trajectory.
 
-Correctness is a hard constraint. A candidate that fails the gate receives zero
-routing weight regardless of its reward or NLL advantage. If every candidate
-fails, the sample is marked `no_valid_expert`; no label is fabricated.
+Routing and verification are independent axes in the canonical three-tier path.
+An incorrect Student completion is still a valid on-policy state, so semantic or
+unit-test failure does not suppress aligned five-Teacher scoring. Verification is
+recorded as `semantic_pass`, `semantic_fail`, or `semantic_unverified`; it never
+enters the calibrated advantage formula. Only a missing, non-finite, or
+alignment-invalid token trajectory blocks routing.
+
+Downstream handling remains conservative: `semantic_pass` can enter positive
+augmentation, `semantic_fail` goes to repair/negative-data handling, and samples
+without executable tests go to an unverified pool. Thus an incorrect completion
+can teach the OPD Student without being mislabeled as a correct augmentation.
+
+The legacy `heuristic_ablation` still treats semantic equivalence as a hard gate,
+because that policy compares independently generated rewrite candidates rather
+than scoring one on-policy Student trajectory.
 
 ### Legacy heuristic ablation
 
@@ -145,8 +157,8 @@ be reported as real MOPD evidence.
 - `resolved_config.json`: exact canonical configuration.
 - `run_manifest.json`: backend and formal-result status.
 
-The handoff records include `domain`, `teacher_id`, `teacher_weights`, and
-`routing_source`, matching
+The handoff records include `domain`, `teacher_id`, `teacher_weights`,
+`routing_source`, `verification_status`, and `downstream_action`, matching
 the routing concepts expected by Open-MOPD.
 
 ## Local-model GPU handoff
@@ -193,9 +205,10 @@ fit calibration on the evaluation split.
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-Tests cover configuration consistency, hard-gate behavior, recorded-label
-priority, one shared completion across five Teachers, robust calibration,
-low-confidence abstention, legacy ablation behavior, and the
+Tests cover configuration consistency, recorded-label priority, one shared
+completion across five Teachers, robust calibration, low-confidence abstention,
+semantic-failure routing without positive-augmentation leakage, missing-test
+handling, legacy hard-gate behavior, and the
 MT-OPD handoff schema. The handoff Student prompt is also checked for Teacher,
 route, and reference-code leakage.
 

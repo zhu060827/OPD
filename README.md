@@ -14,6 +14,7 @@ gap-following allocation 和 reward refresh 会作为显式训练参数传入。
 - [English Stage-2 guide](docs/STAGE2_OPEN_MOPD_FIVE_TEACHER.md)
 - [中文 Stage-2 说明](docs/STAGE2_OPEN_MOPD_FIVE_TEACHER.zh-CN.md)
 - 配置模板：`configs/stage2_open_mopd_five_teacher.example.json`
+- Stage 1 交接模板：`configs/stage2_open_mopd_from_stage1.example.json`
 
 `verl_example/opd.sh` 继续保留，仅作为单 Teacher 对照组。
 
@@ -24,6 +25,11 @@ gap-following allocation 和 reward refresh 会作为显式训练参数传入。
 completion 做对齐 OPD advantage 评分，经各 Teacher 独立校准后选 Top-1。
 Top-1/Top-2 差距太小时默认拒绝伪标签。原先固定权重的 Reward+advantage
 逻辑仍保留为 `heuristic_ablation`，不再是默认方案。
+
+当前正式接口已将 Teacher 路由与代码验证拆开：语义失败的 Student 错误轨迹仍可由
+五个 Teacher 评分并进入 OPD handoff，但会标记为 `repair_or_negative`，不会进入正向
+扩增；无测试样本进入 `unverified_pool`。Stage 2 可用 `stage1_handoff` 策略严格验证
+one-hot Teacher 路由和这些质量字段，然后交给官方 `multi/mt_opd`。
 
 - [English design and run guide](docs/STAGE1_MULTI_EXPERT.md)
 - [中文设计与运行说明](docs/STAGE1_MULTI_EXPERT.zh-CN.md)

@@ -49,7 +49,10 @@ class MultiExpertRouter:
         if selected is None:
             raise ValueError(f"No assessment was produced for recorded expert {expert_id}")
         weights = {key: float(key == expert_id) for key in self.expert_order}
-        usable = selected.gate.passed and selected.trajectory.available
+        # A recorded route is independent of whether the current Student
+        # completion is correct.  Incorrect on-policy trajectories are valid OPD
+        # training states; only missing/alignment-invalid trajectories block it.
+        usable = selected.trajectory.available
         return RoutingDecision(
             status="recorded_label" if usable else "recorded_label_invalid",
             pseudo_method_label=selected.strategy if usable else None,
@@ -61,13 +64,15 @@ class MultiExpertRouter:
             reason=(
                 "Used the augmentation provenance label; no Teacher selection was inferred."
                 if usable
-                else "The recorded route failed correctness or aligned-trajectory validation."
+                else "The recorded route had no valid aligned token trajectory."
             ),
             routing_source="recorded_method_label",
         )
 
     def _route_calibrated_opd(self, assessments: List[ExpertAssessment]) -> RoutingDecision:
-        eligible = [item for item in assessments if item.gate.passed and item.trajectory.available]
+        # Semantic correctness is recorded separately from Teacher routing.
+        # Every Teacher must score the same available Student trajectory.
+        eligible = [item for item in assessments if item.trajectory.available]
         if not eligible:
             return self._no_valid(assessments)
         for item in eligible:
@@ -226,7 +231,7 @@ class MultiExpertRouter:
             selected_expert_id=None,
             expert_weights={key: 0.0 for key in self.expert_order},
             usable_for_training=False,
-            reason="No candidate passed both the code hard gate and trajectory scoring.",
+            reason="No expert produced a valid aligned token trajectory.",
             routing_source="none",
         )
 

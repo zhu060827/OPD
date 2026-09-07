@@ -100,7 +100,16 @@ class MultiExpertStage1Pipeline:
             candidate=quality,
             changed=changed,
         )
-        if gate.passed or self.config.gate.score_failed_candidates:
+        # Canonical OPD routing must observe the Student's current trajectory,
+        # including incorrect trajectories.  Semantic verification is therefore
+        # audit metadata in three-tier mode; it remains a hard feasibility gate
+        # for the legacy candidate-generation ablation.
+        should_score_trajectory = (
+            self.config.routing.policy == "three_tier"
+            or gate.passed
+            or self.config.gate.score_failed_candidates
+        )
+        if should_score_trajectory:
             try:
                 trajectory = summarize_trajectory(
                     self.trajectory_scorer.score(expert, record, candidate)
@@ -122,6 +131,12 @@ class MultiExpertStage1Pipeline:
 
     @staticmethod
     def _result(record, assessments, decision) -> Stage1RecordResult:
+        selected = next(
+            (item for item in assessments if item.expert_id == decision.selected_expert_id),
+            assessments[0] if assessments else None,
+        )
+        verification_status = _verification_status(selected, tests_present=bool(record.tests))
+        downstream_action = _downstream_action(decision, verification_status)
         return Stage1RecordResult(
             task_id=record.task_id,
             prompt=record.prompt,
@@ -130,4 +145,37 @@ class MultiExpertStage1Pipeline:
             language=record.language,
             assessments=assessments,
             routing=decision,
+            verification_status=verification_status,
+            downstream_action=downstream_action,
         )
+
+
+def _verification_status(
+    assessment: ExpertAssessment | None, tests_present: bool
+) -> str:
+    if assessment is None:
+        return "semantic_unverified"
+    semantic = assessment.semantic_result
+    metrics = {
+        str(item.get("name")): float(item.get("score", 0.0))
+        for item in semantic.get("scores", [])
+        if isinstance(item, dict)
+    }
+    structural_checks = ("ast_parse", "signature_consistency", "safety", "compile_pass_rate")
+    if any(metrics.get(name, 0.0) < 0.99 for name in structural_checks):
+        return "semantic_fail"
+    if not tests_present:
+        return "semantic_unverified"
+    if metrics.get("unit_test_pass_rate", 0.0) < 0.99:
+        return "semantic_fail"
+    return "semantic_pass"
+
+
+def _downstream_action(decision, verification_status: str) -> str:
+    if not decision.usable_for_training:
+        return "abstained_pool"
+    if verification_status == "semantic_pass":
+        return "positive_augmentation"
+    if verification_status == "semantic_fail":
+        return "repair_or_negative"
+    return "unverified_pool"

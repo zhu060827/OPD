@@ -16,7 +16,7 @@
 
 ```text
 1. 有 method/domain/rewrite_method 来源标签：直接 one-hot 路由
-2. 无标签且通过正确性门控：五个 Teacher 评分同一条 completion
+2. 无标签样本：五个 Teacher 评分同一条 completion
 3. 校准后 Top-1/Top-2 差距过小：拒绝伪标签（或使用明确配置的 fallback）
 ```
 
@@ -37,6 +37,17 @@ route = argmax_e calibrated_advantage_e
 ```
 
 校准可防止某个 Teacher 仅因概率尺度或锐度不同而长期占据路由。
+
+正式三级流程将 Teacher 路由与代码验证拆成两个独立维度。Student 当前回答即使未通过
+语义检查或单元测试，仍是有价值的 on-policy 错误轨迹；只要 token 对齐有效，五个
+Teacher 就会继续评分。验证结果单独记录为 `semantic_pass`、`semantic_fail` 或
+`semantic_unverified`，不会与 advantage 加权混合。只有 token 轨迹缺失、非有限或
+对齐失败才阻断路由。
+
+后续数据按质量状态分流：通过验证的样本进入 `positive_augmentation`，失败样本进入
+`repair_or_negative`，无可执行测试的样本进入 `unverified_pool`。因此错误轨迹可以用于
+OPD 学习，但不会被冒充成正确增强答案。旧 `heuristic_ablation` 比较的是五个独立生成
+的改写候选，所以仍保留语义硬门控。
 
 ## 旧启发式消融
 
@@ -107,7 +118,8 @@ Mock 模式只用于验证五专家流程和输出 schema，所有输出都明�
 ## 输出文件
 
 - `routing_labels.jsonl`：五个专家的完整候选、门控和评分证据；
-- `mt_opd_handoff.jsonl`：仅包含可进入下一阶段训练的样本；
+- `mt_opd_handoff.jsonl`：包含路由可用的样本，并明确记录
+  `verification_status`、`downstream_action`、OPD 训练资格和正向扩增资格；
 - `summary.json`：标签、门控和各专家汇总；
 - `resolved_config.json`：本次实际使用的完整配置；
 - `run_manifest.json`：后端类型与结果性质。
@@ -140,8 +152,9 @@ python -m code_rewrite_feedback_expander.multi_expert fit-calibration \
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-测试覆盖统一配置、正确性硬门控、已有标签优先、五 Teacher 共享同一 completion、
-稳健校准、低置信度拒绝、旧启发式消融、Top-1、Top-2 诊断，
+测试覆盖统一配置、已有标签优先、五 Teacher 共享同一 completion、语义失败轨迹仍评分、
+失败样本不进入正向扩增、缺少测试时进入 unverified、稳健校准、低置信度拒绝、
+旧启发式硬门控、Top-1、Top-2 诊断，
 无有效专家处理、Student prompt 中无 Teacher/路由/参考答案泄漏，以及 MT-OPD 交接
 schema。
 

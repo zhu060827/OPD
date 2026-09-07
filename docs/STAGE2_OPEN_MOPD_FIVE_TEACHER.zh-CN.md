@@ -44,3 +44,17 @@ bash scripts/run_stage2_open_mopd.sh \
 更新后的上游路由顺序是：已记录 method 标签 > 无标签样本的同轨迹五 Teacher
 校准评分 > 低置信度拒绝/fallback。Open-MOPD 本身仍只接收最终 hard domain
 标签，不使用路由层的 Top-2 诊断权重。
+
+如果设置 `method.label_policy=stage1_handoff`，预检还会严格验证 Stage 1 接口：
+`domain` 必须与 `teacher_id` 一致，五 Teacher 权重必须是 one-hot，必须保留
+`routing_source`，且 `verification_status` 必须与 `downstream_action` 匹配。
+语义失败不会取消样本的 OPD 路由资格，只会阻止当前错误 completion 进入正向扩增。
+这样无需复制第二套 5experts 文件夹，就能自然连接 Stage 1 与正式 `multi/mt_opd`。
+该路径使用 `configs/stage2_open_mopd_from_stage1.example.json` 模板。
+正式启动前先把 Stage 1 JSONL 转换成官方训练入口使用的 Parquet：
+
+```bash
+python scripts/prepare_stage2_handoff.py \
+  --input outputs/stage1_multi_expert/mt_opd_handoff.jsonl \
+  --output /root/autodl-tmp/data/mt_opd_handoff.parquet
+```

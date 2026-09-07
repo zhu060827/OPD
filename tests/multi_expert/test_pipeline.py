@@ -74,6 +74,20 @@ class ScriptedScorer(ExpertTrajectoryScorer):
         )
 
 
+class BrokenStudentScorer(ScriptedScorer):
+    def generate_student_completion(self, record, max_new_tokens):
+        self.generation_calls = getattr(self, "generation_calls", 0) + 1
+        code = "def add(a, b):\n    return a - b"
+        return RewriteCandidate(
+            code=code,
+            reasoning=[],
+            rationale="incorrect scripted Student rollout",
+            strategy="shared_trajectory",
+            raw_response=code,
+            metadata={"shared_across_teachers": True},
+        )
+
+
 def sample_record():
     return CodeRecord(
         task_id="add",
@@ -117,8 +131,13 @@ class MultiExpertPipelineTests(unittest.TestCase):
         self.assertIsNotNone(handoff)
         self.assertEqual("ast", handoff["domain"])
         self.assertEqual("expert_ast", handoff["teacher_id"])
+        self.assertEqual(result.routing.margin, handoff["routing_confidence"])
         self.assertAlmostEqual(1.0, sum(handoff["teacher_weights"].values()))
         self.assertEqual(sample_record().tests, handoff["reward_model"]["ground_truth"]["tests"])
+        self.assertEqual("semantic_pass", handoff["verification_status"])
+        self.assertEqual("positive_augmentation", handoff["downstream_action"])
+        self.assertTrue(handoff["opd_training_eligible"])
+        self.assertTrue(handoff["positive_augmentation_eligible"])
 
     def test_handoff_student_prompt_contains_no_teacher_or_reference_information(self):
         raw = valid_raw_config()
@@ -176,6 +195,37 @@ class MultiExpertPipelineTests(unittest.TestCase):
         self.assertEqual(5, len(scorer.calls))
         self.assertEqual({VALID_CODES["style"]}, {code for _, code in scorer.calls})
         self.assertTrue(result.routing.usable_for_training)
+
+    def test_semantic_failure_is_scored_but_separated_from_positive_augmentation(self):
+        raw = valid_raw_config()
+        raw["routing"] = {
+            **three_tier_routing(),
+            "shared_completion_source": "student_generate",
+        }
+        scorer = BrokenStudentScorer()
+        result = MultiExpertStage1Pipeline(
+            Stage1Config.from_dict(raw), ScriptedGenerator(), scorer
+        ).process(sample_record())
+        self.assertEqual(5, len(scorer.calls))
+        self.assertEqual("expert_ast", result.routing.selected_expert_id)
+        self.assertTrue(result.routing.usable_for_training)
+        self.assertEqual("semantic_fail", result.verification_status)
+        self.assertEqual("repair_or_negative", result.downstream_action)
+        handoff = build_mt_opd_handoff(result)
+        self.assertIsNotNone(handoff)
+        self.assertFalse(handoff["positive_augmentation_eligible"])
+
+    def test_missing_tests_are_unverified_instead_of_dropped(self):
+        raw = valid_raw_config()
+        raw["routing"] = three_tier_routing()
+        record = sample_record()
+        record.tests = []
+        result = MultiExpertStage1Pipeline(
+            Stage1Config.from_dict(raw), ScriptedGenerator(), ScriptedScorer()
+        ).process(record)
+        self.assertTrue(result.routing.usable_for_training)
+        self.assertEqual("semantic_unverified", result.verification_status)
+        self.assertEqual("unverified_pool", result.downstream_action)
 
 
 def three_tier_routing():
