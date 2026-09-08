@@ -1,0 +1,10 @@
+{
+  "description": "MBPP comparison A: natural sampling without domain balancing",
+  "extends": "stage2_open_mopd_from_stage1.example.json",
+  "method_overrides": {
+    "prompt_sampling_balance": false,
+    "token_share_balance": false,
+    "reward_scale_balance": false,
+    "gap_following_alpha": 0.0
+  }
+}

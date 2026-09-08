@@ -43,6 +43,7 @@ from verl.single_controller.ray.base import create_colocated_worker_cls
 from verl.trainer.config import AlgoConfig
 from verl.trainer.ppo import core_algos
 from verl.trainer.ppo.core_algos import AdvantageEstimator, agg_loss
+from verl.trainer.ppo.domain_balance import apply_domain_token_balance
 from verl.trainer.ppo.metric_utils import (
     compute_data_metrics,
     compute_throughout_metrics,
@@ -521,7 +522,20 @@ class RayPPOTrainer:
         self.validation_generations_logger.log(self.config.trainer.logger, samples, self.global_steps)
 
     def _get_gen_batch(self, batch: DataProto) -> DataProto:
-        reward_model_keys = set({"data_source", "reward_model", "extra_info", "uid"}) & batch.non_tensor_batch.keys()
+        # Preserve routing metadata on the driver-side batch. It is repeated in
+        # lockstep with rollout.n and later consumed by routed OPD balancing.
+        reward_model_keys = set(
+            {
+                "data_source",
+                "reward_model",
+                "extra_info",
+                "uid",
+                "domain",
+                "teacher_id",
+                "routing_confidence",
+                "routing_loss_weight",
+            }
+        ) & batch.non_tensor_batch.keys()
 
         # pop those keys for generation
         batch_keys_to_pop = ["input_ids", "attention_mask", "position_ids"]
@@ -1385,6 +1399,17 @@ class RayPPOTrainer:
                             num_repeat=self.config.actor_rollout_ref.rollout.n,
                             norm_adv_by_std_in_grpo=norm_adv_by_std_in_grpo,
                             config=self.config.algorithm,
+                        )
+
+                        # Project extension: balance hard-routed expert domains by
+                        # their actual valid response-token contribution.  This is
+                        # OPD-only weighting; it does not introduce an SFT stage.
+                        if not hasattr(self, "_domain_reward_ema"):
+                            self._domain_reward_ema = {}
+                        metrics.update(
+                            apply_domain_token_balance(
+                                batch, self.config.algorithm, self._domain_reward_ema
+                            )
                         )
  
 

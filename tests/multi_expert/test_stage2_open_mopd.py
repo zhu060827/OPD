@@ -11,6 +11,7 @@ from code_rewrite_feedback_expander.multi_expert.stage2_open_mopd import (
     build_open_mopd_command,
     convert_stage1_handoff_to_parquet,
     inspect_dataset_domains,
+    load_stage2_config,
     validate_stage1_handoff,
     validate_real_run,
 )
@@ -28,15 +29,32 @@ def raw_config(root: Path) -> dict:
         "runtime": {"gpus": 1, "nodes": 1},
         "method": {
             "label_policy": "recorded_method",
+            "prompt_sampling_balance": True,
+            "token_share_balance": True,
+            "reward_scale_balance": True,
             "target_gradient_shares": {domain: 0.2 for domain in EXPECTED_DOMAINS},
             "gap_following_alpha": 1.0,
             "reward_refresh": True,
+            "use_sft": False,
+            "token_balance_min_weight": 0.05,
+            "token_balance_max_weight": 20.0,
+            "reward_ema_decay": 0.9,
             "conflict_policy": "none",
         },
     }
 
 
 class Stage2OpenMOPDTests(unittest.TestCase):
+    def test_comparison_config_extends_full_stage2_config(self):
+        config = load_stage2_config(
+            Path(__file__).resolve().parents[2]
+            / "configs/stage2_mbpp_ablation_natural.json"
+        )
+        self.assertFalse(config.prompt_sampling_balance)
+        self.assertTrue(config.token_share_balance)
+        self.assertTrue(config.reward_scale_balance)
+        self.assertEqual("stage1_handoff", config.label_policy)
+
     def test_requires_exactly_five_ordered_real_teacher_slots(self):
         with tempfile.TemporaryDirectory() as temp:
             raw = raw_config(Path(temp))
@@ -52,10 +70,54 @@ class Stage2OpenMOPDTests(unittest.TestCase):
             self.assertEqual(5, command.count("--teacher"))
             self.assertIn("--domains cot,style,ast,variable,control_flow", rendered)
             self.assertIn("domain_weighting=domain_routing", rendered)
-            self.assertIn("target_share_values=[0.2,0.2,0.2,0.2,0.2]", rendered)
-            self.assertIn("reward_scale_direction=multiply", rendered)
+            self.assertIn("domain_balanced_sampler", rendered)
+            self.assertIn("data.sampler.target_shares=[0.2,0.2,0.2,0.2,0.2]", rendered)
+            self.assertIn("algorithm.domain_balance.enabled=true", rendered)
+            self.assertIn("algorithm.domain_balance.min_weight=0.05", rendered)
+            self.assertIn("algorithm.domain_balance.max_weight=20", rendered)
+            self.assertIn("algorithm.domain_balance.reward_scale_alpha=1", rendered)
+            self.assertIn("algorithm.domain_balance.reward_ema_decay=0.9", rendered)
+            self.assertNotIn("normalize_reward_scale", rendered)
+            self.assertNotIn("sample_weight_field", rendered)
             self.assertIn("opd_refresh_advantage=true", rendered)
             self.assertEqual("--run", command[-1])
+
+    def test_natural_sampling_ablation_does_not_load_custom_sampler(self):
+        with tempfile.TemporaryDirectory() as temp:
+            raw = raw_config(Path(temp))
+            raw["method"]["prompt_sampling_balance"] = False
+            command = build_open_mopd_command(Stage2OpenMOPDConfig.from_dict(raw))
+            rendered = " ".join(command)
+            self.assertIn("data.shuffle=true", rendered)
+            self.assertNotIn("domain_balanced_sampler", rendered)
+            self.assertIn("algorithm.domain_balance.enabled=true", rendered)
+
+    def test_plain_opd_ablation_disables_all_domain_loss_balance(self):
+        with tempfile.TemporaryDirectory() as temp:
+            raw = raw_config(Path(temp))
+            raw["method"].update(
+                prompt_sampling_balance=False,
+                token_share_balance=False,
+                reward_scale_balance=False,
+            )
+            rendered = " ".join(
+                build_open_mopd_command(Stage2OpenMOPDConfig.from_dict(raw))
+            )
+            self.assertIn("data.shuffle=true", rendered)
+            self.assertIn("algorithm.domain_balance.enabled=false", rendered)
+
+    def test_rejects_sft_and_routing_confidence_loss_weighting(self):
+        with tempfile.TemporaryDirectory() as temp:
+            raw = raw_config(Path(temp))
+            raw["method"]["use_sft"] = True
+            with self.assertRaisesRegex(ValueError, "OPD-only"):
+                Stage2OpenMOPDConfig.from_dict(raw)
+
+            raw = raw_config(Path(temp))
+            raw["method"]["use_routing_loss_weight"] = True
+            config = Stage2OpenMOPDConfig.from_dict(raw)
+            with self.assertRaisesRegex(ValueError, "intentionally disabled"):
+                build_open_mopd_command(config)
 
     def test_dataset_domain_validation_reads_real_labels(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -90,6 +152,7 @@ class Stage2OpenMOPDTests(unittest.TestCase):
                         },
                         "routing_source": "calibrated_same_trajectory_opd",
                         "routing_confidence": 0.25,
+                        "routing_loss_weight": 0.5,
                         "verification_status": verification,
                         "downstream_action": (
                             "repair_or_negative"
@@ -107,6 +170,10 @@ class Stage2OpenMOPDTests(unittest.TestCase):
             self.assertEqual(
                 1, report["verification_status_distribution"]["semantic_fail"]
             )
+            try:
+                import pyarrow  # type: ignore  # noqa: F401
+            except ImportError:
+                self.skipTest("pyarrow is not installed")
             parquet_path = Path(temp) / "handoff.parquet"
             converted = convert_stage1_handoff_to_parquet(path, parquet_path)
             self.assertTrue(parquet_path.is_file())

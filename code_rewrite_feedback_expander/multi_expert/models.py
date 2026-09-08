@@ -76,6 +76,7 @@ class RoutingDecision:
     reason: str = ""
     router_design: str = "three_tier_recorded_label_then_calibrated_opd"
     routing_source: str = ""
+    opd_sample_weight: float = 1.0
 
 
 @dataclass

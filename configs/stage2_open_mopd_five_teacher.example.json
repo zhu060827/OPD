@@ -26,6 +26,9 @@
   },
   "method": {
     "label_policy": "recorded_method",
+    "prompt_sampling_balance": true,
+    "token_share_balance": true,
+    "reward_scale_balance": true,
     "target_gradient_shares": {
       "cot": 0.2,
       "style": 0.2,
@@ -33,8 +36,13 @@
       "variable": 0.2,
       "control_flow": 0.2
     },
-    "gap_following_alpha": 1.0,
+    "gap_following_alpha": 0.5,
+    "reward_ema_decay": 0.9,
     "reward_refresh": true,
+    "use_sft": false,
+    "use_routing_loss_weight": false,
+    "token_balance_min_weight": 0.05,
+    "token_balance_max_weight": 20.0,
     "conflict_policy": "none"
   },
   "extra_overrides": [

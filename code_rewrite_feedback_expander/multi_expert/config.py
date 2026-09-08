@@ -49,6 +49,10 @@ class RoutingConfig:
     minimum_margin: float = 0.05
     abstain_on_low_confidence: bool = False
     fallback_expert_id: str | None = None
+    fallback_on_missing_trajectory: bool = False
+    missing_trajectory_fallback_policy: str = "fixed"
+    minimum_opd_sample_weight: float = 0.25
+    fallback_opd_sample_weight: float = 0.10
 
 
 @dataclass(frozen=True)
@@ -131,6 +135,19 @@ class Stage1Config:
             raise ValueError("routing.recorded_label_fields must not be empty")
         if self.routing.fallback_expert_id not in {None, *expert_ids}:
             raise ValueError("routing.fallback_expert_id must name an enabled expert")
+        if self.routing.fallback_on_missing_trajectory and not self.routing.fallback_expert_id:
+            if self.routing.missing_trajectory_fallback_policy == "fixed":
+                raise ValueError(
+                    "fixed missing-trajectory fallback requires routing.fallback_expert_id"
+                )
+        if self.routing.missing_trajectory_fallback_policy not in {"fixed", "balanced_hash"}:
+            raise ValueError(
+                "missing_trajectory_fallback_policy must be fixed or balanced_hash"
+            )
+        if not 0.0 < self.routing.minimum_opd_sample_weight <= 1.0:
+            raise ValueError("minimum_opd_sample_weight must be in (0, 1]")
+        if not 0.0 < self.routing.fallback_opd_sample_weight <= 1.0:
+            raise ValueError("fallback_opd_sample_weight must be in (0, 1]")
         if self.routing.policy == "three_tier":
             missing = set(expert_ids) - set(self.routing.calibration)
             if missing:

@@ -61,7 +61,11 @@ class MultiExpertStage1Pipeline:
             self._assess(expert, record, shared_candidate, require_change=False)
             for expert in experts
         ]
-        decision = self.router.route(assessments, recorded_expert_id=recorded_expert_id)
+        decision = self.router.route(
+            assessments,
+            recorded_expert_id=recorded_expert_id,
+            routing_key=record.task_id,
+        )
         return self._result(record, assessments, decision)
 
     def _process_heuristic_ablation(self, record: CodeRecord) -> Stage1RecordResult:
@@ -70,7 +74,7 @@ class MultiExpertStage1Pipeline:
             candidate = self.generator.generate(expert, record)
             assessments.append(self._assess(expert, record, candidate, require_change=True))
 
-        decision = self.router.route(assessments)
+        decision = self.router.route(assessments, routing_key=record.task_id)
         return self._result(record, assessments, decision)
 
     def _assess(self, expert, record, candidate, require_change: bool) -> ExpertAssessment:

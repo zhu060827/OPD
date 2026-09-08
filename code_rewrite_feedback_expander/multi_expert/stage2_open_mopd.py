@@ -1,8 +1,10 @@
-"""Validated five-Teacher launcher for the official Open-MOPD backend.
+"""Validated five-Teacher, no-SFT launcher for the project Open-MOPD backend.
 
 This module does not emulate MT-OPD.  It validates five real local Teacher
 checkpoints and delegates execution to a pinned checkout of Open-MOPD's
-``scripts/local/mt_opd.sh`` entry point.
+``scripts/local/mt_opd.sh`` entry point. Domain balancing is wired through
+real verl sampler and trainer extension points rather than unused ``mt_opd``
+Hydra placeholders.
 """
 
 from __future__ import annotations
@@ -45,6 +47,14 @@ class Stage2OpenMOPDConfig:
     reward_refresh: bool
     conflict_policy: str
     extra_overrides: tuple[str, ...]
+    use_routing_loss_weight: bool
+    use_sft: bool
+    token_balance_min_weight: float
+    token_balance_max_weight: float
+    reward_ema_decay: float
+    prompt_sampling_balance: bool
+    token_share_balance: bool
+    reward_scale_balance: bool
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "Stage2OpenMOPDConfig":
@@ -78,6 +88,14 @@ class Stage2OpenMOPDConfig:
             reward_refresh=bool(method.get("reward_refresh", True)),
             conflict_policy=str(method.get("conflict_policy", "none")),
             extra_overrides=tuple(str(value) for value in raw.get("extra_overrides", [])),
+            use_routing_loss_weight=bool(method.get("use_routing_loss_weight", False)),
+            use_sft=bool(method.get("use_sft", False)),
+            token_balance_min_weight=float(method.get("token_balance_min_weight", 0.05)),
+            token_balance_max_weight=float(method.get("token_balance_max_weight", 20.0)),
+            reward_ema_decay=float(method.get("reward_ema_decay", 0.9)),
+            prompt_sampling_balance=bool(method.get("prompt_sampling_balance", True)),
+            token_share_balance=bool(method.get("token_share_balance", True)),
+            reward_scale_balance=bool(method.get("reward_scale_balance", True)),
         )
         config.validate_static()
         return config
@@ -113,6 +131,12 @@ class Stage2OpenMOPDConfig:
             raise ValueError("gap_following_alpha must be in [0, 2]")
         if self.conflict_policy not in {"none", "mask", "consensus"}:
             raise ValueError("conflict_policy must be none, mask, or consensus")
+        if self.use_sft:
+            raise ValueError("This project is OPD-only: method.use_sft must be false")
+        if not 0.0 < self.token_balance_min_weight <= self.token_balance_max_weight:
+            raise ValueError("token balance requires 0 < min_weight <= max_weight")
+        if not 0.0 <= self.reward_ema_decay < 1.0:
+            raise ValueError("reward_ema_decay must be in [0, 1)")
 
 
 def load_stage2_config(path: str | Path) -> Stage2OpenMOPDConfig:
@@ -120,6 +144,22 @@ def load_stage2_config(path: str | Path) -> Stage2OpenMOPDConfig:
     raw = json.loads(source.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise ValueError("Stage-2 config must be a JSON object")
+    if "extends" in raw:
+        parent_path = Path(str(raw["extends"]))
+        if not parent_path.is_absolute():
+            parent_path = source.parent / parent_path
+        parent = json.loads(parent_path.read_text(encoding="utf-8"))
+        if not isinstance(parent, dict):
+            raise ValueError("Extended Stage-2 config must be a JSON object")
+        merged = dict(parent)
+        merged["method"] = {
+            **dict(parent.get("method", {})),
+            **dict(raw.get("method_overrides", {})),
+        }
+        for key, value in raw.items():
+            if key not in {"extends", "method_overrides", "description"}:
+                merged[key] = value
+        raw = merged
     return Stage2OpenMOPDConfig.from_dict(raw)
 
 
@@ -162,6 +202,7 @@ def build_open_mopd_command(
     launcher = config.open_mopd_root / "scripts" / "local" / "mt_opd.sh"
     domains = ",".join(EXPECTED_DOMAINS)
     shares = _hydra_list(config.target_gradient_shares)
+    quoted_domains = "[" + ",".join(EXPECTED_DOMAINS) + "]"
     command = [
         "bash",
         str(launcher),
@@ -187,26 +228,56 @@ def build_open_mopd_command(
             "--extra",
             "+mt_opd.domain_weighting=domain_routing",
             "--extra",
-            f"+mt_opd.target_share_domains=[{domains}]",
+            f"+algorithm.domain_balance.enabled={str(config.token_share_balance or config.reward_scale_balance).lower()}",
             "--extra",
-            f"+mt_opd.target_share_values={shares}",
+            f"+algorithm.domain_balance.domains={quoted_domains}",
             "--extra",
-            f"+mt_opd.normalize_reward_scale={config.gap_following_alpha}",
+            f"+algorithm.domain_balance.target_shares={shares}",
             "--extra",
-            "+mt_opd.reward_scale_direction=multiply",
+            f"+algorithm.domain_balance.min_weight={config.token_balance_min_weight:g}",
             "--extra",
-            "+mt_opd.reward_scale_stat=mean",
+            f"+algorithm.domain_balance.max_weight={config.token_balance_max_weight:g}",
             "--extra",
-            "+mt_opd.reward_scale_anchored=false",
+            f"+algorithm.domain_balance.reward_scale_alpha={config.gap_following_alpha:g}",
             "--extra",
-            f"+mt_opd.conflict_policy={config.conflict_policy}",
+            f"+algorithm.domain_balance.reward_ema_decay={config.reward_ema_decay:g}",
+            "--extra",
+            f"+algorithm.domain_balance.token_share_enabled={str(config.token_share_balance).lower()}",
+            "--extra",
+            f"+algorithm.domain_balance.reward_scale_enabled={str(config.reward_scale_balance).lower()}",
             "--extra",
             "actor_rollout_ref.actor.opd_refresh_advantage="
             + str(config.reward_refresh).lower(),
         ]
     )
+    if config.prompt_sampling_balance:
+        command.extend(
+            [
+                "--extra",
+                "data.shuffle=false",
+                "--extra",
+                "data.dataloader_num_workers=0",
+                "--extra",
+                "data.sampler.class_path=pkg://verl.experimental.dataset.domain_balanced_sampler",
+                "--extra",
+                "data.sampler.class_name=DomainBalancedSampler",
+                "--extra",
+                "+data.sampler.domain_key=domain",
+                "--extra",
+                f"+data.sampler.domains={quoted_domains}",
+                "--extra",
+                f"+data.sampler.target_shares={shares}",
+            ]
+        )
+    else:
+        command.extend(["--extra", "data.shuffle=true"])
     for override in config.extra_overrides:
         command.extend(["--extra", override])
+    if config.use_routing_loss_weight:
+        raise ValueError(
+            "routing confidence weighting is intentionally disabled for the first "
+            "formal experiment; domain token balancing is the only loss reweighting"
+        )
     if execute:
         command.append("--run")
     return command
@@ -273,6 +344,9 @@ def validate_stage1_handoff(path: str | Path) -> dict[str, Any]:
         confidence = float(record.get("routing_confidence", float("nan")))
         if not math.isfinite(confidence) or confidence < 0.0:
             raise ValueError(f"Stage-1 record {index} has invalid routing_confidence")
+        loss_weight = float(record.get("routing_loss_weight", float("nan")))
+        if not math.isfinite(loss_weight) or not 0.0 < loss_weight <= 1.0:
+            raise ValueError(f"Stage-1 record {index} has invalid routing_loss_weight")
         verification = record.get("verification_status")
         action = record.get("downstream_action")
         if verification not in expected_actions:

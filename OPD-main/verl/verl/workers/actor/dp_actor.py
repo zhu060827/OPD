@@ -753,6 +753,11 @@ class DataParallelPPOActor(BasePPOActor):
 
         if "format_mask" in data.batch.keys():
             select_keys.append("format_mask") # (bsz, 1)
+
+        # Kept for domain-balance diagnostics; advantages already contain the
+        # effective-token loss scaling applied by the trainer.
+        if "domain_loss_weight" in data.batch.keys():
+            select_keys.append("domain_loss_weight")
         
         # Include student_top_k_log_probs if present (for top-k distillation)
         if "student_top_k_log_probs" in data.batch.keys():

@@ -79,7 +79,11 @@
     "top_k": 2,
     "softmax_temperature": 0.2,
     "minimum_margin": 0.05,
-    "abstain_on_low_confidence": true,
-    "fallback_expert_id": null
+    "abstain_on_low_confidence": false,
+    "fallback_expert_id": null,
+    "fallback_on_missing_trajectory": true,
+    "missing_trajectory_fallback_policy": "balanced_hash",
+    "minimum_opd_sample_weight": 0.25,
+    "fallback_opd_sample_weight": 0.10
   }
 }

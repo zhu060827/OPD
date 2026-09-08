@@ -1,0 +1,11 @@
+{
+  "description": "MBPP main method C: quota sampling plus token/reward balancing",
+  "extends": "stage2_open_mopd_from_stage1.example.json",
+  "method_overrides": {
+    "prompt_sampling_balance": true,
+    "token_share_balance": true,
+    "reward_scale_balance": true,
+    "gap_following_alpha": 0.5,
+    "reward_ema_decay": 0.9
+  }
+}

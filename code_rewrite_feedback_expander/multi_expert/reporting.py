@@ -84,9 +84,12 @@ def build_mt_opd_handoff(result: Stage1RecordResult) -> Dict[str, Any] | None:
         "teacher_weights": result.routing.expert_weights,
         "routing_source": result.routing.routing_source,
         "routing_confidence": result.routing.margin,
+        "routing_loss_weight": result.routing.opd_sample_weight,
         "verification_status": result.verification_status,
         "downstream_action": result.downstream_action,
         "opd_training_eligible": result.routing.usable_for_training,
+        "requires_stage2_rescore": result.routing.status
+        == "fallback_missing_trajectory",
         "positive_augmentation_eligible": result.downstream_action
         == "positive_augmentation",
         "reward_model": {

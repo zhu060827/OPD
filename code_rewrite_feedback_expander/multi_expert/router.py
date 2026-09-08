@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import hashlib
 from typing import Iterable, List
 
 from .config import RoutingConfig
@@ -35,12 +36,13 @@ class MultiExpertRouter:
         self,
         assessments: List[ExpertAssessment],
         recorded_expert_id: str | None = None,
+        routing_key: str = "",
     ) -> RoutingDecision:
         if recorded_expert_id is not None:
             return self._route_recorded_label(assessments, recorded_expert_id)
         if self.config.policy == "heuristic_ablation":
             return self._route_heuristic_ablation(assessments)
-        return self._route_calibrated_opd(assessments)
+        return self._route_calibrated_opd(assessments, routing_key=routing_key)
 
     def _route_recorded_label(
         self, assessments: List[ExpertAssessment], expert_id: str
@@ -69,12 +71,14 @@ class MultiExpertRouter:
             routing_source="recorded_method_label",
         )
 
-    def _route_calibrated_opd(self, assessments: List[ExpertAssessment]) -> RoutingDecision:
+    def _route_calibrated_opd(
+        self, assessments: List[ExpertAssessment], routing_key: str = ""
+    ) -> RoutingDecision:
         # Semantic correctness is recorded separately from Teacher routing.
         # Every Teacher must score the same available Student trajectory.
         eligible = [item for item in assessments if item.trajectory.available]
         if not eligible:
-            return self._no_valid(assessments)
+            return self._no_valid(assessments, routing_key=routing_key)
         for item in eligible:
             stats = self.config.calibration[item.expert_id]
             location = float(stats.get("location", 0.0))
@@ -120,6 +124,7 @@ class MultiExpertRouter:
                         usable_for_training=True,
                         reason="Calibrated margin was low; used the configured fallback route.",
                         routing_source="calibrated_opd_fallback",
+                        opd_sample_weight=self.config.minimum_opd_sample_weight,
                     )
             return RoutingDecision(
                 status="abstained_low_confidence",
@@ -143,6 +148,10 @@ class MultiExpertRouter:
             usable_for_training=True,
             reason="Selected Top-1 from calibrated Teacher advantage on one shared completion.",
             routing_source="calibrated_same_trajectory_opd",
+            opd_sample_weight=max(
+                self.config.minimum_opd_sample_weight,
+                min(1.0, margin),
+            ),
         )
 
     def _route_heuristic_ablation(self, assessments: List[ExpertAssessment]) -> RoutingDecision:
@@ -224,7 +233,37 @@ class MultiExpertRouter:
             routing_source="legacy_heuristic_ablation",
         )
 
-    def _no_valid(self, assessments: List[ExpertAssessment]) -> RoutingDecision:
+    def _no_valid(
+        self, assessments: List[ExpertAssessment], routing_key: str = ""
+    ) -> RoutingDecision:
+        if self.config.fallback_on_missing_trajectory:
+            fallback_id = self.config.fallback_expert_id
+            if self.config.missing_trajectory_fallback_policy == "balanced_hash":
+                ordered_ids = sorted(self.expert_order, key=self.expert_order.get)
+                digest = hashlib.sha256(routing_key.encode("utf-8")).digest()
+                fallback_id = ordered_ids[int.from_bytes(digest[:8], "big") % len(ordered_ids)]
+            fallback = next(item for item in assessments if item.expert_id == fallback_id)
+            return RoutingDecision(
+                status="fallback_missing_trajectory",
+                pseudo_method_label=fallback.strategy,
+                selected_expert_id=fallback.expert_id,
+                top_k=[self._diagnostic(fallback, 1, 1.0)],
+                expert_weights={
+                    key: float(key == fallback.expert_id) for key in self.expert_order
+                },
+                margin=0.0,
+                usable_for_training=True,
+                reason=(
+                    "No aligned Stage-1 trajectory was available; assigned the "
+                    "deterministic auditable route for Stage-2 rescore."
+                ),
+                routing_source=(
+                    "balanced_hash_missing_trajectory_fallback"
+                    if self.config.missing_trajectory_fallback_policy == "balanced_hash"
+                    else "configured_missing_trajectory_fallback"
+                ),
+                opd_sample_weight=self.config.fallback_opd_sample_weight,
+            )
         return RoutingDecision(
             status="no_valid_expert",
             pseudo_method_label=None,
