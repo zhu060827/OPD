@@ -29,7 +29,9 @@ class MultiExpertRouter:
             )
             if expert_id:
                 return expert_id
-            raise ValueError(f"Unknown recorded routing label {value!r} in {field_name}")
+            # Historical labels are provenance only. Unknown legacy values do
+            # not abort the canonical five-Teacher comparison.
+            continue
         return None
 
     def route(

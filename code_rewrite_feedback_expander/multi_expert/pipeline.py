@@ -42,7 +42,9 @@ class MultiExpertStage1Pipeline:
     def _process_three_tier(self, record: CodeRecord) -> Stage1RecordResult:
         recorded_expert_id = self.router.recorded_label(record.metadata)
         experts = self.config.enabled_experts
-        if recorded_expert_id:
+        # Canonical three-tier mode compares all enabled Teachers. Recorded
+        # labels are provenance and only force a route in an explicit ablation.
+        if recorded_expert_id and self.config.routing.policy != "three_tier":
             experts = [item for item in experts if item.expert_id == recorded_expert_id]
         if self.config.routing.shared_completion_source == "student_generate":
             shared_candidate = self.trajectory_scorer.generate_student_completion(
@@ -63,7 +65,7 @@ class MultiExpertStage1Pipeline:
         ]
         decision = self.router.route(
             assessments,
-            recorded_expert_id=recorded_expert_id,
+            recorded_expert_id=(recorded_expert_id if self.config.routing.policy != "three_tier" else None),
             routing_key=record.task_id,
         )
         return self._result(record, assessments, decision)

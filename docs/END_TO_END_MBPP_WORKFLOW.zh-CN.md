@@ -21,6 +21,23 @@ advantage，并使用 EMA 降低 MBPP 小 batch 的噪声。MBPP 首测建议 `a
 
 ### MBPP 平衡对比
 
+### 无微调 Teacher 消融
+
+在不微调 Qwen 的前提下，使用同一个 Qwen 3.5B checkpoint 做两组严格对照：
+
+```text
+Teacher-plain：STAGE1_TEACHER_PROMPT_MODE=none
+              五个 Teacher 使用完全相同的任务上下文
+
+Teacher-directional：STAGE1_TEACHER_PROMPT_MODE=directional
+                     分别使用 COT/Style/AST/Variable/Control-flow 分析提示词
+```
+
+两组实验必须固定 Student、Teacher checkpoint、MBPP 顺序、随机种子和 calibration，
+唯一改变 Teacher 上下文提示词。结果应分别报告路由分布、Top-1/Top-2 margin、
+fallback 比例和 test-500 Pass@1。该实验验证的是“提示词条件化专家路由”，不能宣称
+五个 Teacher 具有参数层面的独立领域能力。
+
 三个平衡层均通过配置开关控制，不需要删除采样代码：
 
 | 实验 | prompt sampling | token share | reward scale |

@@ -320,6 +320,14 @@ def validate_stage1_handoff(path: str | Path) -> dict[str, Any]:
         "semantic_unverified": "unverified_pool",
     }
     for index, record in enumerate(records, start=1):
+        prompt = record.get("prompt")
+        if (
+            not isinstance(prompt, list)
+            or not prompt
+            or not isinstance(prompt[0], dict)
+            or not str(prompt[0].get("content", "")).strip()
+        ):
+            raise ValueError(f"Stage-1 record {index} has an empty or invalid prompt")
         domain = _domain_of(record)
         teacher_id = record.get("teacher_id")
         if teacher_id != f"expert_{domain}":

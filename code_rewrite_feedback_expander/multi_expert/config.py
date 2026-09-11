@@ -73,6 +73,8 @@ class Stage1Config:
     gate: GateConfig = field(default_factory=GateConfig)
     reward: RewardConfig = field(default_factory=RewardConfig)
     routing: RoutingConfig = field(default_factory=RoutingConfig)
+    teacher_prompt_mode: str = "directional"
+    teacher_prompt_version: str = "teacher-lens-v2"
 
     @classmethod
     def from_dict(cls, raw: Dict[str, Any]) -> "Stage1Config":
@@ -87,11 +89,15 @@ class Stage1Config:
             gate=GateConfig(**raw.get("gate", {})),
             reward=RewardConfig(**raw.get("reward", {})),
             routing=RoutingConfig(**raw.get("routing", {})),
+            teacher_prompt_mode=str(raw.get("teacher_prompt_mode", "directional")).lower(),
+            teacher_prompt_version=str(raw.get("teacher_prompt_version", "teacher-lens-v2")),
         )
         config.validate()
         return config
 
     def validate(self) -> None:
+        if self.teacher_prompt_mode not in {"none", "directional"}:
+            raise ValueError("teacher_prompt_mode must be 'none' or 'directional'")
         enabled = [expert for expert in self.experts if expert.enabled]
         if len(enabled) != self.expected_expert_count:
             raise ValueError(
@@ -131,8 +137,6 @@ class Stage1Config:
             )
         if self.routing.student_max_new_tokens <= 0:
             raise ValueError("routing.student_max_new_tokens must be positive")
-        if not self.routing.recorded_label_fields:
-            raise ValueError("routing.recorded_label_fields must not be empty")
         if self.routing.fallback_expert_id not in {None, *expert_ids}:
             raise ValueError("routing.fallback_expert_id must name an enabled expert")
         if self.routing.fallback_on_missing_trajectory and not self.routing.fallback_expert_id:

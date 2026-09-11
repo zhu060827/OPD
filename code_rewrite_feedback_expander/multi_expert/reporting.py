@@ -53,11 +53,22 @@ def build_summary(results: Iterable[Stage1RecordResult]) -> Dict[str, Any]:
             "mean_nll_advantage": statistics.fmean(advantages) if advantages else 0.0,
         }
     margins = [item.routing.margin for item in rows if item.routing.selected_expert_id]
+    fallback_count = sum(
+        item.routing.status == "fallback_missing_trajectory" for item in rows
+    )
+    normal_route_count = sum(
+        item.routing.usable_for_training
+        and item.routing.status != "fallback_missing_trajectory"
+        for item in rows
+    )
     return {
         "schema_version": "stage1_multi_expert.summary.v2",
         "formal_training_result": False,
         "total_records": len(rows),
         "usable_for_training": sum(item.routing.usable_for_training for item in rows),
+        "normal_route_count": normal_route_count,
+        "fallback_route_count": fallback_count,
+        "fallback_route_fraction": fallback_count / max(len(rows), 1),
         "routing_status_distribution": dict(sorted(statuses.items())),
         "verification_status_distribution": dict(sorted(verification_statuses.items())),
         "downstream_action_distribution": dict(sorted(downstream_actions.items())),
@@ -73,6 +84,8 @@ def build_mt_opd_handoff(result: Stage1RecordResult) -> Dict[str, Any] | None:
     selected = next(
         item for item in result.assessments if item.expert_id == result.routing.selected_expert_id
     )
+    if not result.prompt.strip():
+        raise ValueError(f"Cannot create handoff for {result.task_id}: prompt is empty")
     return {
         "data_source": "code_multi_expert_stage1",
         "task_id": result.task_id,

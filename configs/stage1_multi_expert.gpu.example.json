@@ -3,6 +3,8 @@
   "experiment_name": "code_stage1_three_tier_local_models",
   "seed": 20260823,
   "expected_expert_count": 5,
+  "teacher_prompt_mode": "directional",
+  "teacher_prompt_version": "teacher-lens-v2",
   "experts": [
     {
       "expert_id": "expert_cot",
@@ -46,7 +48,7 @@
   "reward": {"quality_gain_scale": 0.05, "regression_tolerance": 0.05, "method_alignment_weight": 0.4, "general_quality_weight": 0.3, "non_regression_weight": 0.2, "change_weight": 0.1},
   "routing": {
     "policy": "three_tier",
-    "recorded_label_fields": ["method", "domain", "rewrite_method"],
+    "recorded_label_fields": [],
     "calibration": {
       "expert_cot": {"location": 0.0, "scale": 1.0},
       "expert_style": {"location": 0.0, "scale": 1.0},
@@ -61,7 +63,11 @@
     "top_k": 2,
     "softmax_temperature": 0.2,
     "minimum_margin": 0.05,
-    "abstain_on_low_confidence": true,
-    "fallback_expert_id": null
+    "abstain_on_low_confidence": false,
+    "fallback_expert_id": null,
+    "fallback_on_missing_trajectory": true,
+    "missing_trajectory_fallback_policy": "balanced_hash",
+    "minimum_opd_sample_weight": 0.25,
+    "fallback_opd_sample_weight": 0.10
   }
 }

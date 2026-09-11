@@ -11,6 +11,7 @@ from .calibration import fit_robust_advantage_calibration, read_jsonl_dicts, wri
 from .config import load_config
 from .pipeline import MultiExpertStage1Pipeline
 from .reporting import build_mt_opd_handoff, build_summary
+from .teacher_prompts import PROMPT_VERSION
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -81,7 +82,21 @@ def run(config_path: str, input_path: str, output_dir: str, limit: int = 0) -> N
 
     write_jsonl(str(output / "routing_labels.jsonl"), [item.to_dict() for item in results])
     handoff = [build_mt_opd_handoff(item) for item in results]
-    write_jsonl(str(output / "mt_opd_handoff.jsonl"), [item for item in handoff if item])
+    missing = [
+        result.task_id
+        for result, item in zip(results, handoff, strict=True)
+        if item is None
+    ]
+    if missing:
+        raise RuntimeError(
+            "Stage-1 full-label run produced no handoff for "
+            f"{len(missing)} records (first task_ids: {missing[:10]}). "
+            "Enable trajectory fallback or fix the scoring backend before training."
+        )
+    handoff_rows = [item for item in handoff if item is not None]
+    if len(handoff_rows) != len(results):
+        raise RuntimeError("Stage-1 handoff count does not match input count")
+    write_jsonl(str(output / "mt_opd_handoff.jsonl"), handoff_rows)
     (output / "summary.json").write_text(
         json.dumps(build_summary(results), ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -93,8 +108,12 @@ def run(config_path: str, input_path: str, output_dir: str, limit: int = 0) -> N
             {
                 "input": str(Path(input_path).resolve()),
                 "record_count": len(results),
+                "handoff_count": len(handoff_rows),
                 "generation_backend": config.generation_backend.backend_type,
                 "trajectory_backend": config.trajectory_backend.backend_type,
+                "teacher_prompt_version": PROMPT_VERSION,
+                "teacher_prompt_mode": config.teacher_prompt_mode,
+                "teacher_prompt_version_configured": config.teacher_prompt_version,
                 "external_paid_api_calls": 0
                 if config.generation_backend.backend_type == "mock"
                 else "not_measured_by_stage1",

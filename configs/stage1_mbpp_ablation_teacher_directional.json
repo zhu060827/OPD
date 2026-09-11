@@ -1,0 +1,6 @@
+{
+  "description": "Ablation: same Qwen Teacher checkpoint with five directional prompts",
+  "base_config": "stage1_multi_expert.gpu.example.json",
+  "teacher_prompt_mode": "directional",
+  "environment": {"STAGE1_TEACHER_PROMPT_MODE": "directional"}
+}

@@ -144,6 +144,7 @@ class Stage2OpenMOPDTests(unittest.TestCase):
                 verification = "semantic_fail" if index == 0 else "semantic_pass"
                 rows.append(
                     {
+                        "prompt": [{"role": "user", "content": f"Task {index}"}],
                         "domain": domain,
                         "teacher_id": f"expert_{domain}",
                         "teacher_weights": {

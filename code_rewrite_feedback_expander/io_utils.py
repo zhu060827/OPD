@@ -21,7 +21,15 @@ def read_jsonl(path: str) -> List[CodeRecord]:
             records.append(
                 CodeRecord(
                     task_id=str(data.get("task_id") or data.get("id") or f"row_{line_no}"),
-                    prompt=str(data.get("prompt") or data.get("question") or ""),
+                    # MBPP uses ``text`` for the natural-language task.
+                    prompt=str(
+                        data.get("prompt")
+                        or data.get("question")
+                        or data.get("text")
+                        or data.get("description")
+                        or data.get("task")
+                        or ""
+                    ),
                     # An expansion record is a valid next-round input. Prefer
                     # the accepted expanded fields, then fall back to raw data.
                     code=str(
@@ -72,7 +80,14 @@ def _parse_tests(data: Dict) -> List[str]:
     Some project datasets store the complete HumanEval harness as one string.
     Iterating that value would silently turn it into one test per character.
     """
-    value = data.get("tests") or data.get("test") or data.get("test_code") or []
+    value = (
+        data.get("tests")
+        or data.get("test")
+        or data.get("test_code")
+        or data.get("test_list")
+        or data.get("challenge_test_list")
+        or []
+    )
     if isinstance(value, list):
         return [str(item) for item in value if str(item).strip()]
     if isinstance(value, str):

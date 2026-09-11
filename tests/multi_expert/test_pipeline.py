@@ -151,7 +151,7 @@ class MultiExpertPipelineTests(unittest.TestCase):
         self.assertNotIn("expert_", student_prompt)
         self.assertNotIn(sample_record().code, student_prompt)
 
-    def test_recorded_label_routes_directly_without_generating_five_candidates(self):
+    def test_recorded_label_is_provenance_but_does_not_skip_five_teacher_scoring(self):
         raw = valid_raw_config()
         raw["routing"] = three_tier_routing()
         generator = ScriptedGenerator()
@@ -162,9 +162,14 @@ class MultiExpertPipelineTests(unittest.TestCase):
             Stage1Config.from_dict(raw), generator, scorer
         ).process(record)
         self.assertEqual([], generator.record_snapshots)
-        self.assertEqual([("expert_variable", record.code)], scorer.calls)
-        self.assertEqual("recorded_label", result.routing.status)
-        self.assertEqual("expert_variable", result.routing.selected_expert_id)
+        self.assertEqual(5, len(scorer.calls))
+        self.assertEqual({expert_id for expert_id, _ in scorer.calls}, {
+            "expert_cot", "expert_style", "expert_ast", "expert_variable", "expert_control_flow"
+        })
+        self.assertEqual("routed_calibrated_opd", result.routing.status)
+        self.assertIn(result.routing.selected_expert_id, {
+            "expert_cot", "expert_style", "expert_ast", "expert_variable", "expert_control_flow"
+        })
 
     def test_unlabeled_record_scores_one_shared_completion_with_all_teachers(self):
         raw = valid_raw_config()

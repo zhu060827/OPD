@@ -9,6 +9,7 @@ from ..llm import build_rewrite_prompt
 from ..models import CodeRecord, RewriteCandidate, TokenDistribution
 from .backends import ExpertTrajectoryScorer
 from .config import ExpertConfig, Stage1Config
+from .teacher_prompts import prompt_metadata, teacher_prompt
 
 
 class LocalTransformersMultiExpertScorer(ExpertTrajectoryScorer):
@@ -26,6 +27,7 @@ class LocalTransformersMultiExpertScorer(ExpertTrajectoryScorer):
         top_k: int = 16,
         device: str = "auto",
         torch_dtype: str = "auto",
+        teacher_prompt_mode: str = "directional",
     ):
         try:
             self.torch = importlib.import_module("torch")
@@ -38,6 +40,9 @@ class LocalTransformersMultiExpertScorer(ExpertTrajectoryScorer):
         AutoTokenizer = transformers.AutoTokenizer
         self.top_k = top_k
         self._routing_policy = "three_tier"
+        self.teacher_prompt_mode = teacher_prompt_mode.strip().lower()
+        if self.teacher_prompt_mode not in {"none", "directional"}:
+            raise ValueError("STAGE1_TEACHER_PROMPT_MODE must be 'none' or 'directional'")
         self.tokenizer = AutoTokenizer.from_pretrained(
             student_model_path, trust_remote_code=True
         )
@@ -110,12 +115,20 @@ class LocalTransformersMultiExpertScorer(ExpertTrajectoryScorer):
         # All Teachers must see the same state in the canonical router. An
         # expert-specific prompt is retained only for the legacy ablation.
         if self._routing_policy == "three_tier":
-            prefix = record.prompt.rstrip() + "\nCandidate code:\n"
+            # Prompt-conditioned experts: all Teachers score the same Student
+            # completion, but each receives a short, fixed analytical lens.
+            # The lens is included for both Student and Teacher likelihoods so
+            # the comparison remains conditional on the same context.
+            prefix = teacher_prompt(expert.strategy, record.prompt, self.teacher_prompt_mode)
         else:
             prefix = build_rewrite_prompt(record, expert.strategy, feedback="") + "\nCandidate code:\n"
         exact_prompt_ids = candidate.metadata.get("student_prompt_token_ids")
         exact_completion_ids = candidate.metadata.get("student_completion_token_ids")
-        if exact_prompt_ids is not None and exact_completion_ids is not None:
+        if (
+            exact_prompt_ids is not None
+            and exact_completion_ids is not None
+            and self._routing_policy != "three_tier"
+        ):
             prefix_ids = self.torch.tensor([exact_prompt_ids], dtype=self.torch.long)
             response_ids = self.torch.tensor([exact_completion_ids], dtype=self.torch.long)
         else:
@@ -172,7 +185,15 @@ class LocalTransformersMultiExpertScorer(ExpertTrajectoryScorer):
                     aspect_weights=(
                         lexical_weights[aspect_index] if lexical_weights else {"ast": 1.0}
                     ),
-                    attribution_source="ast_cfg_def_use_alignment",
+                    attribution_source=(
+                        "ast_cfg_def_use_alignment;"
+                        + ";".join(
+                            f"{key}={value}"
+                            for key, value in prompt_metadata(
+                                expert.strategy, record.prompt, self.teacher_prompt_mode
+                            ).items()
+                        )
+                    ),
                 )
             )
         return profiles
@@ -199,6 +220,7 @@ def create_trajectory_scorer(config: Stage1Config) -> LocalTransformersMultiExpe
         top_k=int(os.getenv("DISTILLATION_TOPK", "16")),
         device=os.getenv("STAGE1_MODEL_DEVICE", "auto"),
         torch_dtype=os.getenv("STAGE1_MODEL_DTYPE", "auto"),
+        teacher_prompt_mode=config.teacher_prompt_mode,
     )
     scorer._routing_policy = config.routing.policy
     return scorer
