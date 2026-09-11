@@ -1,0 +1,27 @@
+{
+  "schema_version": "stage1_multi_expert.summary.v1",
+  "formal_training_result": false,
+  "total_records": 974,
+  "usable_for_training": 881,
+  "routing_status_distribution": {
+    "low_confidence": 20,
+    "no_valid_expert": 73,
+    "routed": 881
+  },
+  "verification_status_distribution": {
+    "semantic_unverified": 974
+  },
+  "downstream_action_distribution": {
+    "unverified_pool": 974
+  },
+  "pseudo_label_distribution": {
+    "ast": 81,
+    "control_flow": 244,
+    "cot": 326,
+    "style": 213,
+    "unrouted": 73,
+    "variable": 37
+  },
+  "mean_top1_margin": 0.3226625493529387,
+  "experts": {}
+}
