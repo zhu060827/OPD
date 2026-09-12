@@ -3,6 +3,8 @@
   "experiment_name": "code_stage1_heuristic_ablation",
   "seed": 20260823,
   "expected_expert_count": 5,
+  "teacher_prompt_mode": "directional",
+  "teacher_prompt_version": "teacher-lens-v2",
   "experts": [
     {
       "expert_id": "expert_cot",
@@ -97,6 +99,17 @@
     "change_weight": 0.1
   },
   "routing": {
+    "policy": "three_tier",
+    "recorded_label_fields": [],
+    "calibration": {
+      "expert_cot": {"location": 0.0, "scale": 1.0},
+      "expert_style": {"location": 0.0, "scale": 1.0},
+      "expert_ast": {"location": 0.0, "scale": 1.0},
+      "expert_variable": {"location": 0.0, "scale": 1.0},
+      "expert_control_flow": {"location": 0.0, "scale": 1.0}
+    },
+    "shared_completion_source": "student_generate",
+    "student_max_new_tokens": 512,
     "reward_weight": 0.55,
     "nll_advantage_weight": 0.45,
     "top_k": 2,

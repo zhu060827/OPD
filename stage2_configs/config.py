@@ -131,8 +131,10 @@ class Stage1Config:
             )
         if self.routing.student_max_new_tokens <= 0:
             raise ValueError("routing.student_max_new_tokens must be positive")
-        if not self.routing.recorded_label_fields:
-            raise ValueError("routing.recorded_label_fields must not be empty")
+        if self.routing.policy != "three_tier" and not self.routing.recorded_label_fields:
+            raise ValueError(
+                "routing.recorded_label_fields must not be empty outside three_tier routing"
+            )
         if self.routing.fallback_expert_id not in {None, *expert_ids}:
             raise ValueError("routing.fallback_expert_id must name an enabled expert")
         if self.routing.fallback_on_missing_trajectory and not self.routing.fallback_expert_id:
