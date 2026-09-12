@@ -1,0 +1,24 @@
+{
+  "schema_version": "stage1_multi_expert.summary.v1",
+  "formal_training_result": false,
+  "total_records": 20,
+  "usable_for_training": 20,
+  "routing_status_distribution": {
+    "routed": 20
+  },
+  "verification_status_distribution": {
+    "semantic_pass": 20
+  },
+  "downstream_action_distribution": {
+    "positive_augmentation": 20
+  },
+  "pseudo_label_distribution": {
+    "ast": 2,
+    "control_flow": 6,
+    "cot": 3,
+    "style": 7,
+    "variable": 2
+  },
+  "mean_top1_margin": 0.2035476646843098,
+  "experts": {}
+}

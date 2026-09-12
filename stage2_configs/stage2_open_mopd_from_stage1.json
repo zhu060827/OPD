@@ -1,0 +1,67 @@
+{
+  "schema_version": "2.1",
+  "experiment_name": "code_five_teacher_open_mopd_from_stage1",
+  "open_mopd_backend": {
+    "root": "/root/autodl-tmp/Open-MOPD",
+    "expected_commit": "4809a96cf85a869106ff0ff3f37d0a51e12010ae"
+  },
+  "models": {
+    "student_path": "/root/autodl-tmp/models/qwen2.5-coder-1.5b",
+    "teachers": [
+      {
+        "domain": "cot",
+        "teacher_path": "/root/autodl-tmp/models/qwen2.5-coder-3b"
+      },
+      {
+        "domain": "style",
+        "teacher_path": "/root/autodl-tmp/models/qwen2.5-coder-3b-style"
+      },
+      {
+        "domain": "ast",
+        "teacher_path": "/root/autodl-tmp/models/qwen2.5-coder-3b-ast"
+      },
+      {
+        "domain": "variable",
+        "teacher_path": "/root/autodl-tmp/models/qwen2.5-coder-0.5b"
+      },
+      {
+        "domain": "control_flow",
+        "teacher_path": "/root/autodl-tmp/models/qwen2.5-coder-3b-control-flow"
+      }
+    ]
+  },
+  "data": {
+    "train_file": "/root/autodl-tmp/data/code_multi_expert_train.parquet",
+    "val_file": "/root/autodl-tmp/data/code_multi_expert_val.parquet"
+  },
+  "output_dir": "/root/autodl-tmp/runs/code-five-teacher-open-mopd-stage1-route",
+  "runtime": {
+    "gpus": 1,
+    "nodes": 1
+  },
+  "method": {
+    "label_policy": "stage1_handoff",
+    "prompt_sampling_balance": true,
+    "token_share_balance": true,
+    "reward_scale_balance": true,
+    "target_gradient_shares": {
+      "cot": 0.2,
+      "style": 0.2,
+      "ast": 0.2,
+      "variable": 0.2,
+      "control_flow": 0.2
+    },
+    "gap_following_alpha": 0.5,
+    "reward_ema_decay": 0.9,
+    "reward_refresh": true,
+    "use_sft": false,
+    "use_routing_loss_weight": false,
+    "token_balance_min_weight": 0.05,
+    "token_balance_max_weight": 20.0,
+    "conflict_policy": "none"
+  },
+  "extra_overrides": [
+    "data.train_batch_size=32",
+    "actor_rollout_ref.rollout.n=1"
+  ]
+}
