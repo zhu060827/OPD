@@ -8,9 +8,19 @@ def convert_record(record: dict) -> dict | None:
     selected_expert_id = routing.get("selected_expert_id")
     pseudo_label = routing.get("pseudo_method_label")
     
-    # 只保留可用于训练的样本
-    if not routing.get("usable_for_training") or not selected_expert_id:
-        return None
+    # 保留所有样本。低置信/语义失败样本仍需带 domain 进入后续审计与
+    # rescore；只有完全缺失路由时才使用可审计的 task_id 哈希 fallback。
+    if not selected_expert_id:
+        experts = ("cot", "style", "ast", "variable", "control_flow")
+        index = sum(ord(ch) for ch in str(record.get("task_id", ""))) % len(experts)
+        pseudo_label = experts[index]
+        selected_expert_id = f"expert_{pseudo_label}"
+        selected = None
+        routing_source = "converter_balanced_hash_fallback"
+    else:
+        routing_source = routing.get("routing_source", "")
+        if not pseudo_label:
+            pseudo_label = str(selected_expert_id).removeprefix("expert_")
     
     selected = next(
         (item for item in record.get("expert_assessments", [])
@@ -18,7 +28,8 @@ def convert_record(record: dict) -> dict | None:
         None,
     )
     if selected is None:
-        return None
+        # Preserve the record even if the original assessment was unavailable.
+        selected = {"candidate": {"code": record.get("original_code", "")}}
     
     return {
         "data_source": "code_multi_expert_stage1",
@@ -28,8 +39,11 @@ def convert_record(record: dict) -> dict | None:
         "response": selected.get("candidate", {}).get("code", ""),
         "domain": pseudo_label,
         "teacher_id": selected_expert_id,
-        "teacher_weights": routing.get("expert_weights", {}),
-        "routing_source": routing.get("routing_source", ""),
+        "teacher_weights": routing.get("expert_weights") or {
+            f"expert_{name}": float(name == pseudo_label)
+            for name in ("cot", "style", "ast", "variable", "control_flow")
+        },
+        "routing_source": routing_source,
         "routing_confidence": routing.get("margin", 0.0),
         "routing_loss_weight": routing.get("opd_sample_weight", 1.0),
         "verification_status": record.get("verification_status", "semantic_unverified"),

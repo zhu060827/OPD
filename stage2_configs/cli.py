@@ -5,10 +5,8 @@ import json
 from pathlib import Path
 from typing import Set
 
-from ..io_utils import read_jsonl, write_jsonl
-from .backends import build_generator, build_trajectory_scorer
+from code_rewrite_feedback_expander.io_utils import read_jsonl, write_jsonl
 from .config import load_config
-from .pipeline import MultiExpertStage1Pipeline
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -56,6 +54,8 @@ def run(
     resume: bool = False,
     write_interval: int = 10,
 ) -> None:
+    from .backends import build_generator, build_trajectory_scorer
+    from .pipeline import MultiExpertStage1Pipeline
     config = load_config(config_path)
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)

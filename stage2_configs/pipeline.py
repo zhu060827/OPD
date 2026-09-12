@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import List
 
-from ..models import CodeRecord, RewriteCandidate
-from ..quality import CodeQualityEvaluator
-from ..semantic import SemanticEquivalenceChecker
+from code_rewrite_feedback_expander.models import CodeRecord, RewriteCandidate
+from code_rewrite_feedback_expander.quality import CodeQualityEvaluator
+from code_rewrite_feedback_expander.semantic import SemanticEquivalenceChecker
 from .backends import ExpertCandidateGenerator, ExpertTrajectoryScorer
 from .config import Stage1Config
 from .models import ExpertAssessment, Stage1RecordResult

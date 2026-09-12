@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List
 
-from ..models import RewriteCandidate
+from code_rewrite_feedback_expander.models import RewriteCandidate
 
 
 @dataclass
