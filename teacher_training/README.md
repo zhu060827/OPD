@@ -2,6 +2,8 @@
 
 本目录只训练五个冻结的 Teacher，不进行 Student SFT。五个 Teacher 共享
 `Qwen/Qwen3-4B` 基座模型，分别保存独立的 LoRA/QLoRA 适配器。
+`configs/teacher_template.json` 只是模板，不是第六个 Teacher；实际训练只使用
+`cot.json`、`style.json`、`ast.json`、`variable.json` 和 `control_flow.json`。
 
 ## 完整流程
 
