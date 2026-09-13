@@ -1,0 +1,32 @@
+{
+  "cot": {
+    "dataset": "deepmind/code_contests",
+    "hub_command": "load_dataset('deepmind/code_contests')",
+    "paper": "Li et al. (2022), Competition-Level Code Generation with AlphaCode",
+    "conversion": "Generate reasoning from accepted solutions; retain only solutions passing tests and reasoning/code consistency checks."
+  },
+  "style": {
+    "dataset": "code_x_glue_cc_code_refinement",
+    "hub_command": "load_dataset('code_x_glue_cc_code_refinement')",
+    "paper": "Lu et al. (2021), CodeXGLUE; Tufano et al. (2019)",
+    "conversion": "Filter before/after pairs to style and organization edits; exclude bug-only and rename-only changes."
+  },
+  "ast": {
+    "dataset": "Refactory / RefactoringMiner pairs",
+    "hub_command": "External download or mine Git history with RefactoringMiner",
+    "paper": "Tsantalis et al. (2018), RefactoringMiner",
+    "conversion": "Parse both sides, store AST edit evidence, exclude formatting-only and identifier-only changes, then run tests."
+  },
+  "variable": {
+    "dataset": "code_x_glue_cc_code_completion (variable misuse subset)",
+    "hub_command": "load_dataset('code_x_glue_cc_code_completion') or use CodeXGLUE release",
+    "paper": "Lu et al. (2021), CodeXGLUE; Allamanis et al. (2015)",
+    "conversion": "Combine definition-use examples with Rename Variable commits or AST renaming to produce semantic before/after pairs."
+  },
+  "control_flow": {
+    "dataset": "ManySStuBs4J",
+    "hub_command": "Download the official ManySStuBs4J release",
+    "paper": "Karampatsis and Sutton (2020), Maybe Deep Learning Can Have a Role in Code Simplification",
+    "conversion": "Keep only condition/loop/return-path changes, add differential tests, and record the Java-language limitation."
+  }
+}

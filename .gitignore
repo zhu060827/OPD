@@ -20,6 +20,9 @@ venv/
 model/
 models/
 checkpoints/
+teacher_training/data/raw/
+teacher_training/data/processed/
+teacher_training/checkpoints/
 *.bin
 *.safetensors
 *.pt
