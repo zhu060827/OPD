@@ -4,33 +4,33 @@ from dataclasses import dataclass
 
 
 DOMAINS = ("cot", "style", "ast", "variable", "control_flow")
-OUTPUT_SCHEMA_VERSION = "teacher-plan-code-v1"
-SYSTEM_PROMPT_VERSION = "teacher-specialization-v2"
+OUTPUT_SCHEMA_VERSION = "teacher-reasoning-code-v2"
+SYSTEM_PROMPT_VERSION = "teacher-specialization-v3"
 
 # 内部 ID 保持稳定，以兼容现有 JSONL、配置和后续 MOPD 路由。
 PUBLIC_DOMAIN_NAMES = {
-    "cot": "Planning/CoT",
+    "cot": "Reasoning-guided Code Transformation",
     "style": "Style/Documentation",
     "variable": "Identifier/Rename",
     "ast": "Extract/Inline",
     "control_flow": "Control-flow",
 }
 
-# 非 CoT 专家的 plan 是结构化改写意图，仅用于统一数据协议。
-PLAN_ROLES = {
-    "cot": "详细规划与代码实现步骤",
-    "style": "简短的风格/文档改写意图（接口统一字段）",
-    "variable": "简短的标识符重命名意图（接口统一字段）",
-    "ast": "简短的 Extract/Inline 重构意图（接口统一字段）",
-    "control_flow": "简短的控制流改写意图（接口统一字段）",
+# CoT 保存完整推理；其他专家只保存简短改写依据，以统一 MOPD 输出协议。
+REASONING_ROLES = {
+    "cot": "完整的代码理解与联合改写推理",
+    "style": "简短的风格/文档改写依据（接口统一字段）",
+    "variable": "简短的标识符重命名依据（接口统一字段）",
+    "ast": "简短的 Extract/Inline 重构依据（接口统一字段）",
+    "control_flow": "简短的控制流改写依据（接口统一字段）",
 }
 
-PLAN_TYPES = {
-    "cot": "reasoning_plan",
-    "style": "interface_intent",
-    "variable": "interface_intent",
-    "ast": "interface_intent",
-    "control_flow": "interface_intent",
+REASONING_TYPES = {
+    "cot": "full_reasoning",
+    "style": "transformation_rationale",
+    "variable": "transformation_rationale",
+    "ast": "transformation_rationale",
+    "control_flow": "transformation_rationale",
 }
 
 
@@ -43,14 +43,14 @@ class DomainSpec:
     literature_basis: tuple[str, ...]
     primary_metric: str
     primary_metric_reference: str
-    fallback_plan: str
+    fallback_reasoning: str
 
 
 DOMAIN_SPECS = {
     "cot": DomainSpec(
         "cot",
-        "规划引导的代码改写专家",
-        "你是规划引导的代码改写专家。先给出保持行为不变的改写计划，再依据计划输出改写代码；保持函数签名和可观察行为不变。",
+        "推理引导的代码改写专家",
+        "你是推理引导的代码改写专家。先逐步分析原代码的行为、约束和拟议修改，再依据分析输出改写代码；保持函数签名和可观察行为不变。",
         "CodeContests（优先）或转换为题目/代码/推理对的 MBPP",
         (
             "Li et al. (2022), Competition-Level Code Generation with AlphaCode",

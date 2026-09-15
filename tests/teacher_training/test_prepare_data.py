@@ -19,13 +19,13 @@ class TeacherDataPreparationTests(unittest.TestCase):
         result = normalize_row(row, thresholds={"naming_gain": 0.0})
         self.assertEqual("variable", result["domain"])
         self.assertEqual("system", result["messages"][0]["role"])
-        self.assertIn("<plan>", result["messages"][2]["content"])
+        self.assertIn("<reasoning>", result["messages"][2]["content"])
         self.assertIn("<code>", result["messages"][2]["content"])
-        self.assertFalse(result["plan_from_source"])
-        self.assertEqual("interface_intent", result["plan_type"])
-        self.assertEqual("teacher-plan-code-v1", result["output_schema_version"])
+        self.assertFalse(result["reasoning_from_source"])
+        self.assertEqual("transformation_rationale", result["reasoning_type"])
+        self.assertEqual("teacher-reasoning-code-v2", result["output_schema_version"])
 
-    def test_prefers_original_plan_over_fallback(self):
+    def test_prefers_original_reasoning_over_fallback(self):
         row = {
             "source_id": "cot-one",
             "source_code": "def f(x):\n    return x + 1",
@@ -36,10 +36,10 @@ class TeacherDataPreparationTests(unittest.TestCase):
             "tests": ["assert f(1) == 2"],
         }
         result = normalize_row(row)
-        self.assertTrue(result["plan_from_source"])
-        self.assertEqual("原始 target_reasoning", result["plan_origin"])
+        self.assertTrue(result["reasoning_from_source"])
+        self.assertEqual("原始 target_reasoning", result["reasoning_origin"])
         self.assertIn(row["target_reasoning"], result["messages"][2]["content"])
-        self.assertEqual("reasoning_plan", result["plan_type"])
+        self.assertEqual("full_reasoning", result["reasoning_type"])
 
     def test_split_keeps_source_ids_disjoint(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -76,6 +76,35 @@ class TeacherDataPreparationTests(unittest.TestCase):
             "semantic_pass": True,
         })
         self.assertEqual("java", result["language"])
+
+    def test_formal_contract_rejects_missing_domain_gold_labels(self):
+        row = {
+            "source_id": "rename-without-label",
+            "source_code": "def f(x):\n    d = x\n    return d",
+            "target_code": "def f(x):\n    value = x\n    return value",
+            "domain": "variable",
+            "semantic_pass": True,
+            "tests": ["assert f(1) == 1"],
+            "source_dataset": "commitpack",
+            "source_paper": "OctoPack",
+        }
+        with self.assertRaisesRegex(ValueError, "target_identifier"):
+            normalize_row(row, thresholds={"naming_gain": 0.0}, formal=True)
+
+    def test_formal_cot_rejects_fallback_reasoning(self):
+        row = {
+            "source_id": "cot-without-real-plan",
+            "task": "返回输入加一",
+            "source_code": "def f(x):\n    return x + 1",
+            "target_code": "def f(x):\n    value = x + 1\n    return value",
+            "domain": "cot",
+            "semantic_pass": True,
+            "tests": ["assert f(1) == 2"],
+            "source_dataset": "CodeContests",
+            "source_paper": "AlphaCode",
+        }
+        with self.assertRaisesRegex(ValueError, "禁止使用固定领域模板"):
+            normalize_row(row, formal=True)
 
 
 if __name__ == "__main__":

@@ -10,8 +10,8 @@
 1. 在 GPU 环境安装 `teacher_training/requirements.txt`。
 2. 按各自许可证下载五个公开数据集，不把原始大文件提交到 Git。
 3. 将数据转换为包含 `source_code`、`target_code`、`domain`、`source_id` 和
-   `semantic_pass` 的 JSONL。转换器优先使用原数据的 `target_plan`、`rewrite_plan`、
-   `target_reasoning`、`reasoning`、`rationale` 或 `explanation`；全部缺失时才使用领域模板。
+   `semantic_pass` 的 JSONL。CoT 正式数据必须同时包含 `source_reasoning` 和
+   `target_reasoning`；新协议不再读取或输出 plan 字段。
 4. 使用 `prepare_data` 分别处理五个领域，执行领域规则、语言标记和语法检查。
 5. 检查 `accepted.jsonl`、`rejected.jsonl` 和 `manifest.json`。
 6. 用人工标注验证集运行 `calibrate_thresholds`，把校准阈值传给 `prepare_data`。
@@ -26,22 +26,20 @@
 `original_code/rewritten_code`。Python 代码会在本地解析；Java 代码必须已通过上游
 解析器和测试，并带有 `semantic_pass: true`。
 
-五个专家统一监督输出为（`<plan>` 是统一接口字段）：
+五个专家统一监督输出为：
 
 ```text
-<plan>
-原数据中的计划/推理；若不存在，则为领域模板
-</plan>
+<reasoning>
+CoT 为完整联合改写推理；其他领域为简短变换依据
+</reasoning>
 
 <code>
 目标改写代码
 </code>
 ```
 
-`plan_origin` 和 `plan_from_source` 会记录计划来自原数据还是回退模板，正式实验应分别统计，
-不能把模板文本描述成人工或数据集原生推理。只有 Planning/CoT 的 `<plan>` 承担详细规划；
-其他四个专家的短 `<plan>` 仅用于统一数据格式、解析和后续 MOPD 融合接口，不表示它们都训练了
-长链式推理，也不构成额外训练目标。
+`reasoning_origin` 和 `reasoning_from_source` 会记录文本来源。CoT 的 `<reasoning>` 是完整推理；
+其他四个专家只是简短 transformation rationale，用于统一格式和后续 MOPD，不声称为 CoT。
 
 规范化数据还会保存：
 
@@ -49,27 +47,27 @@
 {
   "domain": "ast",
   "domain_name": "Extract/Inline",
-  "plan_type": "interface_intent",
-  "output_schema_version": "teacher-plan-code-v1",
-  "system_prompt_version": "teacher-specialization-v2"
+  "reasoning_type": "transformation_rationale",
+  "output_schema_version": "teacher-reasoning-code-v2",
+  "system_prompt_version": "teacher-specialization-v3"
 }
 ```
 
-Planning/CoT 的 `plan_type` 为 `reasoning_plan`，其他四个领域均为 `interface_intent`。
-训练前会严格检查领域显示名称、plan 类型、协议版本和 system prompt，防止旧数据或其他专家的
+CoT 的 `reasoning_type` 为 `full_reasoning`，其他四个领域均为 `transformation_rationale`。
+训练前会严格检查领域显示名称、reasoning 类型、协议版本和 system prompt，防止旧数据或其他专家的
 样本混入当前 LoRA。五个配置还必须使用同一基座和彼此不同的输出目录，因此训练其他专家不会
-覆盖已经保存的 Planning 适配器。
+覆盖已经保存的 CoT 适配器。
 
 领域证据要求：
 
-- CoT：输出规划和改写代码；原数据没有规划时允许使用明确标记的模板；
+- CoT：输出逐步代码分析和改写代码；正式数据禁止固定模板，冒烟数据才允许模板回退；
 - Style：必须有可观察的格式、文档或组织变化；
 - AST：必须有结构变化，不能只有变量名变化；
 - Variable：必须有标识符变化和 AST 证据；
 - Control-flow：必须有控制流节点变化。
 
 内部字段保持稳定：`cot / style / ast / variable / control_flow`。论文和报告使用名称：
-`Planning/CoT`、`Style/Documentation`、`Identifier/Rename`、`Extract/Inline`、
+`Reasoning-guided Code Transformation`、`Style/Documentation`、`Identifier/Rename`、`Extract/Inline`、
 `Control-flow`。其中内部 `ast` 仅表示 Extract/Inline 兼容 ID，不再表示所有 AST 变化；
 内部 `variable` 表示 Identifier/Rename。
 
@@ -90,16 +88,16 @@ Python 样本的语义门禁复用项目 multi-expert 的 `SemanticEquivalenceCh
 
 | Teacher | 唯一领域主指标 | 主要依据 |
 |---|---|---|
-| Planning/CoT | pass@1 | Chen et al. (2021), HumanEval |
+| Reasoning-guided Code Transformation | pass@1 | Chen et al. (2021), HumanEval |
 | Style/Documentation | code readability score change | Buse and Weimer (2010) |
 | AST-local Extract/Inline | refactoring-type exact-match accuracy | Tsantalis et al. (2018) |
 | Identifier/Rename | rename exact-match accuracy | Allamanis et al. (2018)；CodeXGLUE |
 | Control-flow | control-flow refactoring-type exact-match accuracy | Tsantalis et al. (2018) |
 
-正式论文结果必须调用相应标准/官方实现。项目当前的 AST 兼容相似度、风格增益、命名增益、
-控制节点差值和关键词覆盖只能作为过滤证据或描述性统计，不得标记为上述正式主指标，也不得
-把不同指标加权成一个总分。每个领域另选 2～4 个有来源的辅助指标，仅用于展示效果；具体
-列表和引用见指标注册表。训练目标对五个 Teacher 完全一致且只有一个：
+正式论文结果必须调用相应标准/官方实现。旧版项目中的 AST 兼容相似度、风格增益、命名增益、
+控制节点差值、关键词覆盖、推理结构完整度、推理—代码一致率、人工评分和 Judge 评分已从
+自动正式汇总中删除；它们不能作为正式指标。每个领域另选 2～4 个有来源的辅助指标，仅用于
+展示效果；具体列表和引用见指标注册表。训练目标对五个 Teacher 完全一致且只有一个：
 `assistant-only causal language modeling loss`。
 
 ```bash
@@ -145,16 +143,34 @@ python -m teacher_training.train_lora \
 pip install -r teacher_training/requirements.txt
 ```
 
-## 五个主要数据来源
+## 五个主要数据来源（v2）
 
-- CoT：CodeContests，由通过测试的解法生成算法推理；
-- Style：CodeXGLUE Code Refinement，筛选风格和组织改动；
-- AST：Refactory 或 RefactoringMiner，保存 AST 改动证据；
-- Variable：CodeXGLUE Variable-Misuse，加上变量重命名改写对；
-- Control-flow：ManySStuBs4J 中的控制流相关修改，辅以控制流重构数据。
+- Reasoning-guided Code Transformation：CodeContests；从同题通过测试的实现构造代码对，并生成或提取逐样本分析；正式数据禁止固定模板；
+- Style/Documentation：CommitPackFT/CommitPack 真实提交池，筛选非功能性风格与文档变更；
+- Identifier/Rename：CommitPack 提交池，用 RefactoringMiner 检测 Rename 并保存旧名、新名和作用域；
+- Extract/Inline：CommitPack 提交池，用 RefactoringMiner 只抽取 Extract/Inline 类型；
+- Control-flow：CommitPack 提交池，使用预注册 AST/CFG 规则和测试过滤控制流变更。
 
-CodeXGLUE 和 ManySStuBs4J 主要是 Java 数据，而当前下游 MBPP 流程主要使用 Python。
-正式实验应记录每条样本的 `language`，并分别报告同语言结果和跨语言迁移结果。
+这不是“五个天然一一对应的数据集”。除 CoT 外，三个重构领域可以共享同一真实 commit 原始池，
+再按可验证标签形成互斥子集。CodeXGLUE Code Refinement、Variable-Misuse 和 ManySStuBs4J
+分别包含 bug repair/variable misuse/single-statement bug fix，不再作为 Style、Rename 和语义保持
+Control-flow 的天然主训练集；它们只用于辅助或对照。完整来源、下载地址、缺失字段和转换要求见
+`dataset_sources.json`。
+
+正式处理必须加入 `--formal`：
+
+```bash
+python -m teacher_training.prepare_data \
+  --input /path/to/converted_domain_pairs.jsonl \
+  --domain variable \
+  --language java \
+  --formal \
+  --output-dir teacher_training/data/processed/variable
+```
+
+正式配置另设 `"formal_experiment": true`。此时训练入口拒绝未通过领域数据契约的样本。MBPP
+冒烟数据不使用 `--formal`，配置保持 `formal_experiment: false`。正式实验应记录每条样本的语言，
+并分别报告同语言结果和跨语言迁移结果。
 
 ## 交叉领域评估
 

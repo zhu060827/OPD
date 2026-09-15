@@ -21,6 +21,7 @@
   "logging_steps": 10,
   "seed": 42,
   "assistant_only_loss": true,
+  "formal_experiment": false,
   "qwen3_thinking": false,
   "report_to": "none"
 }

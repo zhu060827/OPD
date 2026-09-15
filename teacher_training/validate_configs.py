@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .domains import DOMAINS
 from .train_lora import load_config
+from .dataset_contracts import validate_source_registry
 
 
 def main() -> None:
@@ -15,6 +16,7 @@ def main() -> None:
     configs = {domain: load_config(str(Path(args.config_dir) / f"{domain}.json")) for domain in DOMAINS}
     registry_path = Path(__file__).with_name("metric_registry.json")
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    source_registry = validate_source_registry()
     missing_metrics = [domain for domain in DOMAINS if domain not in registry or not registry[domain].get("主指标") or not registry[domain].get("文献")]
     if missing_metrics:
         raise ValueError(f"以下领域缺少正式主指标或文献：{', '.join(missing_metrics)}")
@@ -35,7 +37,7 @@ def main() -> None:
             mismatches[key] = values
     if mismatches:
         raise ValueError(f"Teacher 超参数不一致：{json.dumps(mismatches, ensure_ascii=False)}")
-    print(json.dumps({"valid": True, "training_objective": registry["训练目标"]["名称"], "domains": list(DOMAINS), "base_model": next(iter(base_models)), "matched_hyperparameters": list(compared), "primary_metrics": {domain: registry[domain]["主指标"] for domain in DOMAINS}, "auxiliary_metric_counts": {domain: len(registry["辅助指标"][domain]) for domain in DOMAINS}}, ensure_ascii=False, indent=2))
+    print(json.dumps({"valid": True, "training_objective": registry["训练目标"]["名称"], "domains": list(DOMAINS), "base_model": next(iter(base_models)), "matched_hyperparameters": list(compared), "dataset_registry_version": source_registry["registry_version"], "primary_metrics": {domain: registry[domain]["主指标"] for domain in DOMAINS}, "auxiliary_metric_counts": {domain: len(registry["辅助指标"][domain]) for domain in DOMAINS}}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

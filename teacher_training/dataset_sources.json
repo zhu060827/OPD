@@ -1,32 +1,61 @@
 {
+  "版本": "teacher-dataset-registry-v2",
+  "说明": "数据源与专家的对应关系是本项目的数据构造方案，不是文献规定的天然映射。正式训练只接收完成转换、领域过滤、语义验证并保留来源证据的样本。",
   "cot": {
-    "dataset": "deepmind/code_contests",
-    "hub_command": "load_dataset('deepmind/code_contests')",
-    "paper": "Li et al. (2022), Competition-Level Code Generation with AlphaCode",
-    "conversion": "Generate reasoning from accepted solutions; retain only solutions passing tests and reasoning/code consistency checks."
+    "论文名称": "Reasoning-guided Code Transformation",
+    "推荐主数据": "CodeContests",
+    "下载地址": "https://huggingface.co/datasets/deepmind/code_contests",
+    "论文": "Li et al. (2022), Competition-level Code Generation with AlphaCode, Science",
+    "匹配等级": "B-组合依据",
+    "原生具备": ["题目", "多个候选/参考程序", "测试用例", "语言标签"],
+    "原生缺失": ["与代码改写逐步对应的 reasoning", "稳定的 before/after 重构标签"],
+    "转换": "从同题通过测试的 reasoning+code 数据或多个通过测试的实现构造 source/target；联合改写 reasoning 和 code；重新执行测试；避免同一题跨数据划分。",
+    "正式必需字段": ["source_id", "task", "source_reasoning", "source_code", "target_reasoning", "target_code", "reasoning_provenance", "tests", "language", "semantic_pass", "source_dataset", "source_paper"]
   },
   "style": {
-    "dataset": "code_x_glue_cc_code_refinement",
-    "hub_command": "load_dataset('code_x_glue_cc_code_refinement')",
-    "paper": "Lu et al. (2021), CodeXGLUE; Tufano et al. (2019)",
-    "conversion": "Filter before/after pairs to style and organization edits; exclude bug-only and rename-only changes."
-  },
-  "ast": {
-    "dataset": "Refactory / RefactoringMiner pairs",
-    "hub_command": "External download or mine Git history with RefactoringMiner",
-    "paper": "Tsantalis et al. (2018), RefactoringMiner",
-    "conversion": "Parse both sides, store AST edit evidence, exclude formatting-only and identifier-only changes, then run tests."
+    "论文名称": "Style/Documentation",
+    "推荐主数据": "CommitPackFT/CommitPack 原始提交池 + 非功能性 Style/Documentation 过滤",
+    "下载地址": "https://huggingface.co/datasets/bigcode/commitpackft",
+    "论文": "Muennighoff et al. (2023), OctoPack: Instruction Tuning Code Large Language Models",
+    "匹配等级": "B-组合依据",
+    "原生具备": ["真实提交变更", "多编程语言", "提交文本"],
+    "原生缺失": ["可靠的纯 Style 标签", "普遍可执行的测试"],
+    "转换": "只保留格式、注释、docstring 和局部组织变更；排除 bug fix、Rename、Extract/Inline 和控制流变化；补充解析、编译和测试证据。CodeXGLUE Code Refinement 只作为对照，因为其原任务包含 bug 修复。",
+    "正式必需字段": ["source_id", "source_code", "target_code", "tests", "language", "semantic_pass", "change_type", "source_commit", "source_dataset", "source_paper"]
   },
   "variable": {
-    "dataset": "code_x_glue_cc_code_completion (variable misuse subset)",
-    "hub_command": "load_dataset('code_x_glue_cc_code_completion') or use CodeXGLUE release",
-    "paper": "Lu et al. (2021), CodeXGLUE; Allamanis et al. (2015)",
-    "conversion": "Combine definition-use examples with Rename Variable commits or AST renaming to produce semantic before/after pairs."
+    "论文名称": "Identifier/Rename",
+    "推荐主数据": "CommitPack 原始提交池 + RefactoringMiner Rename 检测",
+    "下载地址": "https://huggingface.co/datasets/bigcode/commitpackft",
+    "检测工具": "https://github.com/tsantalis/RefactoringMiner",
+    "论文": "Tsantalis et al. (2020), RefactoringMiner 2.0；Allamanis et al. (2015), Suggesting Accurate Method and Class Names",
+    "匹配等级": "B-组合依据",
+    "原生具备": ["真实前后提交"],
+    "原生缺失": ["统一 Rename 金标签", "所有语言的可靠作用域标签"],
+    "转换": "检测并人工抽查 Rename Variable/Parameter/Attribute；保存旧名、新名、作用域和定义—使用位置。Variable-Misuse 仅作数据流辅助，不再作为 Rename 主训练集。",
+    "正式必需字段": ["source_id", "source_code", "target_code", "tests", "language", "semantic_pass", "refactoring_type", "old_identifier", "target_identifier", "scope", "source_commit", "source_dataset", "source_paper"]
+  },
+  "ast": {
+    "论文名称": "Extract/Inline",
+    "推荐主数据": "CommitPack 原始提交池 + RefactoringMiner Extract/Inline 检测",
+    "下载地址": "https://huggingface.co/datasets/bigcode/commitpackft",
+    "检测工具": "https://github.com/tsantalis/RefactoringMiner",
+    "论文": "Tsantalis et al. (2020), RefactoringMiner 2.0",
+    "匹配等级": "A/B-检测类型直接、训练对构造",
+    "原生具备": ["真实前后提交"],
+    "原生缺失": ["下载数据中的统一 Extract/Inline 标签", "Python 的同等检测覆盖"],
+    "转换": "只保留 Extract Variable/Method 和 Inline Variable/Method；保存检测位置和类型；排除纯 Rename、主要控制流变化、格式变化和算法替换。",
+    "正式必需字段": ["source_id", "source_code", "target_code", "tests", "language", "semantic_pass", "refactoring_type", "source_commit", "source_dataset", "source_paper"]
   },
   "control_flow": {
-    "dataset": "ManySStuBs4J",
-    "hub_command": "Download the official ManySStuBs4J release",
-    "paper": "Karampatsis and Sutton (2020), Maybe Deep Learning Can Have a Role in Code Simplification",
-    "conversion": "Keep only condition/loop/return-path changes, add differential tests, and record the Java-language limitation."
+    "论文名称": "Control-flow",
+    "推荐主数据": "CommitPack 原始提交池 + CFG/重构检测 + 测试过滤",
+    "下载地址": "https://huggingface.co/datasets/bigcode/commitpackft",
+    "论文": "Muennighoff et al. (2023), OctoPack；McCabe (1976), A Complexity Measure；Tsantalis et al. (2020), RefactoringMiner 2.0",
+    "匹配等级": "B/C-组合与项目标签",
+    "原生具备": ["真实前后提交", "多编程语言"],
+    "原生缺失": ["标准控制流重构金标签", "普遍可执行的测试"],
+    "转换": "预注册允许的控制流类型，使用 AST/CFG 检测并人工抽查，执行前后测试。ManySStuBs4J 仅作 bug-fix 对照，不作为语义保持主训练集。",
+    "正式必需字段": ["source_id", "source_code", "target_code", "tests", "language", "semantic_pass", "control_flow_type", "source_commit", "source_dataset", "source_paper"]
   }
 }

@@ -127,32 +127,22 @@ def main() -> None:
         meta = metadata.get(source_id, {})
         base, lora = item.get("base_output", ""), item.get("lora_output", "")
         reference = item.get("reference_output", "")
-        expected_complexity = str(meta.get("expected_complexity", "")).replace(" ", "").upper() or None
-        expected_boundaries = list(meta.get("expected_boundaries") or [])
-        base_complexity, lora_complexity = _complexity(base), _complexity(lora)
+        base_pass_at_1 = meta.get("base_pass_at_1", meta.get("base_test_pass"))
+        lora_pass_at_1 = meta.get("lora_pass_at_1", meta.get("lora_test_pass"))
         row = {
             "source_id": source_id,
             "base_chars": len(base), "lora_chars": len(lora),
             "base_repetition": _ngram_repetition(base), "lora_repetition": _ngram_repetition(lora),
-            "base_reference_f1": _token_f1(base, reference), "lora_reference_f1": _token_f1(lora, reference),
-            "base_structure_score": _structure_score(base), "lora_structure_score": _structure_score(lora),
-            "base_complexity_correct": float(base_complexity == expected_complexity) if expected_complexity else None,
-            "lora_complexity_correct": float(lora_complexity == expected_complexity) if expected_complexity else None,
-            "base_boundary_coverage": _boundary_coverage(base, expected_boundaries),
-            "lora_boundary_coverage": _boundary_coverage(lora, expected_boundaries),
             "base_test_pass": meta.get("base_test_pass"), "lora_test_pass": meta.get("lora_test_pass"),
-            "base_consistency": meta.get("base_reasoning_code_consistent"), "lora_consistency": meta.get("lora_reasoning_code_consistent"),
-            "base_human_score": human.get(source_id, {}).get("base_score"), "lora_human_score": human.get(source_id, {}).get("lora_score"),
-            "base_judge_score": judge.get(source_id, {}).get("base_score"), "lora_judge_score": judge.get(source_id, {}).get("lora_score"),
+            "base_pass_at_1": base_pass_at_1, "lora_pass_at_1": lora_pass_at_1,
         }
         rows.append(row)
     metrics = {}
     pairs = [
-        ("输出长度", "base_chars", "lora_chars"), ("4-gram 重复率", "base_repetition", "lora_repetition"),
-        ("参考推理 Token-F1", "base_reference_f1", "lora_reference_f1"), ("推理结构完整度", "base_structure_score", "lora_structure_score"),
-        ("复杂度正确率", "base_complexity_correct", "lora_complexity_correct"), ("边界覆盖率", "base_boundary_coverage", "lora_boundary_coverage"),
-        ("测试通过率", "base_test_pass", "lora_test_pass"), ("推理代码一致率", "base_consistency", "lora_consistency"),
-        ("人工评分", "base_human_score", "lora_human_score"), ("Judge 评分", "base_judge_score", "lora_judge_score"),
+        ("Pass@1", "base_pass_at_1", "lora_pass_at_1"),
+        ("测试通过率（硬门禁统计）", "base_test_pass", "lora_test_pass"),
+        ("4-gram 重复率（描述性统计）", "base_repetition", "lora_repetition"),
+        ("输出长度（描述性统计）", "base_chars", "lora_chars"),
     ]
     for label, base_key, lora_key in pairs:
         base_mean, lora_mean = _mean(rows, base_key), _mean(rows, lora_key)
@@ -161,7 +151,7 @@ def main() -> None:
     output = Path(args.output_dir)
     output.mkdir(parents=True, exist_ok=True)
     missing = [label for label, value in metrics.items() if value["base_mean"] is None or value["lora_mean"] is None]
-    summary = {"samples": len(rows), "metrics": metrics, "missing_inputs": missing, "references": {"bootstrap_ci": "Efron (1979), Bootstrap Methods", "repetition": "4-gram 重复率，项目定义的生成多样性代理指标", "complexity": "McCabe (1976) 与人工/静态分析复杂度标签", "judge": "Zheng et al. (2023), Judging LLM-as-a-Judge"}}
+    summary = {"samples": len(rows), "metrics": metrics, "missing_inputs": missing, "human_and_judge_scores_excluded": True, "references": {"bootstrap_ci": "Efron (1979), Bootstrap Methods", "pass_at_1": "Chen et al. (2021), Evaluating Large Language Models Trained on Code", "test_pass": "Chen et al. (2021), HumanEval；Austin et al. (2021), MBPP", "repetition": "Zhu et al. (2018), Texygen；仅作描述性统计"}}
     (output / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     with (output / "per_sample.csv").open("w", newline="", encoding="utf-8-sig") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))

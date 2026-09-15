@@ -11,8 +11,8 @@ from typing import Any
 from .domains import (
     DOMAIN_SPECS,
     OUTPUT_SCHEMA_VERSION,
-    PLAN_ROLES,
-    PLAN_TYPES,
+    REASONING_ROLES,
+    REASONING_TYPES,
     PUBLIC_DOMAIN_NAMES,
     SYSTEM_PROMPT_VERSION,
     require_domain,
@@ -29,8 +29,8 @@ def load_config(path: str) -> dict[str, Any]:
         raise ValueError("五个 Teacher 必须统一使用 assistant-only causal language modeling loss；assistant_only_loss 必须为 true")
     config["training_objective"] = "assistant-only causal language modeling loss"
     config["domain_name"] = PUBLIC_DOMAIN_NAMES[config["domain"]]
-    config["plan_role"] = PLAN_ROLES[config["domain"]]
-    config["plan_type"] = PLAN_TYPES[config["domain"]]
+    config["reasoning_role"] = REASONING_ROLES[config["domain"]]
+    config["reasoning_type"] = REASONING_TYPES[config["domain"]]
     config["output_schema_version"] = OUTPUT_SCHEMA_VERSION
     config["system_prompt_version"] = SYSTEM_PROMPT_VERSION
     return config
@@ -60,8 +60,8 @@ def validate_dataset_contract(config: dict[str, Any]) -> dict[str, Any]:
                     raise ValueError(f"{path}:{line_number} 的 domain 与配置不一致")
                 expected = {
                     "domain_name": PUBLIC_DOMAIN_NAMES[config["domain"]],
-                    "plan_role": PLAN_ROLES[config["domain"]],
-                    "plan_type": PLAN_TYPES[config["domain"]],
+                    "reasoning_role": REASONING_ROLES[config["domain"]],
+                    "reasoning_type": REASONING_TYPES[config["domain"]],
                     "output_schema_version": OUTPUT_SCHEMA_VERSION,
                     "system_prompt_version": SYSTEM_PROMPT_VERSION,
                 }
@@ -72,6 +72,8 @@ def validate_dataset_contract(config: dict[str, Any]) -> dict[str, Any]:
                     raise ValueError(f"{path}:{line_number} 不是 verified_positive 正样本")
                 if row.get("semantic_pass") is not True:
                     raise ValueError(f"{path}:{line_number} semantic_pass 必须为 true")
+                if config.get("formal_experiment", False) and row.get("formal_data_contract_pass") is not True:
+                    raise ValueError(f"{path}:{line_number} 未通过正式数据契约；请使用 prepare_data --formal 重新处理")
                 messages = row.get("messages") or []
                 roles = [item.get("role") for item in messages]
                 if roles != ["system", "user", "assistant"] or not messages[-1].get("content", "").strip():
@@ -79,8 +81,8 @@ def validate_dataset_contract(config: dict[str, Any]) -> dict[str, Any]:
                 if messages[0].get("content") != DOMAIN_SPECS[config["domain"]].system_prompt:
                     raise ValueError(f"{path}:{line_number} 的 system prompt 与当前 {config['domain_name']} 专家不一致")
                 assistant = messages[-1]["content"]
-                if "<plan>" not in assistant or "</plan>" not in assistant or "<code>" not in assistant or "</code>" not in assistant:
-                    raise ValueError(f"{path}:{line_number} 的 assistant 输出必须包含完整的 <plan> 和 <code> 标签")
+                if "<reasoning>" not in assistant or "</reasoning>" not in assistant or "<code>" not in assistant or "</code>" not in assistant:
+                    raise ValueError(f"{path}:{line_number} 的 assistant 输出必须包含完整的 <reasoning> 和 <code> 标签")
                 rows.append(row)
         if not rows:
             raise ValueError(f"数据文件为空：{path}")
