@@ -1,0 +1,74 @@
+{
+  "训练目标": {
+    "名称": "assistant-only causal language modeling loss",
+    "适用范围": "五个 Teacher 完全相同，只对 assistant 的 <plan> 与 <code> token 计算交叉熵",
+    "文献": "Ouyang et al. (2022), Training language models to follow instructions with human feedback；TRL SFTTrainer assistant_only_loss"
+  },
+  "说明": "每个领域只指定一个正式主指标；硬门禁、辅助指标和描述性统计不参与加权总分。指标本身有文献依据，但五个领域与指标的对应关系是本项目实验设计。正式结果应调用论文或官方实现，项目内兼容代理不得冒充正式结果。",
+  "cot": {
+    "论文名称": "Planning-guided Code Transformation",
+    "主指标": "pass@1",
+    "方向": "越高越好",
+    "文献": "Chen et al. (2021), Evaluating Large Language Models Trained on Code",
+    "正式计算要求": "在留出测试用例上执行生成代码，按 HumanEval 论文定义报告 pass@1。"
+  },
+  "style": {
+    "论文名称": "Style/Documentation",
+    "主指标": "code readability score change",
+    "方向": "越高越好",
+    "文献": "Buse and Weimer (2010), Learning a Metric for Code Readability",
+    "正式计算要求": "使用论文定义或经复现实证验证的可读性模型，报告改写前后分数差。"
+  },
+  "ast": {
+    "论文名称": "AST-local Extract/Inline Refactoring",
+    "主指标": "refactoring-type exact-match accuracy",
+    "方向": "越高越好",
+    "文献": "Tsantalis et al. (2018), RefactoringMiner",
+    "正式计算要求": "内部字段仍为 ast，但金标签只能取 Extract/Inline 等允许类型；预测类型与金标签 exact match。"
+  },
+  "variable": {
+    "论文名称": "Identifier/Rename",
+    "主指标": "rename exact-match accuracy",
+    "方向": "越高越好",
+    "文献": "Allamanis et al. (2018), Learning to Represent Programs with Graphs；Lu et al. (2021), CodeXGLUE Variable Misuse",
+    "正式计算要求": "将预测标识符与数据集金标准标识符做 exact match；宏观或微观口径必须在论文中声明。"
+  },
+  "control_flow": {
+    "论文名称": "Control-flow Transformation",
+    "主指标": "control-flow refactoring-type exact-match accuracy",
+    "方向": "越高越好",
+    "文献": "Tsantalis et al. (2018), RefactoringMiner",
+    "正式计算要求": "使用预先冻结的控制流重构类型集合，预测类型与 RefactoringMiner/人工复核金标签 exact match。"
+  },
+  "通用硬门禁": {
+    "核心项目": ["语言解析成功", "函数签名/公开 API 保持", "编译成功", "原代码与改写代码测试通过"],
+    "条件项目": ["安全检查：数据来源不可信或允许执行外部 API 时启用", "静态类型检查：任务提供类型系统时启用"],
+    "说明": "核心门禁原则相同，但解析器、编译器、测试框架和签名定义按 Python/Java 及任务调整；不作为领域主指标，也不参与加权。"
+  },
+  "辅助指标": {
+    "cot": [
+      {"指标": "CodeBLEU", "文献": "Ren et al. (2020), CodeBLEU"},
+      {"指标": "CodeBERTScore", "文献": "Zhou et al. (2023), CodeBERTScore"},
+      {"指标": "Self-BLEU", "文献": "Zhu et al. (2018), Texygen"}
+    ],
+    "style": [
+      {"指标": "BLEU-4", "文献": "Papineni et al. (2002), BLEU；Lu et al. (2021), CodeXGLUE"},
+      {"指标": "CrystalBLEU", "文献": "Eghbali and Pradel (2022), CrystalBLEU"},
+      {"指标": "Maintainability Index", "文献": "Oman and Hagemeister (1992)"}
+    ],
+    "variable": [
+      {"指标": "subtoken F1", "文献": "Allamanis et al. (2015), Suggesting Accurate Method and Class Names"},
+      {"指标": "CodeBLEU data-flow match", "文献": "Ren et al. (2020), CodeBLEU"}
+    ],
+    "ast": [
+      {"指标": "AST tree edit distance", "文献": "Zhang and Shasha (1989)"},
+      {"指标": "CodeBLEU syntax match", "文献": "Ren et al. (2020), CodeBLEU"},
+      {"指标": "refactoring detection precision/recall", "文献": "Tsantalis et al. (2018), RefactoringMiner"}
+    ],
+    "control_flow": [
+      {"指标": "cyclomatic complexity change", "文献": "McCabe (1976), A Complexity Measure"},
+      {"指标": "CFG graph edit distance", "文献": "Bunke (1997)"},
+      {"指标": "refactoring detection precision/recall", "文献": "Tsantalis et al. (2018), RefactoringMiner"}
+    ]
+  }
+}

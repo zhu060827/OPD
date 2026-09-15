@@ -9,7 +9,15 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from .domains import DOMAIN_SPECS, require_domain
+from .domains import (
+    DOMAIN_SPECS,
+    OUTPUT_SCHEMA_VERSION,
+    PLAN_ROLES,
+    PLAN_TYPES,
+    PUBLIC_DOMAIN_NAMES,
+    SYSTEM_PROMPT_VERSION,
+    require_domain,
+)
 from .io_utils import read_jsonl, write_jsonl
 from .validation import validate_domain
 
@@ -27,12 +35,30 @@ def _text(value: Any) -> str:
     return str(value or "")
 
 
+def _resolve_plan(row: dict[str, Any], domain: str) -> tuple[str, str]:
+    """优先使用数据集已有计划/推理；缺失时才使用可追踪的领域模板。"""
+    candidates = (
+        ("target_plan", "原始 target_plan"),
+        ("rewrite_plan", "原始 rewrite_plan"),
+        ("target_reasoning", "原始 target_reasoning"),
+        ("expanded_reasoning", "原始 expanded_reasoning"),
+        ("reasoning", "原始 reasoning"),
+        ("rationale", "原始 rationale"),
+        ("explanation", "原始 explanation"),
+    )
+    for key, origin in candidates:
+        value = _text(row.get(key))
+        if value:
+            return value, origin
+    return DOMAIN_SPECS[domain].fallback_plan, "领域模板（原数据无计划/推理）"
+
+
 def normalize_row(row: dict[str, Any], domain_override: str | None = None, language_override: str | None = None, validate: bool = True, thresholds: dict[str, float] | None = None) -> dict[str, Any]:
     domain = require_domain(domain_override or _first(row, "domain", "method", "rewrite_method"))
     source_code = _text(_first(row, "source_code", "before_code", "original_code", default=row.get("extra_info", {}).get("original_code", "")))
     target_code = _text(_first(row, "target_code", "after_code", "rewritten_code", "expanded_code", "response", "code"))
     source_reasoning = _text(_first(row, "source_reasoning", "original_reasoning"))
-    target_reasoning = _text(_first(row, "target_reasoning", "expanded_reasoning", "reasoning"))
+    target_plan, plan_origin = _resolve_plan(row, domain)
     task = _text(_first(row, "task", "instruction", "question", "text", "prompt"))
     if isinstance(row.get("prompt"), list):
         task = "\n".join(str(item.get("content", "")) for item in row["prompt"] if isinstance(item, dict))
@@ -59,21 +85,26 @@ def normalize_row(row: dict[str, Any], domain_override: str | None = None, langu
     if not accepted:
         raise ValueError(validation_reason)
     user = f"Task:\n{task}\n\nOriginal reasoning:\n{source_reasoning or '(not provided)'}\n\nOriginal code:\n{source_code}"
-    assistant_parts = []
-    if target_reasoning:
-        assistant_parts.append(f"Rewritten reasoning:\n{target_reasoning}")
-    assistant_parts.append(f"Rewritten code:\n{target_code}")
+    assistant_content = f"<plan>\n{target_plan}\n</plan>\n\n<code>\n{target_code}\n</code>"
     return {
         "source_id": source_id,
         "domain": domain,
+        "domain_name": PUBLIC_DOMAIN_NAMES[domain],
+        "plan_role": PLAN_ROLES[domain],
+        "plan_type": PLAN_TYPES[domain],
+        "output_schema_version": OUTPUT_SCHEMA_VERSION,
+        "system_prompt_version": SYSTEM_PROMPT_VERSION,
         "language": language,
         "messages": [
             {"role": "system", "content": spec.system_prompt},
             {"role": "user", "content": user},
-            {"role": "assistant", "content": "\n\n".join(assistant_parts)},
+            {"role": "assistant", "content": assistant_content},
         ],
         "source_code": source_code,
         "target_code": target_code,
+        "target_plan": target_plan,
+        "plan_origin": plan_origin,
+        "plan_from_source": not plan_origin.startswith("领域模板"),
         "tests": list(tests or []),
         "semantic_pass": bool(row.get("semantic_pass", row.get("verification_status") == "semantic_pass")),
         "validation_status": validation_reason,
@@ -82,6 +113,8 @@ def normalize_row(row: dict[str, Any], domain_override: str | None = None, langu
         "source_dataset": _text(_first(row, "source_dataset", "data_source", default="unknown")),
         "source_paper": _text(row.get("source_paper", "")),
         "metadata": dict(row.get("metadata") or {}),
+        "primary_metric": spec.primary_metric,
+        "primary_metric_reference": spec.primary_metric_reference,
     }
 
 
@@ -121,6 +154,11 @@ def prepare(input_path: str, output_dir: str, domain: str | None, seed: int, tra
         "counts": counts,
         "rejected": len(rejected),
         "domains": dict(Counter(item["domain"] for item in normalized)),
+        "plan_origins": dict(Counter(item["plan_origin"] for item in normalized)),
+        "plans_from_source": sum(item["plan_from_source"] for item in normalized),
+        "plans_from_fallback_template": sum(not item["plan_from_source"] for item in normalized),
+        "output_schema_version": OUTPUT_SCHEMA_VERSION,
+        "system_prompt_version": SYSTEM_PROMPT_VERSION,
     }
     root.mkdir(parents=True, exist_ok=True)
     (root / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")

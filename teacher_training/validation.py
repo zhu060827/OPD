@@ -82,9 +82,7 @@ def validate_domain(domain: str, source: str, target: str, row: dict[str, Any], 
         return False, "必须通过语义验证", evidence
     if domain == "cot":
         reasoning = row.get("target_reasoning") or row.get("expanded_reasoning") or row.get("reasoning")
-        if not reasoning:
-            return False, "CoT 必须包含目标推理文本", evidence
-        evidence["reasoning_present"] = True
+        evidence["source_reasoning_present"] = bool(reasoning)
     elif domain == "style":
         gain = quality_metrics.get("style_violation_rate", 0.0) - before_metrics.get("style_violation_rate", 0.0)
         evidence["style_gain"] = gain

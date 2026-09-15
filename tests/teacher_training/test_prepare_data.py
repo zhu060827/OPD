@@ -19,6 +19,27 @@ class TeacherDataPreparationTests(unittest.TestCase):
         result = normalize_row(row, thresholds={"naming_gain": 0.0})
         self.assertEqual("variable", result["domain"])
         self.assertEqual("system", result["messages"][0]["role"])
+        self.assertIn("<plan>", result["messages"][2]["content"])
+        self.assertIn("<code>", result["messages"][2]["content"])
+        self.assertFalse(result["plan_from_source"])
+        self.assertEqual("interface_intent", result["plan_type"])
+        self.assertEqual("teacher-plan-code-v1", result["output_schema_version"])
+
+    def test_prefers_original_plan_over_fallback(self):
+        row = {
+            "source_id": "cot-one",
+            "source_code": "def f(x):\n    return x + 1",
+            "target_code": "def f(x):\n    result = x + 1\n    return result",
+            "domain": "cot",
+            "target_reasoning": "先保存计算结果，再返回；时间复杂度保持 O(1)。",
+            "semantic_pass": True,
+            "tests": ["assert f(1) == 2"],
+        }
+        result = normalize_row(row)
+        self.assertTrue(result["plan_from_source"])
+        self.assertEqual("原始 target_reasoning", result["plan_origin"])
+        self.assertIn(row["target_reasoning"], result["messages"][2]["content"])
+        self.assertEqual("reasoning_plan", result["plan_type"])
 
     def test_split_keeps_source_ids_disjoint(self):
         with tempfile.TemporaryDirectory() as directory:
