@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 from pathlib import Path
@@ -36,16 +37,20 @@ def _generate(model, tokenizer, messages, max_new_tokens: int, thinking: bool) -
     return tokenizer.decode(output[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True).strip()
 
 
-REASONING_PATTERNS = {
-    "algorithm": re.compile(r"算法|algorithm|approach|method", re.IGNORECASE),
-    "steps": re.compile(r"步骤|第一|其次|最后|step|first|then|finally", re.IGNORECASE),
-    "complexity": re.compile(r"复杂度|time complexity|space complexity|\bO\s*\(", re.IGNORECASE),
-    "boundaries": re.compile(r"边界|特殊情况|空输入|edge case|boundary|empty input", re.IGNORECASE),
-}
+CODE_BLOCK = re.compile(r"<code>\s*(.*?)\s*</code>", re.DOTALL)
 
 
-def _reasoning_evidence(text: str) -> dict[str, bool]:
-    return {name: bool(pattern.search(text)) for name, pattern in REASONING_PATTERNS.items()}
+def _code_contract(text: str, language: str) -> tuple[bool, bool]:
+    match = CODE_BLOCK.fullmatch(text.strip())
+    if not match:
+        return False, False
+    if language.lower() != "python":
+        return True, False
+    try:
+        ast.parse(match.group(1))
+    except SyntaxError:
+        return True, False
+    return True, True
 
 
 def main() -> None:
@@ -73,9 +78,10 @@ def main() -> None:
     results = []
     for row, base_output in zip(rows, base_outputs):
         lora_output = _generate(adapted, tokenizer, row["messages"], args.max_new_tokens, args.thinking)
-        base_evidence = _reasoning_evidence(base_output)
-        lora_evidence = _reasoning_evidence(lora_output)
-        results.append({"source_id": row["source_id"], "domain": row["domain"], "base_output": base_output, "lora_output": lora_output, "reference_output": row["messages"][-1]["content"], "base_chars": len(base_output), "lora_chars": len(lora_output), "base_reasoning_markers": sum(base_evidence.values()), "lora_reasoning_markers": sum(lora_evidence.values()), "base_reasoning_evidence": base_evidence, "lora_reasoning_evidence": lora_evidence, "qwen3_thinking": args.thinking})
+        language = str(row.get("language", "python"))
+        base_tag, base_parse = _code_contract(base_output, language)
+        lora_tag, lora_parse = _code_contract(lora_output, language)
+        results.append({"source_id": row["source_id"], "domain": row["domain"], "language": language, "base_output": base_output, "lora_output": lora_output, "reference_output": row["messages"][-1]["content"], "base_chars": len(base_output), "lora_chars": len(lora_output), "base_code_tag_complete": base_tag, "lora_code_tag_complete": lora_tag, "base_parse_pass": base_parse, "lora_parse_pass": lora_parse, "qwen3_thinking": args.thinking})
     count = write_jsonl(args.output, results)
     if args.plot and results:
         labels = [row["source_id"] for row in results]
@@ -84,23 +90,20 @@ def main() -> None:
         width = 0.38
         base_label, lora_label = ("基座模型", "LoRA Teacher") if has_chinese_font else ("Base model", "LoRA Teacher")
         length_title, length_ylabel = (("输出长度对比（字符数）", "字符数") if has_chinese_font else ("Output length comparison (characters)", "Characters"))
-        marker_title, marker_ylabel = (("推理要素覆盖对比（算法/步骤/复杂度/边界）", "覆盖项数量（0-4）") if has_chinese_font else ("Reasoning-element coverage (algorithm/steps/complexity/boundaries)", "Covered items (0-4)"))
+        parse_title, parse_ylabel = (("Python 解析通过情况", "通过（0/1）") if has_chinese_font else ("Python parse success", "Pass (0/1)"))
         axes[0].bar([p - width / 2 for p in positions], [row["base_chars"] for row in results], width, label=base_label)
         axes[0].bar([p + width / 2 for p in positions], [row["lora_chars"] for row in results], width, label=lora_label)
         axes[0].set_title(length_title)
         axes[0].set_ylabel(length_ylabel)
         axes[0].set_xticks(positions, labels, rotation=45, ha="right")
         axes[0].legend()
-        axes[1].bar([p - width / 2 for p in positions], [row["base_reasoning_markers"] for row in results], width, label=base_label)
-        axes[1].bar([p + width / 2 for p in positions], [row["lora_reasoning_markers"] for row in results], width, label=lora_label)
-        axes[1].set_title(marker_title)
-        axes[1].set_ylabel(marker_ylabel)
+        axes[1].bar([p - width / 2 for p in positions], [int(row["base_parse_pass"]) for row in results], width, label=base_label)
+        axes[1].bar([p + width / 2 for p in positions], [int(row["lora_parse_pass"]) for row in results], width, label=lora_label)
+        axes[1].set_title(parse_title)
+        axes[1].set_ylabel(parse_ylabel)
         axes[1].set_xticks(positions, labels, rotation=45, ha="right")
-        axes[1].set_ylim(0, 4.5)
+        axes[1].set_ylim(0, 1.15)
         axes[1].legend()
-        if not any(row["base_reasoning_markers"] or row["lora_reasoning_markers"] for row in results):
-            message = "未检测到中英文推理关键词，请查看 JSONL 原始输出" if has_chinese_font else "No Chinese/English reasoning markers detected; inspect the JSONL outputs"
-            axes[1].text(0.5, 0.5, message, transform=axes[1].transAxes, ha="center", va="center")
         Path(args.plot).parent.mkdir(parents=True, exist_ok=True)
         figure.savefig(args.plot, dpi=160)
         plt.close(figure)

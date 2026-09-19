@@ -1,201 +1,163 @@
-# 五个 Teacher 专家化训练（Qwen3-4B）
+# 四个代码改写 Teacher 的专家化训练
 
-本目录只训练五个冻结的 Teacher，不进行 Student SFT。五个 Teacher 共享
-`Qwen/Qwen3-4B` 基座模型，分别保存独立的 LoRA/QLoRA 适配器。
-`configs/teacher_template.json` 只是模板，不是第六个 Teacher；实际训练只使用
-`cot.json`、`style.json`、`ast.json`、`variable.json` 和 `control_flow.json`。
+本目录只训练四个语义保持、code-only 的 Teacher，不训练 Student，也不修改 Stage 1/MOPD。四个 Teacher 使用同一 Qwen3-4B 基座和一致的 LoRA/QLoRA 超参数：
 
-## 完整流程
+| 内部 ID | 正式名称 | 训练范式依据 |
+|---|---|---|
+| `formatting` | Style/Formatting | STYLER：格式违规代码到规范代码 |
+| `identifier` | Identifier Deobfuscation/Rename | DOBF：混淆标识符到原始自然标识符 |
+| `local_structure` | Local Structural Transformation | NatGen：语义保持扰动代码到自然代码 |
+| `control_flow` | Control-flow Transformation | NatGen；ContraCode 作为辅助依据 |
 
-1. 在 GPU 环境安装 `teacher_training/requirements.txt`。
-2. 按各自许可证下载五个公开数据集，不把原始大文件提交到 Git。
-3. 将数据转换为包含 `source_code`、`target_code`、`domain`、`source_id` 和
-   `semantic_pass` 的 JSONL。CoT 正式数据必须同时包含 `source_reasoning` 和
-   `target_reasoning`；新协议不再读取或输出 plan 字段。
-4. 使用 `prepare_data` 分别处理五个领域，执行领域规则、语言标记和语法检查。
-5. 检查 `accepted.jsonl`、`rejected.jsonl` 和 `manifest.json`。
-6. 用人工标注验证集运行 `calibrate_thresholds`，把校准阈值传给 `prepare_data`。
-7. 运行 `validate_configs`，再对每个配置执行 `--dry-run`。
-8. 分别训练五个 LoRA Teacher；训练过程不会加载或更新 Student。
-9. 在五个留出领域上进行交叉评估，生成 5×5 评分矩阵。
-10. 将适配器路径填入 Stage 2 的 `teacher_path`。
+正式实验冻结为每个 Teacher 一个训练来源：Formatting=`bigcode/commitpackft`，Identifier=`code_search_net`，Local Structure=`code_search_net`，Control-flow=`deepmind/code_contests`。`prepare_data --formal` 和正式训练启动检查都会拒绝混入其他来源。
 
-## 数据格式与验证
+这四个来源不能未经适配直接训练：CommitPackFT 和 CodeSearchNet 通常缺少可执行测试；CodeContests 使用 stdin/stdout 测试而当前验证器使用函数级 `assert`。因此在 CodeContests 专用执行器和前三个来源的测试恢复完成前，配置必须保持 `formal_experiment=false`。不得为了增加样本数把“没有测试”记作测试通过。
 
-原始 JSONL 可以使用 `before_code/after_code`、`source_code/target_code` 或
-`original_code/rewritten_code`。Python 代码会在本地解析；Java 代码必须已通过上游
-解析器和测试，并带有 `semantic_pass: true`。
+四类不是严格正交分类。每条样本按照主要变换意图归类，允许少量伴随语法变化，但必须满足领域限制和通用语义门禁。
 
-五个专家统一监督输出为：
+## 统一训练协议
 
-```text
-<reasoning>
-CoT 为完整联合改写推理；其他领域为简短变换依据
-</reasoning>
+所有 Teacher 使用 `assistant-only causal language modeling loss`。模型只生成代码：
 
+```xml
 <code>
-目标改写代码
+完整目标代码
 </code>
 ```
 
-`reasoning_origin` 和 `reasoning_from_source` 会记录文本来源。CoT 的 `<reasoning>` 是完整推理；
-其他四个专家只是简短 transformation rationale，用于统一格式和后续 MOPD，不声称为 CoT。
+当前协议为 `teacher-code-only-v1` 和 `teacher-specialization-v4`。旧的 `cot/style/variable/ast` 领域名和 `<reasoning>` 输出不再接受，正式数据需要重新转换。
 
-规范化数据还会保存：
+## 通用硬门禁
+
+四个领域共享四项核心硬门禁，全部是通过/失败判定，不参加加权：
+
+1. 使用对应语言的标准解析器确认解析成功；
+2. 按 Fowler 重构定义保持函数签名和公开 API；
+3. 使用固定版本语言工具链确认编译成功；
+4. 原代码和目标代码在同一留出测试集上全部通过（HumanEval/MBPP 的 execution-based evaluation）。
+
+安全隔离不是模型质量指标，但执行不可信程序时必须启用；静态类型检查仅在任务具有类型契约时启用。Python 当前实现使用标准 AST、编译器和隔离临时目录测试。正式执行不可信数据时还应在服务器容器层设置网络、文件系统、CPU、内存和超时限制。
+
+- `formatting`：只处理格式和布局，不修改标识符及程序结构；
+- `identifier`：只处理局部标识符，保持作用域、数据流和控制流；
+- `local_structure`：只处理表达式、临时变量和局部语句结构；
+- `control_flow`：处理条件、循环、提前返回和路径结构，禁止 bug fix 和算法替换。
+
+## 准备数据
+
+输入示例：
 
 ```json
 {
-  "domain": "ast",
-  "domain_name": "Extract/Inline",
-  "reasoning_type": "transformation_rationale",
-  "output_schema_version": "teacher-reasoning-code-v2",
-  "system_prompt_version": "teacher-specialization-v3"
+  "source_id": "sample-001",
+  "domain": "identifier",
+  "task": "保持行为不变，将局部标识符恢复为自然名称。",
+  "source_code": "def total(VAR_0): ...",
+  "target_code": "def total(numbers): ...",
+  "tests": ["assert total([1, 2]) == 3"],
+  "semantic_pass": true,
+  "transformation_type": "identifier_deobfuscation",
+  "construction_method": "dobf_style_ast_obfuscation",
+  "source_dataset": "CodeSearchNet",
+  "source_paper": "DOBF"
 }
 ```
 
-CoT 的 `reasoning_type` 为 `full_reasoning`，其他四个领域均为 `transformation_rationale`。
-训练前会严格检查领域显示名称、reasoning 类型、协议版本和 system prompt，防止旧数据或其他专家的
-样本混入当前 LoRA。五个配置还必须使用同一基座和彼此不同的输出目录，因此训练其他专家不会
-覆盖已经保存的 CoT 适配器。
-
-领域证据要求：
-
-- CoT：输出逐步代码分析和改写代码；正式数据禁止固定模板，冒烟数据才允许模板回退；
-- Style：必须有可观察的格式、文档或组织变化；
-- AST：必须有结构变化，不能只有变量名变化；
-- Variable：必须有标识符变化和 AST 证据；
-- Control-flow：必须有控制流节点变化。
-
-内部字段保持稳定：`cot / style / ast / variable / control_flow`。论文和报告使用名称：
-`Reasoning-guided Code Transformation`、`Style/Documentation`、`Identifier/Rename`、`Extract/Inline`、
-`Control-flow`。其中内部 `ast` 仅表示 Extract/Inline 兼容 ID，不再表示所有 AST 变化；
-内部 `variable` 表示 Identifier/Rename。
-
-不合格样本写入 `rejected.jsonl`，合格样本写入 `accepted.jsonl`，统计信息写入
-`manifest.json`。训练划分按 `source_id` 完成，避免同一道题的不同改写跨集合泄漏。
-
-Python 样本的语义门禁复用项目 multi-expert 的 `SemanticEquivalenceChecker`。四个核心门禁为：
-语言解析成功、函数签名/公开 API 保持、编译成功、原代码与改写代码测试通过。安全检查在数据
-来源不可信或允许外部 API 时作为条件门禁启用。Java 等语言替换为相应解析器、编译器和测试框架。
-随后复用 `CodeQualityEvaluator` 产生筛选证据。
-阈值不是论文规定的固定常数，必须使用人工标注验证集校准。这些规则只负责数据筛选，
-不能作为论文中的领域主指标。
-
-## 正式主指标
-
-每个 Teacher 只指定一个最匹配的领域主指标，详细机器可读定义见
-`teacher_training/metric_registry.json`：
-
-| Teacher | 唯一领域主指标 | 主要依据 |
-|---|---|---|
-| Reasoning-guided Code Transformation | pass@1 | Chen et al. (2021), HumanEval |
-| Style/Documentation | code readability score change | Buse and Weimer (2010) |
-| AST-local Extract/Inline | refactoring-type exact-match accuracy | Tsantalis et al. (2018) |
-| Identifier/Rename | rename exact-match accuracy | Allamanis et al. (2018)；CodeXGLUE |
-| Control-flow | control-flow refactoring-type exact-match accuracy | Tsantalis et al. (2018) |
-
-正式论文结果必须调用相应标准/官方实现。旧版项目中的 AST 兼容相似度、风格增益、命名增益、
-控制节点差值、关键词覆盖、推理结构完整度、推理—代码一致率、人工评分和 Judge 评分已从
-自动正式汇总中删除；它们不能作为正式指标。每个领域另选 2～4 个有来源的辅助指标，仅用于
-展示效果；具体列表和引用见指标注册表。训练目标对五个 Teacher 完全一致且只有一个：
-`assistant-only causal language modeling loss`。
+处理一个领域：
 
 ```bash
 python -m teacher_training.prepare_data \
-  --input /path/to/ast_pairs.jsonl \
-  --domain ast \
+  --input /path/to/identifier_raw.jsonl \
+  --output-dir teacher_training/data/processed/identifier \
+  --domain identifier \
   --language python \
-  --output-dir teacher_training/data/processed/ast
+  --formal
 ```
 
-校准示例：
+程序生成 `accepted.jsonl`、`rejected.jsonl`、`train.jsonl`、`validation.jsonl`、`test.jsonl` 和 `manifest.json`。划分按原始 `problem_id` 完成；`source_id` 只标识单个变体，从而避免同一问题的多个改写版本跨集合泄漏。
+
+原始数据下载与确定性构造入口：
 
 ```bash
-python -m teacher_training.calibrate_thresholds \
-  --input /path/to/human_validation.jsonl \
-  --output /path/to/calibrated_thresholds.json \
-  --min-precision 0.90
+python -m teacher_training.scripts.download_source_data \
+  --dataset codesearchnet --language python --split train \
+  --revision <固定的-Hugging-Face-commit> \
+  --output-dir /path/to/raw
 
-python -m teacher_training.prepare_data \
-  --input /path/to/variable_pairs.jsonl \
-  --domain variable \
-  --thresholds /path/to/calibrated_thresholds.json \
-  --output-dir teacher_training/data/processed/variable
+python -m teacher_training.scripts.construct_domain_pairs \
+  --input /path/to/python_with_tests.jsonl \
+  --domain identifier \
+  --output /path/to/identifier_raw.jsonl \
+  --rejected /path/to/identifier_rejected.jsonl
 ```
 
-人工验证集每行至少包含：`domain`、`accepted_by_human` 和 `metrics`。建议先由两名标注者
-独立判断“是否真正属于该领域且语义保持”，再冻结满足 precision≥0.90 的阈值。
+同一构造脚本支持四个领域。它只接收带可执行测试的数据；公开自然代码下载结果必须先关联原始测试，不能因为能够解析就直接进入正式训练。
 
-## 检查配置并训练
+划分后必须运行独立泄漏审计；它同时检查 `problem_id` 交集和完全相同 target 代码的哈希交集：
+
+```bash
+python -m teacher_training.audit_splits \
+  --train teacher_training/data/processed/identifier/train.jsonl \
+  --validation teacher_training/data/processed/identifier/validation.jsonl \
+  --test teacher_training/data/processed/identifier/test.jsonl \
+  --output teacher_training/data/processed/identifier/leakage_audit.json
+```
+
+## 配置检查与训练
 
 ```bash
 python -m teacher_training.validate_configs
-python -m teacher_training.train_lora \
-  --config teacher_training/configs/cot.json \
-  --dry-run
-python -m teacher_training.train_lora \
-  --config teacher_training/configs/cot.json
+python -m teacher_training.train_lora --config teacher_training/configs/formatting.json
+python -m teacher_training.train_lora --config teacher_training/configs/identifier.json
+python -m teacher_training.train_lora --config teacher_training/configs/local_structure.json
+python -m teacher_training.train_lora --config teacher_training/configs/control_flow.json
 ```
 
-训练前在 GPU 环境安装依赖：
+正式训练前将四个配置的 `formal_experiment` 改为 `true`，并确认基座、数据和输出路径适合服务器。
+
+改为 `true` 之前运行就绪审计。默认最低量是每领域 train=5000、validation=500、test=500；这是实验预注册的最低规模检查，不是论文指标，可通过参数调整并在实验记录中说明：
 
 ```bash
-pip install -r teacher_training/requirements.txt
+python -m teacher_training.check_training_readiness
 ```
 
-## 五个主要数据来源（v2）
+## 评价设计
 
-- Reasoning-guided Code Transformation：CodeContests；从同题通过测试的实现构造代码对，并生成或提取逐样本分析；正式数据禁止固定模板；
-- Style/Documentation：CommitPackFT/CommitPack 真实提交池，筛选非功能性风格与文档变更；
-- Identifier/Rename：CommitPack 提交池，用 RefactoringMiner 检测 Rename 并保存旧名、新名和作用域；
-- Extract/Inline：CommitPack 提交池，用 RefactoringMiner 只抽取 Extract/Inline 类型；
-- Control-flow：CommitPack 提交池，使用预注册 AST/CFG 规则和测试过滤控制流变更。
+| 领域 | 正式主指标 |
+|---|---|
+| Formatting | exact formatting repair accuracy（STYLER） |
+| Identifier | identifier recovery exact-match accuracy（DOBF） |
+| Local Structure | CodeBLEU（官方实现） |
+| Control-flow | Pass@1 |
 
-这不是“五个天然一一对应的数据集”。除 CoT 外，三个重构领域可以共享同一真实 commit 原始池，
-再按可验证标签形成互斥子集。CodeXGLUE Code Refinement、Variable-Misuse 和 ManySStuBs4J
-分别包含 bug repair/variable misuse/single-statement bug fix，不再作为 Style、Rename 和语义保持
-Control-flow 的天然主训练集；它们只用于辅助或对照。完整来源、下载地址、缺失字段和转换要求见
-`dataset_sources.json`。
+语法、签名、编译和测试分别报告为硬门禁通过率，不合并成自定义 `all-gates` 指标，也不与主指标加权。辅助指标只用于解释结果。项目不再输出 `no_change`、`domain_purity_pass`、关键词覆盖或任何内部启发式质量分数。完整版本、实现和出处见 `metric_registry.json`。
 
-正式处理必须加入 `--formal`：
+生成测试集预测后运行：
 
 ```bash
-python -m teacher_training.prepare_data \
-  --input /path/to/converted_domain_pairs.jsonl \
-  --domain variable \
-  --language java \
-  --formal \
-  --output-dir teacher_training/data/processed/variable
+python -m teacher_training.evaluate_domains \
+  --predictions /path/to/predictions.jsonl \
+  --references teacher_training/data/processed/identifier/test.jsonl \
+  --output-dir /path/to/identifier_eval
 ```
 
-正式配置另设 `"formal_experiment": true`。此时训练入口拒绝未通过领域数据契约的样本。MBPP
-冒烟数据不使用 `--formal`，配置保持 `formal_experiment: false`。正式实验应记录每条样本的语言，
-并分别报告同语言结果和跨语言迁移结果。
+正式依赖固定为 `black==25.1.0`、`pycodestyle==2.12.1`、`sacrebleu==2.5.1`、`codebleu==0.7.0` 和 `radon==6.0.1`。输出包含逐样本 CSV 和领域汇总 JSON。
 
-## 交叉领域评估
+各领域辅助指标数量不强制相同：
 
-基座与 LoRA 输出对比也可同时生成图表：
+- Formatting：pycodestyle violation count、Levenshtein edit distance；
+- Identifier：identifier subtoken F1、full-code exact match；
+- Local Structure：BLEU、exact match；
+- Control-flow：cyclomatic complexity、CodeBLEU。
 
-```bash
-python -m teacher_training.compare_base_lora \
-  --base-model /root/autodl-tmp/models/Qwen3-4B \
-  --adapter /root/autodl-tmp/models/teacher-cot-lora \
-  --test-file teacher_training/data/processed/cot/test.jsonl \
-  --output /root/autodl-tmp/results/cot_base_vs_lora.jsonl \
-  --plot /root/autodl-tmp/results/cot_base_vs_lora.png \
-  --limit 20
-```
-
-图表展示每个测试样本的输出长度和推理要素覆盖数量。它们是可解释性辅助指标，不能
-替代语义测试、领域质量指标或人工评估。
-
-推理结果每行需要包含 `teacher_domain`、`sample_domain`、`score` 和
-`semantic_pass`：
+交叉领域评估输出 4×4 矩阵。每个测试领域列使用该领域自己的注册主指标，四个门禁各自输出独立矩阵；只能在同一列中比较四个 Teacher，禁止跨列比较或加权：
 
 ```bash
 python -m teacher_training.evaluate_teachers \
-  --input /path/to/prediction_scores.jsonl \
-  --output /path/to/teacher_matrix.json
+  --input /path/to/scores.jsonl \
+  --output /path/to/four_teacher_matrix.json
 ```
 
-理想情况下，5×5 矩阵的对角线分数高于非对角线，同时保持较高的语义通过率。
+## 文献边界
+
+本项目依据已有论文实际采用过的训练范式组织四个专家，但不声称已有论文训练了完全相同的四 Teacher 系统：Formatting 依据 STYLER，Identifier 依据 DOBF，Local Structure 依据 NatGen，Control-flow 主要沿用 NatGen，ContraCode 仅提供语义保持程序变体训练的辅助依据。数据来源和正式字段见 `dataset_sources.json`。

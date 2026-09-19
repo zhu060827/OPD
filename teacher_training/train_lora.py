@@ -11,12 +11,11 @@ from typing import Any
 from .domains import (
     DOMAIN_SPECS,
     OUTPUT_SCHEMA_VERSION,
-    REASONING_ROLES,
-    REASONING_TYPES,
     PUBLIC_DOMAIN_NAMES,
     SYSTEM_PROMPT_VERSION,
     require_domain,
 )
+from .source_policy import validate_source_for_domain
 
 
 def load_config(path: str) -> dict[str, Any]:
@@ -26,11 +25,9 @@ def load_config(path: str) -> dict[str, Any]:
         if not config.get(key):
             raise ValueError(f"Missing required config key: {key}")
     if config.get("assistant_only_loss") is not True:
-        raise ValueError("五个 Teacher 必须统一使用 assistant-only causal language modeling loss；assistant_only_loss 必须为 true")
+        raise ValueError("四个 Teacher 必须统一使用 assistant-only causal language modeling loss；assistant_only_loss 必须为 true")
     config["training_objective"] = "assistant-only causal language modeling loss"
     config["domain_name"] = PUBLIC_DOMAIN_NAMES[config["domain"]]
-    config["reasoning_role"] = REASONING_ROLES[config["domain"]]
-    config["reasoning_type"] = REASONING_TYPES[config["domain"]]
     config["output_schema_version"] = OUTPUT_SCHEMA_VERSION
     config["system_prompt_version"] = SYSTEM_PROMPT_VERSION
     return config
@@ -46,6 +43,7 @@ def _file_sha256(path: str) -> str:
 
 def validate_dataset_contract(config: dict[str, Any]) -> dict[str, Any]:
     summary = {}
+    split_problem_ids: dict[str, set[str]] = {}
     for split_key in ("train_file", "validation_file"):
         path = Path(config[split_key])
         if not path.exists():
@@ -60,8 +58,6 @@ def validate_dataset_contract(config: dict[str, Any]) -> dict[str, Any]:
                     raise ValueError(f"{path}:{line_number} 的 domain 与配置不一致")
                 expected = {
                     "domain_name": PUBLIC_DOMAIN_NAMES[config["domain"]],
-                    "reasoning_role": REASONING_ROLES[config["domain"]],
-                    "reasoning_type": REASONING_TYPES[config["domain"]],
                     "output_schema_version": OUTPUT_SCHEMA_VERSION,
                     "system_prompt_version": SYSTEM_PROMPT_VERSION,
                 }
@@ -74,6 +70,8 @@ def validate_dataset_contract(config: dict[str, Any]) -> dict[str, Any]:
                     raise ValueError(f"{path}:{line_number} semantic_pass 必须为 true")
                 if config.get("formal_experiment", False) and row.get("formal_data_contract_pass") is not True:
                     raise ValueError(f"{path}:{line_number} 未通过正式数据契约；请使用 prepare_data --formal 重新处理")
+                if config.get("formal_experiment", False):
+                    validate_source_for_domain(config["domain"], str(row.get("source_dataset", "")))
                 messages = row.get("messages") or []
                 roles = [item.get("role") for item in messages]
                 if roles != ["system", "user", "assistant"] or not messages[-1].get("content", "").strip():
@@ -81,15 +79,22 @@ def validate_dataset_contract(config: dict[str, Any]) -> dict[str, Any]:
                 if messages[0].get("content") != DOMAIN_SPECS[config["domain"]].system_prompt:
                     raise ValueError(f"{path}:{line_number} 的 system prompt 与当前 {config['domain_name']} 专家不一致")
                 assistant = messages[-1]["content"]
-                if "<reasoning>" not in assistant or "</reasoning>" not in assistant or "<code>" not in assistant or "</code>" not in assistant:
-                    raise ValueError(f"{path}:{line_number} 的 assistant 输出必须包含完整的 <reasoning> 和 <code> 标签")
+                if "<code>" not in assistant or "</code>" not in assistant:
+                    raise ValueError(f"{path}:{line_number} 的 assistant 输出必须包含完整的 <code> 标签")
+                if "<reasoning>" in assistant or "</reasoning>" in assistant:
+                    raise ValueError(f"{path}:{line_number} 仍含旧 reasoning 协议；请重新运行 prepare_data")
                 rows.append(row)
         if not rows:
             raise ValueError(f"数据文件为空：{path}")
         source_ids = [row.get("source_id") for row in rows]
         if len(source_ids) != len(set(source_ids)):
             raise ValueError(f"{path} 存在重复 source_id")
+        problem_ids = {str(row.get("problem_id", row.get("source_id"))) for row in rows}
+        split_problem_ids[split_key] = problem_ids
         summary[split_key] = {"path": str(path.resolve()), "samples": len(rows), "sha256": _file_sha256(str(path))}
+    overlap = split_problem_ids["train_file"] & split_problem_ids["validation_file"]
+    if overlap:
+        raise ValueError(f"训练集与验证集存在 problem_id 泄漏；示例：{sorted(overlap)[:5]}")
     return summary
 
 

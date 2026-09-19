@@ -3,34 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
-DOMAINS = ("cot", "style", "ast", "variable", "control_flow")
-OUTPUT_SCHEMA_VERSION = "teacher-reasoning-code-v2"
-SYSTEM_PROMPT_VERSION = "teacher-specialization-v3"
+DOMAINS = ("formatting", "identifier", "local_structure", "control_flow")
+OUTPUT_SCHEMA_VERSION = "teacher-code-only-v1"
+SYSTEM_PROMPT_VERSION = "teacher-specialization-v4"
 
-# 内部 ID 保持稳定，以兼容现有 JSONL、配置和后续 MOPD 路由。
 PUBLIC_DOMAIN_NAMES = {
-    "cot": "Reasoning-guided Code Transformation",
-    "style": "Style/Documentation",
-    "variable": "Identifier/Rename",
-    "ast": "Extract/Inline",
-    "control_flow": "Control-flow",
-}
-
-# CoT 保存完整推理；其他专家只保存简短改写依据，以统一 MOPD 输出协议。
-REASONING_ROLES = {
-    "cot": "完整的代码理解与联合改写推理",
-    "style": "简短的风格/文档改写依据（接口统一字段）",
-    "variable": "简短的标识符重命名依据（接口统一字段）",
-    "ast": "简短的 Extract/Inline 重构依据（接口统一字段）",
-    "control_flow": "简短的控制流改写依据（接口统一字段）",
-}
-
-REASONING_TYPES = {
-    "cot": "full_reasoning",
-    "style": "transformation_rationale",
-    "variable": "transformation_rationale",
-    "ast": "transformation_rationale",
-    "control_flow": "transformation_rationale",
+    "formatting": "Style/Formatting",
+    "identifier": "Identifier Deobfuscation/Rename",
+    "local_structure": "Local Structural Transformation",
+    "control_flow": "Control-flow Transformation",
 }
 
 
@@ -43,62 +24,44 @@ class DomainSpec:
     literature_basis: tuple[str, ...]
     primary_metric: str
     primary_metric_reference: str
-    fallback_reasoning: str
 
 
 DOMAIN_SPECS = {
-    "cot": DomainSpec(
-        "cot",
-        "推理引导的代码改写专家",
-        "你是推理引导的代码改写专家。先逐步分析原代码的行为、约束和拟议修改，再依据分析输出改写代码；保持函数签名和可观察行为不变。",
-        "CodeContests（优先）或转换为题目/代码/推理对的 MBPP",
-        (
-            "Li et al. (2022), Competition-Level Code Generation with AlphaCode",
-            "Wei et al. (2022), Chain-of-Thought Prompting Elicits Reasoning in Large Language Models",
-        ),
-        "pass@1",
-        "Chen et al. (2021), Evaluating Large Language Models Trained on Code",
-        "分析任务约束和边界情况，制定保持函数签名与可观察行为不变的改写步骤，并据此生成通过原测试的代码。",
+    "formatting": DomainSpec(
+        "formatting",
+        "风格与格式规范化专家",
+        "你是代码风格与格式规范化专家。只修复缩进、空白、换行、括号布局和语言格式规范问题；不得改变标识符、表达式含义、控制流、函数签名、公开 API 或可观察行为。只输出完整改写代码。",
+        "真实 formatting/checkstyle 修复对，或按 STYLER 范式构造的格式违规代码到规范代码对",
+        ("Palma et al., STYLER: Learning Formatting Conventions to Repair Checkstyle Warnings", "Allamanis et al. (2014), Learning Natural Coding Conventions"),
+        "exact formatting repair accuracy",
+        "Palma et al., STYLER: Learning Formatting Conventions to Repair Checkstyle Warnings",
     ),
-    "style": DomainSpec(
-        "style",
-        "风格与文档专家",
-        "你是风格与文档专家。只改进格式、注释、docstring、可读性和局部组织；不得改变算法、数据流、主要 AST 结构、控制流、函数签名或可观察行为。",
-        "筛选非功能性风格/组织改动后的 CodeXGLUE Code Refinement",
-        ("Lu et al. (2021), CodeXGLUE", "Tufano et al. (2019), Learning to Represent Programs with Program Graphs"),
-        "code readability score change",
-        "Buse and Weimer (2010), Learning a Metric for Code Readability",
-        "改善可读性、文档或代码组织；不改变算法、函数签名和可观察行为。",
+    "identifier": DomainSpec(
+        "identifier",
+        "标识符去混淆与重命名专家",
+        "你是标识符去混淆与重命名专家。只恢复或改善局部变量、参数和局部标识符名称，并同步更新全部定义和使用；不得改变作用域、公开 API、表达式结构、控制流、函数签名或可观察行为。只输出完整改写代码。",
+        "按 DOBF 目标从自然代码构造的标识符混淆代码到原始代码对；真实 Rename 提交仅作补充",
+        ("Lachaux et al. (2021), DOBF: A Deobfuscation Pre-Training Objective for Programming Languages", "Allamanis et al. (2015), Suggesting Accurate Method and Class Names"),
+        "identifier recovery exact-match accuracy",
+        "Lachaux et al. (2021), DOBF",
     ),
-    "ast": DomainSpec(
-        "ast",
-        "局部结构重构专家",
-        "你是局部结构重构专家。只执行 Extract/Inline、表达式拆分或局部语句组织等结构重构；纯格式、纯命名和主要控制流变化不属于本领域。",
-        "RefactoringMiner 检测的结构重构，或 Refactory 风格的前后代码对",
-        ("Tsantalis et al. (2018), RefactoringMiner", "Allamanis et al. (2018), Learning to Represent Programs with Graphs"),
-        "refactoring-type exact-match accuracy",
-        "Tsantalis et al. (2018), RefactoringMiner",
-        "执行 Extract/Inline、表达式拆分或局部语句组织，并保持程序行为不变。",
-    ),
-    "variable": DomainSpec(
-        "variable",
-        "标识符重命名专家",
-        "你是标识符重命名专家。只改善变量或局部标识符名称，并同步更新定义和使用；保持作用域、公开 API、表达式结构、控制流和可观察行为不变。",
-        "CodeXGLUE Variable Misuse 加上真实 Rename Variable 提交转换的改写对",
-        ("Lu et al. (2021), CodeXGLUE", "Allamanis et al. (2015), Suggesting Accurate Method and Class Names"),
-        "rename exact-match accuracy",
-        "Allamanis et al. (2018), Learning to Represent Programs with Graphs；Lu et al. (2021), CodeXGLUE Variable Misuse",
-        "依据变量的定义、使用、作用域和语义角色改进标识符，并同步更新全部引用。",
+    "local_structure": DomainSpec(
+        "local_structure",
+        "局部结构变换专家",
+        "你是局部结构变换专家。只执行语义保持的局部表达式拆分或合并、临时变量引入或消除、局部语句重组和等价语法自然化；不得进行纯格式、纯重命名、主要控制流或算法变换。只输出完整改写代码。",
+        "按 NatGen 范式对自然代码应用可逆、语义保持的局部结构变换后形成的代码对",
+        ("Chakraborty et al. (2022), NatGen: Generative Pre-training by Naturalizing Source Code", "Ren et al. (2020), CodeBLEU"),
+        "CodeBLEU",
+        "Ren et al. (2020), CodeBLEU: a Method for Automatic Evaluation of Code Synthesis",
     ),
     "control_flow": DomainSpec(
         "control_flow",
-        "控制流专家",
-        "你是控制流专家。改进条件、循环、提前返回、嵌套和执行路径；保持函数签名及可观察行为不变，避免纯命名或纯格式改写。",
-        "用 RefactoringMiner 挖掘的控制流重构；ManySStuBs4J 仅作补充",
-        ("Tsantalis et al. (2018), RefactoringMiner", "Karampatsis and Sutton (2020), How Often Do Single-Statement Bugs Occur?"),
-        "control-flow refactoring-type exact-match accuracy",
-        "Tsantalis et al. (2018), RefactoringMiner",
-        "重构条件、循环、提前返回或嵌套路径，并保持函数签名和可观察行为不变。",
+        "控制流变换专家",
+        "你是控制流变换专家。只执行语义保持的条件、循环、提前返回、guard clause、break/continue 和路径结构变换；不得进行纯格式、纯重命名或算法替换，不得改变函数签名和可观察行为。只输出完整改写代码。",
+        "按 NatGen/ContraCode 范式构造并经测试验证的语义保持控制流变换对",
+        ("Chakraborty et al. (2022), NatGen: Generative Pre-training by Naturalizing Source Code", "Jain et al. (2021), ContraCode: Learning Contrastive Representations for Code"),
+        "Pass@1",
+        "Chen et al. (2021), Evaluating Large Language Models Trained on Code",
     ),
 }
 

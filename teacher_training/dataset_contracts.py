@@ -29,7 +29,7 @@ def validate_source_registry() -> dict[str, Any]:
     errors: list[str] = []
     for domain in DOMAINS:
         spec = registry.get(domain, {})
-        for key in ("论文名称", "推荐主数据", "下载地址", "论文", "匹配等级", "转换", "正式必需字段"):
+        for key in ("论文名称", "推荐主数据", "下载地址", "论文", "匹配等级", "转换", "正式必需字段", "正式适配状态"):
             if not spec.get(key):
                 errors.append(f"{domain} 缺少 {key}")
         if "semantic_pass" not in spec.get("正式必需字段", []):

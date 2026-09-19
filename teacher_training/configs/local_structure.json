@@ -1,9 +1,9 @@
 {
-  "domain": "variable",
+  "domain": "local_structure",
   "model_name_or_path": "Qwen/Qwen3-4B",
-  "train_file": "teacher_training/data/processed/variable/train.jsonl",
-  "validation_file": "teacher_training/data/processed/variable/validation.jsonl",
-  "output_dir": "/root/autodl-tmp/models/teacher-variable-lora",
+  "train_file": "teacher_training/data/processed/local_structure/train.jsonl",
+  "validation_file": "teacher_training/data/processed/local_structure/validation.jsonl",
+  "output_dir": "/root/autodl-tmp/models/teacher-local-structure-lora",
   "load_in_4bit": true,
   "num_train_epochs": 3,
   "learning_rate": 0.0002,

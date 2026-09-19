@@ -1,61 +1,52 @@
 {
-  "版本": "teacher-dataset-registry-v2",
-  "说明": "数据源与专家的对应关系是本项目的数据构造方案，不是文献规定的天然映射。正式训练只接收完成转换、领域过滤、语义验证并保留来源证据的样本。",
-  "cot": {
-    "论文名称": "Reasoning-guided Code Transformation",
-    "推荐主数据": "CodeContests",
-    "下载地址": "https://huggingface.co/datasets/deepmind/code_contests",
-    "论文": "Li et al. (2022), Competition-level Code Generation with AlphaCode, Science",
-    "匹配等级": "B-组合依据",
-    "原生具备": ["题目", "多个候选/参考程序", "测试用例", "语言标签"],
-    "原生缺失": ["与代码改写逐步对应的 reasoning", "稳定的 before/after 重构标签"],
-    "转换": "从同题通过测试的 reasoning+code 数据或多个通过测试的实现构造 source/target；联合改写 reasoning 和 code；重新执行测试；避免同一题跨数据划分。",
-    "正式必需字段": ["source_id", "task", "source_reasoning", "source_code", "target_reasoning", "target_code", "reasoning_provenance", "tests", "language", "semantic_pass", "source_dataset", "source_paper"]
-  },
-  "style": {
-    "论文名称": "Style/Documentation",
-    "推荐主数据": "CommitPackFT/CommitPack 原始提交池 + 非功能性 Style/Documentation 过滤",
+  "版本": "teacher-dataset-registry-v3",
+  "说明": "四个领域均为语义保持的 code-only 改写任务。数据必须经过专用转换、预注册变换类型、来源记录以及解析/API/编译/测试四项核心硬门禁；论文依据说明训练范式，不声称已有论文训练了完全相同的四 Teacher 系统。",
+  "formatting": {
+    "论文名称": "Style/Formatting",
+    "推荐主数据": "CommitPackFT Python（唯一训练来源）",
     "下载地址": "https://huggingface.co/datasets/bigcode/commitpackft",
-    "论文": "Muennighoff et al. (2023), OctoPack: Instruction Tuning Code Large Language Models",
-    "匹配等级": "B-组合依据",
-    "原生具备": ["真实提交变更", "多编程语言", "提交文本"],
-    "原生缺失": ["可靠的纯 Style 标签", "普遍可执行的测试"],
-    "转换": "只保留格式、注释、docstring 和局部组织变更；排除 bug fix、Rename、Extract/Inline 和控制流变化；补充解析、编译和测试证据。CodeXGLUE Code Refinement 只作为对照，因为其原任务包含 bug 修复。",
-    "正式必需字段": ["source_id", "source_code", "target_code", "tests", "language", "semantic_pass", "change_type", "source_commit", "source_dataset", "source_paper"]
+    "论文": "Palma et al., STYLER；Allamanis et al. (2014), Learning Natural Coding Conventions",
+    "匹配等级": "A-已有格式修复模型训练范式",
+    "原生具备": ["真实代码或真实格式修复提交"],
+    "原生缺失": ["统一 Python formatting 金标签", "普遍可执行的测试"],
+    "正式适配状态": "条件可行：必须恢复仓库测试；若无测试只能用于预训练/消融，不能通过当前正式四门禁",
+    "转换": "target 使用规范代码；source 使用真实格式违规版本或确定性格式扰动版本。禁止修改标识符、AST 语义结构和控制流；使用 formatter/linter、AST 和测试验证。",
+    "正式必需字段": ["source_id", "problem_id", "source_code", "target_code", "tests", "language", "semantic_pass", "transformation_type", "construction_method", "source_dataset", "source_paper"]
   },
-  "variable": {
-    "论文名称": "Identifier/Rename",
-    "推荐主数据": "CommitPack 原始提交池 + RefactoringMiner Rename 检测",
-    "下载地址": "https://huggingface.co/datasets/bigcode/commitpackft",
-    "检测工具": "https://github.com/tsantalis/RefactoringMiner",
-    "论文": "Tsantalis et al. (2020), RefactoringMiner 2.0；Allamanis et al. (2015), Suggesting Accurate Method and Class Names",
-    "匹配等级": "B-组合依据",
-    "原生具备": ["真实前后提交"],
-    "原生缺失": ["统一 Rename 金标签", "所有语言的可靠作用域标签"],
-    "转换": "检测并人工抽查 Rename Variable/Parameter/Attribute；保存旧名、新名、作用域和定义—使用位置。Variable-Misuse 仅作数据流辅助，不再作为 Rename 主训练集。",
-    "正式必需字段": ["source_id", "source_code", "target_code", "tests", "language", "semantic_pass", "refactoring_type", "old_identifier", "target_identifier", "scope", "source_commit", "source_dataset", "source_paper"]
+  "identifier": {
+    "论文名称": "Identifier Deobfuscation/Rename",
+    "推荐主数据": "CodeSearchNet Python（唯一训练来源）",
+    "下载地址": "https://huggingface.co/datasets/code_search_net",
+    "论文": "Lachaux et al. (2021), DOBF: A Deobfuscation Pre-Training Objective for Programming Languages",
+    "匹配等级": "A-直接去混淆训练目标",
+    "原生具备": ["自然代码", "标识符上下文"],
+    "原生缺失": ["DOBF 式 source，需要确定性构造", "可执行单元测试"],
+    "正式适配状态": "条件可行：DOBF 构造可复现，但当前正式四门禁仍要求为每个函数恢复可靠测试",
+    "转换": "保留自然代码为 target，仅混淆局部变量和参数生成 source；保存原名、目标名、作用域和定义—使用位置。禁止公开 API、结构和控制流变化。",
+    "正式必需字段": ["source_id", "problem_id", "source_code", "target_code", "tests", "language", "semantic_pass", "transformation_type", "old_identifier", "target_identifier", "scope", "construction_method", "source_dataset", "source_paper"]
   },
-  "ast": {
-    "论文名称": "Extract/Inline",
-    "推荐主数据": "CommitPack 原始提交池 + RefactoringMiner Extract/Inline 检测",
-    "下载地址": "https://huggingface.co/datasets/bigcode/commitpackft",
-    "检测工具": "https://github.com/tsantalis/RefactoringMiner",
-    "论文": "Tsantalis et al. (2020), RefactoringMiner 2.0",
-    "匹配等级": "A/B-检测类型直接、训练对构造",
-    "原生具备": ["真实前后提交"],
-    "原生缺失": ["下载数据中的统一 Extract/Inline 标签", "Python 的同等检测覆盖"],
-    "转换": "只保留 Extract Variable/Method 和 Inline Variable/Method；保存检测位置和类型；排除纯 Rename、主要控制流变化、格式变化和算法替换。",
-    "正式必需字段": ["source_id", "source_code", "target_code", "tests", "language", "semantic_pass", "refactoring_type", "source_commit", "source_dataset", "source_paper"]
+  "local_structure": {
+    "论文名称": "Local Structural Transformation",
+    "推荐主数据": "CodeSearchNet Python（唯一训练来源，与 Identifier 独立构造和划分）",
+    "下载地址": "https://huggingface.co/datasets/code_search_net",
+    "论文": "Chakraborty et al. (2022), NatGen: Generative Pre-training by Naturalizing Source Code",
+    "匹配等级": "A-直接生成式自然化训练范式",
+    "原生具备": ["自然代码"],
+    "原生缺失": ["局部结构扰动 source，需要按预注册变换构造", "可执行单元测试"],
+    "正式适配状态": "条件可行：NatGen 式构造可复现，但当前正式四门禁仍要求为每个函数恢复可靠测试",
+    "转换": "对 target 应用可逆、语义保持的表达式拆分/合并、临时变量引入/消除和局部语句变换得到 source；记录 transformation_type，并排除命名、格式和主要控制流变化。",
+    "正式必需字段": ["source_id", "problem_id", "source_code", "target_code", "tests", "language", "semantic_pass", "transformation_type", "construction_method", "source_dataset", "source_paper"]
   },
   "control_flow": {
-    "论文名称": "Control-flow",
-    "推荐主数据": "CommitPack 原始提交池 + CFG/重构检测 + 测试过滤",
-    "下载地址": "https://huggingface.co/datasets/bigcode/commitpackft",
-    "论文": "Muennighoff et al. (2023), OctoPack；McCabe (1976), A Complexity Measure；Tsantalis et al. (2020), RefactoringMiner 2.0",
-    "匹配等级": "B/C-组合与项目标签",
-    "原生具备": ["真实前后提交", "多编程语言"],
-    "原生缺失": ["标准控制流重构金标签", "普遍可执行的测试"],
-    "转换": "预注册允许的控制流类型，使用 AST/CFG 检测并人工抽查，执行前后测试。ManySStuBs4J 仅作 bug-fix 对照，不作为语义保持主训练集。",
-    "正式必需字段": ["source_id", "source_code", "target_code", "tests", "language", "semantic_pass", "control_flow_type", "source_commit", "source_dataset", "source_paper"]
+    "论文名称": "Control-flow Transformation",
+    "推荐主数据": "DeepMind CodeContests Python 正确解答（唯一训练来源）",
+    "下载地址": "https://huggingface.co/datasets/deepmind/code_contests",
+    "论文": "Chakraborty et al. (2022), NatGen；Jain et al. (2021), ContraCode",
+    "匹配等级": "A/B-生成式自然化直接依据，对比式变换训练辅助依据",
+    "原生具备": ["竞赛题目", "多语言解答", "标准输入输出测试"],
+    "原生缺失": ["统一控制流变换 source，需要按预注册变换构造", "函数级 assert 测试；原测试为 stdin/stdout"],
+    "正式适配状态": "尚未直接兼容：必须增加 CodeContests Python 语言枚举解析、正确解答筛选和 stdin/stdout 执行器后才能正式训练",
+    "转换": "构造并记录 guard_clause、conditional_rewrite、loop_rewrite、early_return、break_continue_rewrite 等语义保持变换；禁止 bug fix、算法替换和复杂度类别改变；执行原测试。",
+    "正式必需字段": ["source_id", "problem_id", "source_code", "target_code", "tests", "language", "semantic_pass", "transformation_type", "construction_method", "source_dataset", "source_paper"]
   }
 }

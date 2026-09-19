@@ -1,3 +1,9 @@
+"""旧版通用诊断脚本，不属于 teacher-metrics-v4 正式四领域评估。
+
+正式实验使用 ``python -m teacher_training.evaluate_domains``。本文件仅保留用于复现旧结果；
+其中的关键词、长度和重复率不得作为四个 Teacher 的正式指标。
+"""
+
 from __future__ import annotations
 
 import argparse

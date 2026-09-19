@@ -1,74 +1,70 @@
 {
+  "协议版本": "teacher-metrics-v4",
   "训练目标": {
     "名称": "assistant-only causal language modeling loss",
-    "适用范围": "五个 Teacher 完全相同，只对 assistant 的 <reasoning> 与 <code> token 计算交叉熵",
-    "文献": "Ouyang et al. (2022), Training language models to follow instructions with human feedback；TRL SFTTrainer assistant_only_loss"
+    "适用范围": "四个 Teacher 完全相同；只对 assistant 消息（<code>...</code>）计算 next-token cross-entropy",
+    "可复现实现": "TRL SFTTrainer 的 assistant_only_loss=true",
+    "文献": "Ouyang et al. (2022), Training Language Models to Follow Instructions with Human Feedback；Hugging Face TRL SFTTrainer 文档"
   },
-  "说明": "每个领域只指定一个正式主指标；硬门禁、辅助指标和描述性统计不参与加权总分。指标本身有文献依据，但五个领域与指标的对应关系是本项目实验设计。正式结果应调用论文或官方实现，项目内兼容代理不得冒充正式结果。",
-  "cot": {
-    "论文名称": "Reasoning-guided Code Transformation",
-    "主指标": "pass@1",
-    "方向": "越高越好",
-    "文献": "Chen et al. (2021), Evaluating Large Language Models Trained on Code",
-    "正式计算要求": "在留出测试用例上执行生成代码，按 HumanEval 定义报告 pass@1。reasoning 是中间监督而非单独评分对象；使用 reasoning+code 对 code-only 消融，并报告 Pass@1 差异及置信区间。"
+  "说明": "只保留具有公开定义且可由固定实现复现的项目：四项门禁、每领域一个主指标及注册辅助指标。不同指标不得加权或合并为项目自定义总分。",
+  "通用硬门禁": {
+    "核心项目": [
+      {"名称": "语言解析成功", "输出字段": "parse_pass", "实现": "Python ast.parse；其他语言使用对应标准解析器", "依据": "语言规范与标准解析器"},
+      {"名称": "函数签名/公开 API 保持", "输出字段": "signature_pass", "实现": "比较变换前后的公开函数名、参数、默认值及语言允许的类型信息", "依据": "Fowler (2018), Refactoring: Improving the Design of Existing Code"},
+      {"名称": "编译成功", "输出字段": "compile_pass", "实现": "Python compile；Java javac；C/C++ 使用固定版本编译器", "依据": "相应语言规范与标准编译器"},
+      {"名称": "改写代码通过留出测试", "输出字段": "test_pass", "实现": "在隔离环境对模型改写执行固定留出测试集；数据构造阶段另行要求 source/target 均通过", "依据": "Chen et al. (2021), HumanEval；Austin et al. (2021), MBPP"}
+    ],
+    "条件项目": [
+      {"名称": "安全检查", "启用条件": "执行不可信代码或数据允许外部 API/文件/网络访问时", "实现": "隔离容器、资源限制和允许列表；静态黑名单只能作为前置检查", "依据": "执行生成代码的实验安全要求，不作为模型质量指标"},
+      {"名称": "静态类型检查", "启用条件": "数据和语言任务提供类型契约时", "实现": "使用固定版本 mypy/pyright/javac 等", "依据": "相应工具和语言类型系统规范"}
+    ]
   },
-  "style": {
-    "论文名称": "Style/Documentation",
-    "主指标": "code readability score change",
+  "formatting": {
+    "论文名称": "Style/Formatting",
+    "主指标": "exact formatting repair accuracy",
+    "主指标字段": "primary_exact_formatting_repair",
     "方向": "越高越好",
-    "文献": "Buse and Weimer (2010), Learning a Metric for Code Readability",
-    "正式计算要求": "使用论文定义或经复现实证验证的可读性模型，报告改写前后分数差。"
+    "可复现实现": "模型输出去除 <code> 标签后，仅统一文件末尾换行，与 gold target 严格文本一致，按样本求准确率；Black 只用于构造规范化 gold，不在评估时抹平格式差异",
+    "文献": "Palma et al., STYLER: Learning Formatting Conventions to Repair Checkstyle Warnings",
+    "辅助指标": [
+      {"指标": "pycodestyle violation count", "输出字段": "pycodestyle_violation_count", "实现": "固定 pycodestyle 版本及规则集，报告每样本违规数", "文献": "pycodestyle/PEP 8"},
+      {"指标": "Levenshtein edit distance", "输出字段": "levenshtein_distance_to_target", "实现": "报告预测文本到 gold target 的字符级 Levenshtein 距离，不参与加权", "文献": "Levenshtein (1966), Binary Codes Capable of Correcting Deletions, Insertions, and Reversals"}
+    ]
   },
-  "ast": {
-    "论文名称": "AST-local Extract/Inline Refactoring",
-    "主指标": "refactoring-type exact-match accuracy",
+  "identifier": {
+    "论文名称": "Identifier Deobfuscation/Rename",
+    "主指标": "identifier recovery exact-match accuracy",
+    "主指标字段": "primary_identifier_exact_match",
     "方向": "越高越好",
-    "文献": "Tsantalis et al. (2018), RefactoringMiner",
-    "正式计算要求": "内部字段仍为 ast，但金标签只能取 Extract/Inline 等允许类型；预测类型与金标签 exact match。"
+    "可复现实现": "对金标注 old_identifier 位置提取预测名称，与 target_identifier 做 exact match",
+    "文献": "Lachaux et al. (2021), DOBF",
+    "辅助指标": [
+      {"指标": "identifier subtoken F1", "输出字段": "identifier_subtoken_f1", "实现": "按 camelCase/snake_case 分词后计算 precision/recall/F1", "文献": "Allamanis et al. (2015), Suggesting Accurate Method and Class Names"},
+      {"指标": "full-code exact match", "输出字段": "full_code_exact_match", "实现": "AST 反解析规范化后与 gold target 完全一致", "文献": "Lachaux et al. (2021), DOBF 的去混淆恢复任务"}
+    ]
   },
-  "variable": {
-    "论文名称": "Identifier/Rename",
-    "主指标": "rename exact-match accuracy",
+  "local_structure": {
+    "论文名称": "Local Structural Transformation",
+    "主指标": "CodeBLEU",
+    "主指标字段": "primary_codebleu",
     "方向": "越高越好",
-    "文献": "Allamanis et al. (2018), Learning to Represent Programs with Graphs；Lu et al. (2021), CodeXGLUE Variable Misuse",
-    "正式计算要求": "将预测标识符与数据集金标准标识符做 exact match；宏观或微观口径必须在论文中声明。"
+    "可复现实现": "使用 codebleu PyPI/官方实现，固定 tokenizer、语言和版本；比较 prediction 与 gold target",
+    "文献": "Ren et al. (2020), CodeBLEU",
+    "辅助指标": [
+      {"指标": "BLEU", "输出字段": "bleu", "实现": "SacreBLEU corpus_bleu，固定 tokenize=none", "文献": "Papineni et al. (2002), BLEU；Post (2018), SacreBLEU"},
+      {"指标": "exact match", "输出字段": "exact_match", "实现": "AST 反解析规范化后的完整代码 exact match", "文献": "Lachaux et al. (2021), DOBF；Chakraborty et al. (2022), NatGen 的序列恢复评估范式"}
+    ]
   },
   "control_flow": {
     "论文名称": "Control-flow Transformation",
-    "主指标": "control-flow refactoring-type exact-match accuracy",
+    "主指标": "Pass@1",
+    "主指标字段": "primary_pass_at_1",
     "方向": "越高越好",
-    "文献": "Tsantalis et al. (2018), RefactoringMiner",
-    "正式计算要求": "使用预先冻结的控制流重构类型集合，预测类型与 RefactoringMiner/人工复核金标签 exact match。"
-  },
-  "通用硬门禁": {
-    "核心项目": ["语言解析成功", "函数签名/公开 API 保持", "编译成功", "原代码与改写代码测试通过"],
-    "条件项目": ["安全检查：数据来源不可信或允许执行外部 API 时启用", "静态类型检查：任务提供类型系统时启用"],
-    "说明": "核心门禁原则相同，但解析器、编译器、测试框架和签名定义按 Python/Java 及任务调整；不作为领域主指标，也不参与加权。"
-  },
-  "辅助指标": {
-    "cot": [
-      {"指标": "CodeBLEU", "文献": "Ren et al. (2020), CodeBLEU", "用途": "代码参考相似性辅助统计"},
-      {"指标": "CodeBERTScore", "文献": "Zhou et al. (2023), CodeBERTScore", "用途": "代码语义表示相似性辅助统计"},
-      {"指标": "Self-BLEU", "文献": "Zhu et al. (2018), Texygen", "用途": "多样性辅助统计；仅在每个输入生成多个候选时使用"}
-    ],
-    "style": [
-      {"指标": "BLEU-4", "文献": "Papineni et al. (2002), BLEU；Lu et al. (2021), CodeXGLUE"},
-      {"指标": "CrystalBLEU", "文献": "Eghbali and Pradel (2022), CrystalBLEU"},
-      {"指标": "Maintainability Index", "文献": "Oman and Hagemeister (1992)"}
-    ],
-    "variable": [
-      {"指标": "subtoken F1", "文献": "Allamanis et al. (2015), Suggesting Accurate Method and Class Names"},
-      {"指标": "CodeBLEU data-flow match", "文献": "Ren et al. (2020), CodeBLEU"}
-    ],
-    "ast": [
-      {"指标": "AST tree edit distance", "文献": "Zhang and Shasha (1989)"},
-      {"指标": "CodeBLEU syntax match", "文献": "Ren et al. (2020), CodeBLEU"},
-      {"指标": "refactoring detection precision/recall", "文献": "Tsantalis et al. (2018), RefactoringMiner"}
-    ],
-    "control_flow": [
-      {"指标": "cyclomatic complexity change", "文献": "McCabe (1976), A Complexity Measure"},
-      {"指标": "CFG graph edit distance", "文献": "Bunke (1997)"},
-      {"指标": "refactoring detection precision/recall", "文献": "Tsantalis et al. (2018), RefactoringMiner"}
+    "可复现实现": "每个任务生成一个程序，在留出测试上执行，报告通过全部测试的任务比例",
+    "文献": "Chen et al. (2021), Evaluating Large Language Models Trained on Code",
+    "辅助指标": [
+      {"指标": "cyclomatic complexity", "输出字段": "cyclomatic_complexity", "实现": "固定版本 radon cc，报告预测代码复杂度，并单独输出 source_cyclomatic_complexity", "文献": "McCabe (1976), A Complexity Measure"},
+      {"指标": "CodeBLEU", "输出字段": "codebleu", "实现": "使用 codebleu 官方实现比较 prediction 与 gold target", "文献": "Ren et al. (2020), CodeBLEU"}
     ]
   }
 }

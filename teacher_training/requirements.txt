@@ -5,3 +5,8 @@ trl>=0.12
 accelerate>=1.0
 bitsandbytes>=0.44
 torch>=2.4
+black==25.1.0
+pycodestyle==2.12.1
+sacrebleu==2.5.1
+codebleu==0.7.0
+radon==6.0.1

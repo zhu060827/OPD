@@ -1,9 +1,9 @@
 {
-  "domain": "ast",
+  "domain": "identifier",
   "model_name_or_path": "Qwen/Qwen3-4B",
-  "train_file": "teacher_training/data/processed/ast/train.jsonl",
-  "validation_file": "teacher_training/data/processed/ast/validation.jsonl",
-  "output_dir": "/root/autodl-tmp/models/teacher-ast-lora",
+  "train_file": "teacher_training/data/processed/identifier/train.jsonl",
+  "validation_file": "teacher_training/data/processed/identifier/validation.jsonl",
+  "output_dir": "/root/autodl-tmp/models/teacher-identifier-lora",
   "load_in_4bit": true,
   "num_train_epochs": 3,
   "learning_rate": 0.0002,

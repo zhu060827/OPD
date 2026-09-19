@@ -1,6 +1,6 @@
 {
-  "说明": "这是配置模板，不是第六个 Teacher。复制后必须填写 domain、数据路径和输出路径。",
-  "domain": "填写领域：cot/style/ast/variable/control_flow",
+  "说明": "这是配置模板，不是第五个 Teacher。复制后必须填写 domain、数据路径和输出路径。",
+  "domain": "填写领域：formatting/identifier/local_structure/control_flow",
   "model_name_or_path": "/root/autodl-tmp/models/Qwen3-4B",
   "train_file": "teacher_training/data/processed/<领域>/train.jsonl",
   "validation_file": "teacher_training/data/processed/<领域>/validation.jsonl",

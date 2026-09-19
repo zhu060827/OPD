@@ -1,9 +1,9 @@
 {
-  "domain": "cot",
+  "domain": "formatting",
   "model_name_or_path": "Qwen/Qwen3-4B",
-  "train_file": "teacher_training/data/processed/cot/train.jsonl",
-  "validation_file": "teacher_training/data/processed/cot/validation.jsonl",
-  "output_dir": "/root/autodl-tmp/models/teacher-cot-lora",
+  "train_file": "teacher_training/data/processed/formatting/train.jsonl",
+  "validation_file": "teacher_training/data/processed/formatting/validation.jsonl",
+  "output_dir": "/root/autodl-tmp/models/teacher-formatting-lora",
   "load_in_4bit": true,
   "num_train_epochs": 3,
   "learning_rate": 0.0002,
