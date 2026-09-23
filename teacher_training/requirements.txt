@@ -9,4 +9,6 @@ black==25.1.0
 pycodestyle==2.12.1
 sacrebleu==2.5.1
 codebleu==0.7.0
+tree-sitter==0.23.2
+tree-sitter-python==0.23.6
 radon==6.0.1

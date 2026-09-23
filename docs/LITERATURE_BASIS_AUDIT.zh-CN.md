@@ -38,7 +38,7 @@ Control-flow Teacher。CommitPackFT 和 CodeSearchNet 是自然代码来源，�
 
 每个领域只用一个主指标，不计算跨指标总分。辅助指标仅描述结果：
 
-- Formatting：pycodestyle violation count；Levenshtein edit distance；
+- Formatting：pycodestyle violation count；Levenshtein edit distance；AST identity 作为非功能性格式修复的领域硬门禁；
 - Identifier：identifier subtoken F1；full-code exact match；
 - Local Structure：SacreBLEU；AST 规范化 exact match；
 - Control-flow：McCabe cyclomatic complexity；CodeBLEU。

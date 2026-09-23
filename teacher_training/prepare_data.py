@@ -87,6 +87,8 @@ def normalize_row(row: dict[str, Any], domain_override: str | None = None, langu
         "source_code": source_code,
         "target_code": target_code,
         "tests": list(tests or []),
+        "test_format": str(row.get("test_format") or ("python_assert" if tests else "none")),
+        "test_timeout": int(row.get("test_timeout", 5)),
         "semantic_pass": bool(row.get("semantic_pass", row.get("verification_status") == "semantic_pass")),
         "validation_status": validation_reason,
         "experiment_status": "verified_positive",
@@ -102,6 +104,8 @@ def normalize_row(row: dict[str, Any], domain_override: str | None = None, langu
         "change_type", "source_commit", "refactoring_type", "transformation_type",
         "construction_method", "old_identifier", "target_identifier", "scope",
         "definition_use_locations", "control_flow_type",
+        "formatting_perturbation", "constructor_version", "transformation_evidence",
+        "commit", "file_path", "license", "repos", "source_task",
     ):
         if row.get(key) not in (None, "", []):
             normalized[key] = row[key]
@@ -116,13 +120,47 @@ def normalize_row(row: dict[str, Any], domain_override: str | None = None, langu
     return normalized
 
 
-def prepare(input_path: str, output_dir: str, domain: str | None, seed: int, train_ratio: float, validation_ratio: float, require_semantic_pass: bool, language: str | None = None, formal: bool = False) -> dict[str, Any]:
+def _token_lengths(tokenizer: Any, messages: list[dict[str, str]]) -> tuple[int, int]:
+    """按训练时的 chat template 计算整个样本和 assistant 目标长度。"""
+    try:
+        rendered = tokenizer.apply_chat_template(
+            messages,
+            tokenize=True,
+            add_generation_prompt=False,
+            enable_thinking=False,
+        )
+    except TypeError:
+        rendered = tokenizer.apply_chat_template(
+            messages, tokenize=True, add_generation_prompt=False
+        )
+    target = tokenizer(messages[-1]["content"], add_special_tokens=False)["input_ids"]
+    return len(rendered), len(target)
+
+
+def prepare(input_path: str, output_dir: str, domain: str | None, seed: int, train_ratio: float, validation_ratio: float, require_semantic_pass: bool, language: str | None = None, formal: bool = False, tokenizer: Any | None = None, tokenizer_name: str | None = None, max_length: int | None = None, max_generation_tokens: int | None = None) -> dict[str, Any]:
     normalized, rejected = [], []
     for index, row in enumerate(read_jsonl(input_path), 1):
         try:
             item = normalize_row(row, domain, language, validate=True, formal=formal)
             if require_semantic_pass and not item["semantic_pass"]:
                 raise ValueError("semantic_pass is required")
+            if tokenizer is not None:
+                total_tokens, target_tokens = _token_lengths(tokenizer, item["messages"])
+                item["token_length_evidence"] = {
+                    "tokenizer": tokenizer_name,
+                    "total_chat_tokens": total_tokens,
+                    "target_tokens": target_tokens,
+                    "max_length": max_length,
+                    "max_generation_tokens": max_generation_tokens,
+                }
+                if max_length is not None and total_tokens > max_length:
+                    raise ValueError(
+                        f"training_context_too_long: total_chat_tokens={total_tokens}>{max_length}"
+                    )
+                if max_generation_tokens is not None and target_tokens > max_generation_tokens:
+                    raise ValueError(
+                        f"generation_target_too_long: target_tokens={target_tokens}>{max_generation_tokens}"
+                    )
             normalized.append(item)
         except (TypeError, ValueError) as exc:
             rejected.append({"line": index, "reason": str(exc), "row": row})
@@ -156,6 +194,12 @@ def prepare(input_path: str, output_dir: str, domain: str | None, seed: int, tra
         "system_prompt_version": SYSTEM_PROMPT_VERSION,
         "formal_data_contract_required": formal,
         "formal_data_contract_passed": sum(item["formal_data_contract_pass"] for item in normalized),
+        "token_length_policy": {
+            "enabled": tokenizer is not None,
+            "tokenizer": tokenizer_name,
+            "max_length": max_length,
+            "max_generation_tokens": max_generation_tokens,
+        },
     }
     root.mkdir(parents=True, exist_ok=True)
     (root / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -173,10 +217,25 @@ def main() -> None:
     parser.add_argument("--validation-ratio", type=float, default=0.1)
     parser.add_argument("--allow-unverified", action="store_true")
     parser.add_argument("--formal", action="store_true", help="启用正式数据来源和领域金标签契约；冒烟测试不要使用")
+    parser.add_argument("--tokenizer", help="本地 tokenizer 路径或 Hugging Face ID；传入后启用长度门禁")
+    parser.add_argument("--max-length", type=int, help="完整 chat template 的最大 token 数")
+    parser.add_argument("--max-generation-tokens", type=int, help="assistant 目标的最大 token 数")
     args = parser.parse_args()
     if args.train_ratio <= 0 or args.validation_ratio < 0 or args.train_ratio + args.validation_ratio >= 1:
         parser.error("划分比例必须为测试集留出非空比例")
-    result = prepare(args.input, args.output_dir, args.domain, args.seed, args.train_ratio, args.validation_ratio, not args.allow_unverified, args.language, args.formal)
+    if bool(args.max_length or args.max_generation_tokens) and not args.tokenizer:
+        parser.error("--max-length/--max-generation-tokens 必须与 --tokenizer 一起使用")
+    if args.formal and not args.tokenizer:
+        parser.error("正式数据必须传入 --tokenizer 并启用 token 长度门禁")
+    tokenizer = None
+    if args.tokenizer:
+        if not args.max_length or not args.max_generation_tokens:
+            parser.error("启用 --tokenizer 时必须同时设置 --max-length 和 --max-generation-tokens")
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained(
+            args.tokenizer, local_files_only=True, trust_remote_code=True
+        )
+    result = prepare(args.input, args.output_dir, args.domain, args.seed, args.train_ratio, args.validation_ratio, not args.allow_unverified, args.language, args.formal, tokenizer, args.tokenizer, args.max_length, args.max_generation_tokens)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

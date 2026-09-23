@@ -10,10 +10,7 @@ import ast
 import csv
 import json
 import re
-import subprocess
-import sys
 import tempfile
-import textwrap
 from collections import Counter
 from pathlib import Path
 from statistics import fmean
@@ -21,14 +18,22 @@ from typing import Any
 
 from .domains import DOMAINS, require_domain
 from .io_utils import read_jsonl
+from .test_execution import run_registered_tests
 
 
-CODE_BLOCK = re.compile(r"<code>\s*(.*?)\s*</code>", re.DOTALL)
+CODE_BLOCK = re.compile(r"<code>\s*(.*?)\s*</code>", re.DOTALL | re.IGNORECASE)
+MARKDOWN_BLOCK = re.compile(r"```(?:python|py)?\s*\n?(.*?)\n?```", re.DOTALL | re.IGNORECASE)
 
 
 def extract_code(text: str) -> str:
-    match = CODE_BLOCK.search(str(text or ""))
-    return (match.group(1) if match else str(text or "")).strip()
+    value = str(text or "").strip()
+    match = CODE_BLOCK.fullmatch(value)
+    if match:
+        return match.group(1).strip()
+    match = MARKDOWN_BLOCK.fullmatch(value)
+    if match:
+        return match.group(1).strip()
+    return value
 
 
 def normalized_code(code: str) -> str:
@@ -103,23 +108,10 @@ def levenshtein_distance(left: str, right: str) -> int:
     return previous[-1]
 
 
-def run_tests(code: str, tests: list[str], timeout: int) -> bool:
+def run_tests(code: str, tests: list[Any], timeout: int, test_format: str = "python_assert") -> bool:
     if not tests:
         raise ValueError("Pass@1 要求每条 control_flow 测试样本提供留出测试")
-    script = code.rstrip() + "\n\n"
-    for test in tests:
-        script += textwrap.dedent(str(test)).rstrip() + "\n"
-    with tempfile.TemporaryDirectory(prefix="teacher_eval_") as directory:
-        path = Path(directory) / "candidate.py"
-        path.write_text(script, encoding="utf-8")
-        try:
-            result = subprocess.run(
-                [sys.executable, str(path)], cwd=directory, capture_output=True,
-                text=True, timeout=timeout, check=False,
-            )
-        except subprocess.TimeoutExpired:
-            return False
-    return result.returncode == 0
+    return run_registered_tests(code, tests, test_format, timeout)[0]
 
 
 def function_signatures(code: str) -> list[str]:
@@ -157,13 +149,30 @@ def pycodestyle_count(code: str) -> int:
         return int(report.total_errors)
 
 
-def codebleu_score(prediction: str, target: str, language: str) -> float:
+def codebleu_details(predictions: list[str], targets: list[str], language: str) -> dict[str, float]:
     try:
         from codebleu import calc_codebleu
     except ImportError as exc:
-        raise RuntimeError("CodeBLEU 正式评估需要固定版本 codebleu==0.7.0") from exc
-    result = calc_codebleu([target], [prediction], lang=language)
-    return float(result["codebleu"])
+        raise RuntimeError(
+            "CodeBLEU 正式评估需要兼容版本组合：codebleu==0.7.0、"
+            "tree-sitter==0.23.2、tree-sitter-python==0.23.6"
+        ) from exc
+    try:
+        result = calc_codebleu(targets, predictions, lang=language)
+    except ImportError as exc:
+        parser_package = {
+            "python": "tree-sitter==0.23.2 tree-sitter-python==0.23.6",
+        }.get(language, f"tree-sitter-{language}")
+        raise RuntimeError(
+            f"CodeBLEU 缺少 {language} 语言解析器；请安装 {parser_package}。"
+            "建议重新执行 pip install -r teacher_training/requirements.txt。"
+        ) from exc
+    return {key: float(value) for key, value in result.items()}
+
+
+def codebleu_score(prediction: str, target: str, language: str) -> float:
+    """单样本 CodeBLEU 只用于误差分析；论文主结果使用 corpus_metrics。"""
+    return codebleu_details([prediction], [target], language)["codebleu"]
 
 
 def bleu_score(prediction: str, target: str) -> float:
@@ -171,7 +180,43 @@ def bleu_score(prediction: str, target: str) -> float:
         import sacrebleu
     except ImportError as exc:
         raise RuntimeError("BLEU 正式评估需要固定版本 sacrebleu==2.5.1") from exc
-    return float(sacrebleu.corpus_bleu([prediction], [[target]], tokenize="none").score)
+    return float(sacrebleu.sentence_bleu(prediction, [target], tokenize="none").score)
+
+
+def corpus_metrics(references: list[dict[str, Any]], predictions: dict[str, dict[str, Any]], prediction_field: str | None) -> dict[str, dict[str, float | int | str]]:
+    """对整个测试集一次性计算语料级指标，避免平均单样本分数。"""
+    if not references or {str(row["domain"]) for row in references} != {"local_structure"}:
+        return {}
+    predicted_codes, targets = [], []
+    for reference in references:
+        prediction = predictions[str(reference["source_id"])]
+        if prediction_field:
+            raw = prediction[prediction_field]
+        else:
+            raw = prediction.get("lora_output", prediction.get("prediction", ""))
+        predicted_codes.append(extract_code(raw))
+        targets.append(str(reference["target_code"]).strip())
+    language = str(references[0].get("language", "python")).lower()
+    details = codebleu_details(predicted_codes, targets, language)
+    try:
+        import sacrebleu
+    except ImportError as exc:
+        raise RuntimeError("BLEU 正式评估需要固定版本 sacrebleu==2.5.1") from exc
+    metrics: dict[str, dict[str, float | int | str]] = {
+        "corpus_codebleu": {
+            "value": details["codebleu"], "n": len(targets),
+            "aggregation": "official corpus-level calc_codebleu",
+        },
+        "corpus_bleu": {
+            "value": float(sacrebleu.corpus_bleu(predicted_codes, [targets], tokenize="none").score),
+            "n": len(targets), "aggregation": "SacreBLEU corpus_bleu; tokenize=none",
+        },
+    }
+    for key in ("ngram_match_score", "weighted_ngram_match_score", "syntax_match_score", "dataflow_match_score"):
+        metrics[f"codebleu_{key}"] = {
+            "value": details[key], "n": len(targets), "aggregation": "official corpus-level calc_codebleu component",
+        }
+    return metrics
 
 
 def cyclomatic_complexity(code: str) -> float:
@@ -183,9 +228,15 @@ def cyclomatic_complexity(code: str) -> float:
     return float(sum(block.complexity for block in blocks))
 
 
-def evaluate_row(reference: dict[str, Any], prediction: dict[str, Any], timeout: int) -> dict[str, Any]:
+def evaluate_row(reference: dict[str, Any], prediction: dict[str, Any], timeout: int, prediction_field: str | None = None) -> dict[str, Any]:
     domain = require_domain(str(reference["domain"]))
-    predicted = extract_code(prediction.get("lora_output", prediction.get("prediction", "")))
+    if prediction_field:
+        if prediction_field not in prediction:
+            raise ValueError(f"预测记录缺少指定字段 {prediction_field!r}")
+        raw_prediction = prediction[prediction_field]
+    else:
+        raw_prediction = prediction.get("lora_output", prediction.get("prediction", ""))
+    predicted = extract_code(raw_prediction)
     target = str(reference["target_code"]).strip()
     source = str(reference["source_code"]).strip()
     language = str(reference.get("language", "python")).lower()
@@ -211,10 +262,20 @@ def evaluate_row(reference: dict[str, Any], prediction: dict[str, Any], timeout:
     except SyntaxError:
         pass
     tests = list(reference.get("tests") or [])
-    if not tests:
-        raise ValueError(f"{reference['source_id']} 缺少留出测试，不能计算正式 test pass/Pass@1")
-    result["test_pass"] = result["compile_pass"] and run_tests(predicted, tests, timeout)
+    if not tests and domain == "control_flow":
+        raise ValueError(f"{reference['source_id']} 缺少留出测试，不能计算 Pass@1")
+    test_format = str(reference.get("test_format") or "python_assert")
+    result["test_pass"] = (
+        result["compile_pass"] and run_tests(predicted, tests, timeout, test_format)
+    ) if tests else None
     if domain == "formatting":
+        try:
+            result["ast_identity_pass"] = float(
+                ast.dump(ast.parse(predicted), include_attributes=False)
+                == ast.dump(ast.parse(source), include_attributes=False)
+            )
+        except SyntaxError:
+            result["ast_identity_pass"] = 0.0
         result["primary_exact_formatting_repair"] = float(
             result["parse_pass"] and predicted.rstrip() == target.rstrip()
         )
@@ -229,8 +290,8 @@ def evaluate_row(reference: dict[str, Any], prediction: dict[str, Any], timeout:
         result["identifier_subtoken_f1"] = subtoken_f1(predicted_name, target_name)
         result["full_code_exact_match"] = float(normalized_code(predicted) == normalized_code(target))
     elif domain == "local_structure":
-        result["primary_codebleu"] = codebleu_score(predicted, target, language)
-        result["bleu"] = bleu_score(predicted, target)
+        result["per_sample_codebleu"] = codebleu_score(predicted, target, language)
+        result["sentence_bleu"] = bleu_score(predicted, target)
         result["exact_match"] = float(normalized_code(predicted) == normalized_code(target))
     elif domain == "control_flow":
         result["primary_pass_at_1"] = float(
@@ -264,17 +325,33 @@ def main() -> None:
     parser.add_argument("--references", required=True, help="prepare_data 生成的 test.jsonl")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--timeout", type=int, default=10)
+    parser.add_argument(
+        "--prediction-field",
+        choices=("prediction", "base_output", "lora_output"),
+        help="明确选择预测字段；比较文件建议分别使用 base_output 和 lora_output",
+    )
     args = parser.parse_args()
     predictions = {str(row["source_id"]): row for row in read_jsonl(args.predictions)}
     references = list(read_jsonl(args.references))
     missing = [str(row["source_id"]) for row in references if str(row["source_id"]) not in predictions]
     if missing:
         raise ValueError(f"缺少 {len(missing)} 条预测；示例：{missing[:5]}")
-    rows = [evaluate_row(row, predictions[str(row["source_id"])], args.timeout) for row in references]
+    rows = [
+        evaluate_row(row, predictions[str(row["source_id"])], args.timeout, args.prediction_field)
+        for row in references
+    ]
     output = Path(args.output_dir)
     output.mkdir(parents=True, exist_ok=True)
+    domains = summarize(rows)
+    registered_corpus_metrics = corpus_metrics(references, predictions, args.prediction_field)
+    if registered_corpus_metrics:
+        domains["local_structure"]["corpus_metrics"] = registered_corpus_metrics
     (output / "summary.json").write_text(
-        json.dumps({"protocol": "teacher-metrics-v4", "domains": summarize(rows)}, ensure_ascii=False, indent=2),
+        json.dumps({
+            "protocol": "teacher-metrics-v5",
+            "prediction_field": args.prediction_field or "auto",
+            "domains": domains,
+        }, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     fieldnames = sorted(set().union(*(row.keys() for row in rows)))

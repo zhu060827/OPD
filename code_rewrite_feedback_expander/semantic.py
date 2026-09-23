@@ -164,8 +164,10 @@ class SemanticEquivalenceChecker:
     def _unit_test_score(self, record: CodeRecord, candidate: RewriteCandidate) -> MetricScore:
         if not record.tests:
             return MetricScore("unit_test_pass_rate", 1.0, "No tests supplied; unit-test gate skipped.")
-        original_result = self._run_tests(record.code, record.tests)
-        rewritten_result = self._run_tests(candidate.code, record.tests)
+        test_format = str(record.metadata.get("test_format", "python_assert"))
+        timeout = int(record.metadata.get("test_timeout", 5))
+        original_result = self._run_tests(record.code, record.tests, test_format, timeout)
+        rewritten_result = self._run_tests(candidate.code, record.tests, test_format, timeout)
         if original_result[0] and rewritten_result[0]:
             return MetricScore("unit_test_pass_rate", 1.0, "Original and rewritten code pass supplied tests.")
         return MetricScore(
@@ -176,31 +178,12 @@ class SemanticEquivalenceChecker:
             f"rewritten_output={rewritten_result[1][-500:]}",
         )
 
-    def _run_tests(self, code: str, tests: List[str]) -> Tuple[bool, str]:
-        digest = hashlib.sha1(code.encode("utf-8")).hexdigest()[:10]
-        script = code.rstrip() + "\n\n\ndef __run_tests__():"
-        if not tests:
-            script += "\n    return True\n\n__run_tests__()\n"
-        else:
-            for test in tests:
-                script += "\n" + textwrap.indent(test.rstrip(), "    ")
-            script += "\n    return True\n\n__run_tests__()\n"
-        with tempfile.TemporaryDirectory(prefix=f"code_rewrite_{digest}_") as tmpdir:
-            path = Path(tmpdir) / "candidate_test.py"
-            path.write_text(script, encoding="utf-8")
-            try:
-                completed = subprocess.run(
-                    [sys.executable, str(path)],
-                    text=True,
-                    capture_output=True,
-                    timeout=5,
-                    cwd=tmpdir,
-                    check=False,
-                )
-            except subprocess.TimeoutExpired:
-                return False, "Timed out."
-        output = (completed.stdout or "") + (completed.stderr or "")
-        return completed.returncode == 0, output
+    def _run_tests(
+        self, code: str, tests: List[object], test_format: str = "python_assert", timeout: int = 5
+    ) -> Tuple[bool, str]:
+        # 训练数据筛选与正式评估共用同一执行口径，避免指标漂移。
+        from teacher_training.test_execution import run_registered_tests
+        return run_registered_tests(code, tests, test_format, timeout)
 
     def _feedback(self, scores: List[MetricScore], passed: bool) -> str:
         if passed:

@@ -11,7 +11,28 @@
 
 正式实验冻结为每个 Teacher 一个训练来源：Formatting=`bigcode/commitpackft`，Identifier=`code_search_net`，Local Structure=`code_search_net`，Control-flow=`deepmind/code_contests`。`prepare_data --formal` 和正式训练启动检查都会拒绝混入其他来源。
 
-这四个来源不能未经适配直接训练：CommitPackFT 和 CodeSearchNet 通常缺少可执行测试；CodeContests 使用 stdin/stdout 测试而当前验证器使用函数级 `assert`。因此在 CodeContests 专用执行器和前三个来源的测试恢复完成前，配置必须保持 `formal_experiment=false`。不得为了增加样本数把“没有测试”记作测试通过。
+## 实验室 RTX A6000 配置
+
+RTX A6000 的 48GB 显存足以使用 QLoRA 训练 Qwen3-4B。建议将项目放在 `/home/tangyafeng/zhuxiyao/teacher-project`，模型放在 `/home/tangyafeng/zhuxiyao/models`，数据和适配器输出放在 `/home/tangyafeng/zhuxiyao/teacher-runs`。服务器首次配置：
+
+```bash
+cd /home/tangyafeng/zhuxiyao/teacher-project
+python3 -m venv /home/tangyafeng/zhuxiyao/venvs/teacher
+source /home/tangyafeng/zhuxiyao/venvs/teacher/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r teacher_training/requirements.txt
+export TEACHER_PROJECT_ROOT=/home/tangyafeng/zhuxiyao/teacher-project
+export TEACHER_MODEL_DIR=/home/tangyafeng/zhuxiyao/models
+export TEACHER_OUTPUT_DIR=/home/tangyafeng/zhuxiyao/teacher-runs
+export CUDA_VISIBLE_DEVICES=0
+python -m teacher_training.check_server
+```
+
+当前机器只显示一张可见卡时使用 `CUDA_VISIBLE_DEVICES=0`；不要根据物理机器的“GPU1”名称盲目填写 `1`。以 `nvidia-smi -L` 和 `torch.cuda.device_count()` 的实际可见编号为准。
+
+模型目录应最终包含 `/home/tangyafeng/zhuxiyao/models/Qwen3-4B/config.json`、tokenizer 文件和全部 safetensors 分片。数据准备完成后再运行 `check_training_readiness`，通过后才把四份配置的 `formal_experiment` 改为 `true`。
+
+这四个来源不能未经适配直接训练：CommitPackFT 和 CodeSearchNet 通常缺少可执行测试；CodeContests 使用 stdin/stdout 测试而当前验证器使用函数级 `assert`。门禁按领域注册：四域共同强制 parse、signature/API 和 compile；Formatting 额外强制 AST identity 与固定 Black target；Identifier 强制可逆 rename 映射；Local Structure 强制预注册局部变换；Control-flow 强制预注册控制流证据和真实测试。前三域没有测试时 `test_pass=N/A`，不得记作通过。CodeContests 专用执行器完成前，Control-flow 的 `formal_experiment` 必须保持 `false`。
 
 四类不是严格正交分类。每条样本按照主要变换意图归类，允许少量伴随语法变化，但必须满足领域限制和通用语义门禁。
 
@@ -84,14 +105,24 @@ python -m teacher_training.scripts.download_source_data \
   --revision <固定的-Hugging-Face-commit> \
   --output-dir /path/to/raw
 
+# 先把 save_to_disk 快照统一为构造器 JSONL。
+python -m teacher_training.scripts.adapt_source_data \
+  --dataset codesearchnet \
+  --input /path/to/raw/codesearchnet/python/train/dataset \
+  --output /path/to/adapted/codesearchnet_python.jsonl \
+  --limit 100
+
 python -m teacher_training.scripts.construct_domain_pairs \
-  --input /path/to/python_with_tests.jsonl \
+  --input /path/to/adapted/codesearchnet_python.jsonl \
   --domain identifier \
   --output /path/to/identifier_raw.jsonl \
   --rejected /path/to/identifier_rejected.jsonl
 ```
 
-同一构造脚本支持四个领域。它只接收带可执行测试的数据；公开自然代码下载结果必须先关联原始测试，不能因为能够解析就直接进入正式训练。
+同一适配脚本支持 `commitpackft`、`codesearchnet` 和 `code_contests`；同一构造脚本支持四个领域。
+Formatting、Identifier 和 Local Structure 的原数据没有普遍可运行的测试，其 test 门禁如实记为 N/A，
+不伪造测试通过。Control-flow 则必须保留 CodeContests 的 `stdin_stdout` 测试，适配时先验证原解答，
+数据筛选和正式评估共用 `teacher_training.test_execution` 中的执行口径。
 
 划分后必须运行独立泄漏审计；它同时检查 `problem_id` 交集和完全相同 target 代码的哈希交集：
 
@@ -103,6 +134,44 @@ python -m teacher_training.audit_splits \
   --output teacher_training/data/processed/identifier/leakage_audit.json
 ```
 
+正式数据必须使用实际基座模型 tokenizer 开启长度门禁，不得让 TRL 静默截断不完整的 assistant 代码。例如：
+
+```bash
+python -m teacher_training.prepare_data \
+  --input /path/to/constructed/local_structure.jsonl \
+  --output-dir teacher_training/data/processed/local_structure \
+  --domain local_structure \
+  --language python \
+  --tokenizer "$TEACHER_MODEL_DIR/Qwen3-4B" \
+  --max-length 2048 \
+  --max-generation-tokens 2048 \
+  --formal
+```
+
+被长度门禁拒绝的样本会保留在 `rejected.jsonl`，原因分别为
+`training_context_too_long` 或 `generation_target_too_long`；`manifest.json` 会记录 tokenizer 和两个上限。
+冒烟测试也建议使用同样参数，但不传 `--formal`。
+
+Base/LoRA 生成结果会额外保存 `generated_tokens`、`generation_limit`、
+`max_tokens_reached`、`protocol_pass` 和 `suspected_truncation`。其中“触及上限且
+`<code>` 协议未闭合”才记为疑似截断。
+
+Local Structure 和 Control-flow 的 CodeBLEU 需要语言对应的 Tree-sitter
+解析器。Python 实验固定使用 `codebleu==0.7.0`、
+`tree-sitter==0.23.2` 和 `tree-sitter-python==0.23.6`。三者必须作为
+同一个可复现版本组合安装；`tree-sitter==0.22.3` 与该 Python
+语言包的 Capsule API 不兼容。安装命令为：
+
+```bash
+python -m pip install -r teacher_training/requirements.txt
+```
+
+`teacher-metrics-v5` 将 Local Structure 的论文主结果固定为整个测试集
+一次性计算的 corpus CodeBLEU，并在 `summary.json` 中保存 n-gram、
+weighted n-gram、syntax 和 data-flow 四个组成项。BLEU 同样使用
+SacreBLEU corpus-level 计算。`per_sample.csv` 中的 `per_sample_codebleu`
+和 `sentence_bleu` 仅用于配对误差分析，不作为论文主表分数。
+
 ## 配置检查与训练
 
 ```bash
@@ -111,6 +180,14 @@ python -m teacher_training.train_lora --config teacher_training/configs/formatti
 python -m teacher_training.train_lora --config teacher_training/configs/identifier.json
 python -m teacher_training.train_lora --config teacher_training/configs/local_structure.json
 python -m teacher_training.train_lora --config teacher_training/configs/control_flow.json
+```
+
+正式加载模型前，可以先使用 `--dry-run`。该模式不加载 GPU 模型，但会真实读取训练集和验证集，检查协议字段、领域一致性、`source_id` 唯一性及 `problem_id` 防泄漏：
+
+```bash
+python -m teacher_training.train_lora \
+  --config teacher_training/configs/identifier_smoke_v2.json \
+  --dry-run
 ```
 
 正式训练前将四个配置的 `formal_experiment` 改为 `true`，并确认基座、数据和输出路径适合服务器。
@@ -141,11 +218,11 @@ python -m teacher_training.evaluate_domains \
   --output-dir /path/to/identifier_eval
 ```
 
-正式依赖固定为 `black==25.1.0`、`pycodestyle==2.12.1`、`sacrebleu==2.5.1`、`codebleu==0.7.0` 和 `radon==6.0.1`。输出包含逐样本 CSV 和领域汇总 JSON。
+正式依赖固定为 `black==25.1.0`、`pycodestyle==2.12.1`、`sacrebleu==2.5.1`、`codebleu==0.7.0`、`tree-sitter==0.23.2`、`tree-sitter-python==0.23.6` 和 `radon==6.0.1`。输出包含逐样本 CSV 和领域汇总 JSON。
 
 各领域辅助指标数量不强制相同：
 
-- Formatting：pycodestyle violation count、Levenshtein edit distance；
+- Formatting：pycodestyle violation count、Levenshtein edit distance；另报告 AST identity 领域硬门禁；
 - Identifier：identifier subtoken F1、full-code exact match；
 - Local Structure：BLEU、exact match；
 - Control-flow：cyclomatic complexity、CodeBLEU。

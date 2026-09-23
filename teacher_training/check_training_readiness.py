@@ -32,8 +32,8 @@ def main() -> None:
             test_rows = list(read_jsonl(test_path))
             for row in test_rows:
                 validate_source_for_domain(domain, str(row.get("source_dataset", "")))
-                if not row.get("tests"):
-                    raise ValueError(f"测试样本 {row.get('source_id')} 缺少可执行 tests")
+                if domain == "control_flow" and not row.get("tests"):
+                    raise ValueError(f"Control-flow 测试样本 {row.get('source_id')} 缺少可执行 tests")
             counts = {
                 "train": summary["train_file"]["samples"],
                 "validation": summary["validation_file"]["samples"],

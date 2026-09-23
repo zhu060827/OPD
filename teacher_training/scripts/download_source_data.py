@@ -13,7 +13,8 @@ from pathlib import Path
 
 DATASETS = {
     "commitpackft": "bigcode/commitpackft",
-    "codesearchnet": "code_search_net",
+    # 新版 huggingface_hub 解析 hf:// URI 时必须使用 namespace/name。
+    "codesearchnet": "code-search-net/code_search_net",
     "code_contests": "deepmind/code_contests",
 }
 

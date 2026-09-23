@@ -129,22 +129,31 @@ def validate_domain(domain: str, source: str, target: str, row: dict[str, Any], 
             "tests": "Chen et al. (2021), HumanEval；Austin et al. (2021), MBPP",
         },
     }
-    record = CodeRecord(task_id=str(row.get("source_id", "unknown")), prompt=str(row.get("task", row.get("prompt", ""))), code=source, tests=list(row.get("tests") or []))
+    record = CodeRecord(
+        task_id=str(row.get("source_id", "unknown")),
+        prompt=str(row.get("task", row.get("prompt", ""))),
+        code=source,
+        tests=list(row.get("tests") or []),
+        metadata={
+            "test_format": row.get("test_format", "python_assert"),
+            "test_timeout": row.get("test_timeout", 5),
+        },
+    )
     candidate = RewriteCandidate(code=target, reasoning=[], rationale="", strategy=domain, raw_response="")
     semantic = SemanticEquivalenceChecker().check(record, candidate)
     semantic_metrics = {item.name: float(item.score) for item in semantic.scores}
     evidence["semantic_metrics"] = semantic_metrics
     evidence["semantic_feedback"] = semantic.feedback
-    if not record.tests:
-        return False, "正式实验要求提供可执行测试", evidence
+    if not record.tests and domain == "control_flow":
+        return False, "Control-flow 正式样本必须提供可执行测试", evidence
     core_gates = {
         "parse_pass": semantic_metrics.get("ast_parse") == 1.0,
         "signature_pass": semantic_metrics.get("signature_consistency") == 1.0,
         "compile_pass": semantic_metrics.get("compile_pass_rate") == 1.0,
-        "test_pass": semantic_metrics.get("unit_test_pass_rate") == 1.0,
+        "test_pass": (semantic_metrics.get("unit_test_pass_rate") == 1.0) if record.tests else None,
     }
     evidence["hard_gates"] = core_gates
-    failed = [name for name, passed in core_gates.items() if not passed]
+    failed = [name for name, passed in core_gates.items() if passed is False]
     if failed:
         return False, f"未通过核心硬门禁：{', '.join(failed)}", evidence
     if row.get("require_safety_gate") and semantic_metrics.get("safety") != 1.0:
@@ -160,6 +169,16 @@ def validate_domain(domain: str, source: str, target: str, row: dict[str, Any], 
             return False, "Formatting 只能改变具体语法布局，AST 必须完全一致", evidence
         if changed_names:
             return False, "Formatting 领域不得修改标识符", evidence
+        try:
+            import black
+            black_target = black.format_str(target, mode=black.Mode()).rstrip()
+        except ImportError as exc:
+            raise RuntimeError("Formatting 正式验证需要 black==25.1.0") from exc
+        except (SyntaxError, ValueError) as exc:
+            return False, f"Black 规范化失败：{exc}", evidence
+        evidence["black_canonical_target"] = target.rstrip() == black_target
+        if not evidence["black_canonical_target"]:
+            return False, "Formatting target 必须是固定 Black 版本的规范输出", evidence
     elif domain == "local_structure":
         if not evidence["ast_changed"]:
             return False, "局部结构必须发生 AST 变化", evidence

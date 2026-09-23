@@ -18,7 +18,10 @@ from .io_utils import read_jsonl
 PRIMARY_KEYS = {
     "formatting": "primary_exact_formatting_repair",
     "identifier": "primary_identifier_exact_match",
-    "local_structure": "primary_codebleu",
+    # 4×4 矩阵的输入是逐样本 JSONL，因此这里保留单样本
+    # CodeBLEU 用于同一测试列内的 Teacher 诊断比较。论文主表必须
+    # 使用 evaluate_domains summary.json 中的 corpus_codebleu。
+    "local_structure": "per_sample_codebleu",
     "control_flow": "primary_pass_at_1",
 }
 GATE_KEYS = ("parse_pass", "signature_pass", "compile_pass", "test_pass")
@@ -46,7 +49,8 @@ def build_matrices(rows: list[dict[str, object]]) -> dict[str, object]:
             raise ValueError(f"{teacher}×{sample} 缺少门禁字段：{', '.join(missing_gates)}")
         primary[(teacher, sample)].append(float(row[primary_key]))
         for gate in GATE_KEYS:
-            gates[gate][(teacher, sample)].append(float(bool(row[gate])))
+            if row[gate] is not None:
+                gates[gate][(teacher, sample)].append(float(bool(row[gate])))
         counts[(teacher, sample)] += 1
 
     def matrix(values: dict[tuple[str, str], list[float]]) -> dict[str, dict[str, float | None]]:
@@ -57,7 +61,7 @@ def build_matrices(rows: list[dict[str, object]]) -> dict[str, object]:
 
     return {
         "protocol": "teacher-cross-domain-v2",
-        "warning": "每列使用不同领域主指标，只允许同列比较 Teacher；禁止跨列比较或加权。",
+        "warning": "每列使用不同领域指标，只允许同列比较 Teacher；禁止跨列比较或加权。Local Structure 列为平均单样本 CodeBLEU，仅用于跨 Teacher 诊断；论文主结果使用 evaluate_domains 的语料级 CodeBLEU。",
         "column_primary_metrics": PRIMARY_KEYS,
         "sample_counts": {
             teacher: {sample: counts[(teacher, sample)] for sample in DOMAINS}

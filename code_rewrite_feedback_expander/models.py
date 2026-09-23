@@ -10,7 +10,7 @@ class CodeRecord:
     prompt: str
     code: str
     reasoning: List[str] = field(default_factory=list)
-    tests: List[str] = field(default_factory=list)
+    tests: List[Any] = field(default_factory=list)
     language: str = "python"
     metadata: Dict[str, Any] = field(default_factory=dict)
 

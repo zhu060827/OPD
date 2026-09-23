@@ -7,6 +7,13 @@ from teacher_training.prepare_data import normalize_row, prepare
 
 
 class TeacherDataPreparationTests(unittest.TestCase):
+    class FakeTokenizer:
+        def apply_chat_template(self, messages, **kwargs):
+            return list(range(sum(len(item["content"].split()) for item in messages)))
+
+        def __call__(self, text, **kwargs):
+            return {"input_ids": list(range(len(text.split())))}
+
     def test_normalizes_before_after_pair(self):
         row = {
             "source_id": "one",
@@ -153,6 +160,62 @@ class TeacherDataPreparationTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(ValueError, "预注册规则"):
             normalize_row(row, formal=True)
+
+    def test_formatting_accepts_missing_tests_with_na_test_gate(self):
+        row = {
+            "source_id": "formatting-no-tests",
+            "problem_id": "formatting-problem",
+            "source_code": "def f(x):\n  return x + 1",
+            "target_code": "def f(x):\n    return x + 1",
+            "domain": "formatting",
+            "semantic_pass": True,
+            "transformation_type": "formatting_repair",
+            "construction_method": "styler_style_deterministic",
+            "source_dataset": "bigcode/commitpackft",
+            "source_paper": "CommitPackFT/STYLER",
+        }
+        result = normalize_row(row, formal=True)
+        self.assertIsNone(result["evidence"]["hard_gates"]["test_pass"])
+
+    def test_control_flow_rejects_missing_tests(self):
+        row = {
+            "source_id": "control-no-tests",
+            "problem_id": "control-problem",
+            "source_code": "def f(x):\n    if x >= 0:\n        return x\n    else:\n        return 0",
+            "target_code": "def f(x):\n    if x < 0:\n        return 0\n    return x",
+            "domain": "control_flow",
+            "semantic_pass": True,
+            "transformation_type": "guard_clause",
+            "construction_method": "deterministic_ast_transform",
+            "source_dataset": "deepmind/code_contests",
+            "source_paper": "AlphaCode",
+        }
+        with self.assertRaisesRegex(ValueError, "必须提供可执行测试"):
+            normalize_row(row, formal=True)
+
+    def test_prepare_rejects_training_context_that_exceeds_token_policy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "raw.jsonl"
+            row = {
+                "source_id": "long-one",
+                "problem_id": "long-problem",
+                "source_code": "def f(x):\n    value = x\n    return value",
+                "target_code": "def f(x):\n    result = x\n    return result",
+                "task": "rename the local variable",
+                "domain": "identifier",
+                "semantic_pass": True,
+                "transformation_type": "identifier_deobfuscation",
+            }
+            source.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            manifest = prepare(
+                str(source), str(root / "out"), "identifier", 42, 0.8, 0.1,
+                True, tokenizer=self.FakeTokenizer(), tokenizer_name="fake",
+                max_length=3, max_generation_tokens=100,
+            )
+            self.assertEqual(1, manifest["rejected"])
+            rejected = json.loads((root / "out" / "rejected.jsonl").read_text())
+            self.assertIn("training_context_too_long", rejected["reason"])
 
 
 if __name__ == "__main__":
