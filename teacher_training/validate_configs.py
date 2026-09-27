@@ -7,7 +7,15 @@ from pathlib import Path
 from .domains import DOMAINS
 from .train_lora import load_config
 from .dataset_contracts import validate_source_registry
-from .evaluate_teachers import GATE_KEYS, PRIMARY_KEYS
+from .evaluate_teachers import GATE_KEYS
+
+
+EXPECTED_PRIMARY_KEYS = {
+    "formatting": "primary_exact_formatting_repair",
+    "identifier": "primary_identifier_exact_match",
+    "local_structure": "corpus_codebleu",
+    "control_flow": "primary_pass_at_1",
+}
 
 
 def main() -> None:
@@ -29,7 +37,7 @@ def main() -> None:
         raise ValueError(f"以下领域的辅助指标数量不在 2～4 个之间：{', '.join(missing_auxiliary)}")
     for domain in DOMAINS:
         spec = registry[domain]
-        if spec.get("主指标字段") != PRIMARY_KEYS[domain]:
+        if spec.get("主指标字段") != EXPECTED_PRIMARY_KEYS[domain]:
             raise ValueError(f"{domain} 的主指标字段与评估实现不一致")
         for metric in spec["辅助指标"]:
             if not all(metric.get(key) for key in ("指标", "输出字段", "实现", "文献")):
