@@ -34,6 +34,18 @@ python tabular_data/train.py --profile reference --offline
 
 ## reasoned 的生成依据与解释
 
+### 真实 LLM 实验
+
+在仓库根目录的 `.env` 中配置 `OPENAI_API_KEY`、`OPENAI_BASE_URL` 和 `OPENAI_MODEL` 后运行：
+
+```bash
+python tabular_data/train_llm.py
+```
+
+当前真实实验使用配置模型 `gpt-6-luna`；入口给 API 请求设置 180 秒超时。单独重跑可加 `--dataset balance_scale` 等参数，避免重跑其他已完成任务。
+
+入口使用与离线对照相同的 reference 模型、固定划分、5 轮 × 5 个候选和消融设置。结果单独保存在 `outputs/llm/`，不覆盖离线报告；完成的两类运行汇总至 `outputs/latest_summary.md`。此入口禁止本地规则回退，不合格式的响应最多重试 5 次，保留已验证候选并仅补齐缺额；API 失败或重试耗尽会停止并保存失败日志，不能作为成功的 LLM 成绩。报告中的 `api_calls_succeeded` 是已返回响应的调用计数（含格式修复），候选来源见每轮记录；报告也保留本地回退次数。`outputs/llm/api_calls/` 记录模型、提示及原始响应，不包含密钥。密钥仅放在本地配置中。
+
 每轮用当前训练数据拟合不超过深度 4 的 CART，提取条件路径，并读取当前 XGBoost 的训练残差。候选包括 CART 路径指示列、Jungle 几何关系、简单交互、多列组合、非线性/分段表达式和历史拒绝原因对应的修复。
 
 本地候选预筛分数为：

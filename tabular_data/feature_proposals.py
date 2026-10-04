@@ -7,6 +7,9 @@ from dataclasses import asdict, dataclass, field
 import hashlib
 import itertools
 import json
+import os
+from pathlib import Path
+import time
 import re
 
 import numpy as np
@@ -619,6 +622,9 @@ def propose_feature_candidates(
     eligible_columns=None,
     task_type="classification",
     guidance=None,
+    _response_retries=5,
+    _response_feedback="",
+    _partial_proposals=None,
 ):
     if mode != "reasoned":
         raise ValueError("只支持当前 reasoned 生成器。")
@@ -638,12 +644,18 @@ def propose_feature_candidates(
     profile["_guidance_context"] = guidance
     records = prior_feedback(history, round_index)
     if isinstance(client, LLMClient):
+        proposed = list(_partial_proposals or [])
+        remaining = count - len(proposed)
         try:
             if not client.available:
                 raise LLMError("LLM configuration is incomplete.")
             prompt = (
-                f"""Propose {count} distinct interpretable numeric features as JSON: {{"features": [...]}}. Each item needs name (ASCII identifier), family, expression, hypothesis and construction. The hypothesis and construction must be concise Chinese explanations, not claims of proven effects. Expressions use df['column'] and only np.abs/sign/log/log1p/log10/sqrt/exp/clip/maximum/minimum/where/sin/cos/tanh/power and np.pi. No imports, target access, indexing rows, aggregations or fitted statistics. Refer to named training parameter symbols, never paste their numeric values. Allowed literal constants: 0, 1, 2, 4, 180, 1e-6 and np.pi, only with their mathematical/numerical meanings. Explain the mathematical derivation and purpose of each operation; do not provide private internal reasoning. Learn from ALL earlier validation outcomes: unused means simplify/change inputs; metric_regression means bound extremes or change gates; insufficient_gain means explore a new combination. Do not relax acceptance rules. When feedback exists, each feature also needs feedback_reference (an earlier candidate name) and adaptation_action (specific change in Chinese). Protect logs, roots, division and exponentials. Avoid huge expressions and redundant monotonic transforms alone. """
+                f"""Propose {remaining} distinct interpretable numeric features as JSON: {{"features": [...]}}. Each item needs name (ASCII identifier), family, expression, hypothesis and construction. The hypothesis and construction must be concise Chinese explanations, not claims of proven effects. Expressions use df['column'] and only np.abs/sign/log/log1p/log10/sqrt/exp/clip/maximum/minimum/where/sin/cos/tanh/power and np.pi. No imports, target access, indexing rows, aggregations or fitted statistics. Refer to named training parameter symbols, never paste their numeric values. Allowed literal constants: 0, 1, 2, 4, 180, 1e-6 and np.pi, only with their mathematical/numerical meanings. Explain the mathematical derivation and purpose of each operation; do not provide private internal reasoning. Learn from ALL earlier validation outcomes: unused means simplify/change inputs; metric_regression means bound extremes or change gates; insufficient_gain means explore a new combination. Do not relax acceptance rules. When feedback exists, each feature also needs feedback_reference (an earlier candidate name) and adaptation_action (specific change in Chinese). Protect logs, roots, division and exponentials. Avoid huge expressions and redundant monotonic transforms alone. """
                 + "Cover multicolumn (3+ columns), nonlinear and piecewise families. "
+                + f"The family field MUST be exactly one of {json.dumps(FAMILIES)}. hypothesis and construction must be nonempty strings. "
+                + "For EVERY multicolumn item, its expression MUST reference at least THREE DISTINCT df columns. A two-column ratio/product/log relation must use nonlinear, never multicolumn. A conditional np.where relation should use piecewise. Validate each item before responding. "
+                + f"Do not repeat these already retained expressions: {[p.expression for p in proposed]}. Also do not repeat any prior history expression. Return exactly {remaining} items.\n"
+                + f"Previous response validation error (repair it): {_response_feedback or 'None'}.\n"
                 + f"Training parameters: {json.dumps({k: {'value': v['value'], 'column': v['column'], 'statistic': v['statistic']} for k, v in parameter_registry(profile).items()}, ensure_ascii=False)}\n"
                 + f"Training profile: {json.dumps({k: v for k, v in profile.items() if not k.startswith('_')}, ensure_ascii=False)}\n"
                 + f"Prior validation feedback: {json.dumps(records, ensure_ascii=False)}\n"
@@ -655,70 +667,91 @@ def propose_feature_candidates(
                 temperature=0.3,
             )
             client.real_call_count += 1
-            payload = json.loads(strip_code_fence(raw))
-            proposed = []
-            for item in payload["features"][:count]:
-                if not re.fullmatch("[A-Za-z][A-Za-z0-9_]{0,60}", item["name"]):
-                    raise ValueError("特征名称不合法。")
-                proposal = _proposal(
-                    f"oct_llm_{item['name']}_r{round_index}",
-                    item["family"],
-                    item["expression"],
-                    item["hypothesis"],
-                    item["construction"],
-                    profile,
-                    source="llm",
+            audit_root = os.getenv("TABULAR_LLM_AUDIT_DIR")
+            if audit_root:
+                destination = Path(audit_root)
+                destination.mkdir(parents=True, exist_ok=True)
+                (destination / f"round_{round_index}_{time.time_ns()}.json").write_text(
+                    json.dumps({"model": client.model, "round": round_index,
+                                "prompt": prompt, "response": raw}, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
                 )
-                if records:
-                    reference = next(
-                        (
-                            r
-                            for r in records
-                            if r["name"] == item.get("feedback_reference")
-                        ),
-                        None,
+            payload = json.loads(strip_code_fence(raw))
+            response_errors = []
+            for item in payload["features"][:remaining]:
+                try:
+                    if not re.fullmatch("[A-Za-z][A-Za-z0-9_]{0,60}", item["name"]):
+                        raise ValueError("特征名称不合法。")
+                    proposal = _proposal(
+                        f"oct_llm_{item['name']}_r{round_index}",
+                        item["family"],
+                        item["expression"],
+                        item["hypothesis"],
+                        item["construction"],
+                        profile,
+                        source="llm",
                     )
+                    if records:
+                        reference = next(
+                            (
+                                r
+                                for r in records
+                                if r["name"] == item.get("feedback_reference")
+                            ),
+                            None,
+                        )
+                        if (
+                            reference is None
+                            or not isinstance(item.get("adaptation_action"), str)
+                            or (not item["adaptation_action"].strip())
+                        ):
+                            raise ValueError("LLM 未提供可核验的历史反馈引用与修改说明。")
+                        proposal.adaptation = {
+                            "kind": "llm_feedback",
+                            "source_candidate": reference["name"],
+                            "source_round": reference["round"],
+                            "outcome": reference["outcome"],
+                            "observed_reason": reference["reason"],
+                            "action": item["adaptation_action"],
+                            "history_summary": feedback_summary(records),
+                        }
+                    else:
+                        proposal.adaptation = {
+                            "kind": "initial_exploration",
+                            "action": "首轮基于训练画像提出假说。",
+                        }
+                    allowed_families = FAMILIES
                     if (
-                        reference is None
-                        or not isinstance(item.get("adaptation_action"), str)
-                        or (not item["adaptation_action"].strip())
+                        proposal.family not in allowed_families
+                        or not proposal.hypothesis
+                        or (not proposal.construction)
                     ):
-                        raise ValueError("LLM 未提供可核验的历史反馈引用与修改说明。")
-                    proposal.adaptation = {
-                        "kind": "llm_feedback",
-                        "source_candidate": reference["name"],
-                        "source_round": reference["round"],
-                        "outcome": reference["outcome"],
-                        "observed_reason": reference["reason"],
-                        "action": item["adaptation_action"],
-                        "history_summary": feedback_summary(records),
-                    }
-                else:
-                    proposal.adaptation = {
-                        "kind": "initial_exploration",
-                        "action": "首轮基于训练画像提出假说。",
-                    }
-                allowed_families = FAMILIES
-                if (
-                    proposal.family not in allowed_families
-                    or not proposal.hypothesis
-                    or (not proposal.construction)
-                ):
-                    raise ValueError("候选家族或解释不符合当前实验设置。")
-                if proposal.family == "multicolumn" and len(proposal.input_columns) < 3:
-                    raise ValueError("多列复合候选至少需要三个列。")
-                if proposal.signature not in seen and proposal.signature not in {
-                    p.signature for p in proposed
-                }:
-                    proposed.append(proposal)
+                        raise ValueError("候选家族或解释不符合当前实验设置。")
+                    if proposal.family == "multicolumn" and len(proposal.input_columns) < 3:
+                        raise ValueError(f"Candidate {item['name']} uses {len(proposal.input_columns)} distinct columns but family=multicolumn. Use nonlinear/piecewise for two-column relations, or genuinely reference at least three distinct df columns.")
+                    if proposal.signature not in seen and proposal.signature not in {
+                        p.signature for p in proposed
+                    }:
+                        proposed.append(proposal)
+                except (ValueError, KeyError, TypeError, SyntaxError) as item_error:
+                    response_errors.append(f"{type(item_error).__name__}: {item_error}")
             if len(proposed) != count:
-                raise ValueError("LLM 返回的不同合法候选数量不符合本轮预算。")
+                raise ValueError(f"Only {len(proposed)}/{count} distinct candidates retained. Some expressions repeat prior history or another item. Supply NEW expressions to complete the budget. Validation errors: {response_errors}")
             client.last_call_used_mock = False
             return proposed
         except (LLMError, ValueError, KeyError, TypeError, SyntaxError) as exc:
             client.last_error = (
                 f"{type(exc).__name__}: structured feature proposal failed"
             )
+            if not isinstance(exc, LLMError) and _response_retries > 0:
+                print(f"LLM 候选格式校验失败，重新请求修复；剩余重试 {_response_retries} 次。", flush=True)
+                return propose_feature_candidates(
+                    frame, client, round_index, history, seen, count=count, mode=mode,
+                    eligible_columns=eligible_columns, task_type=task_type, guidance=guidance,
+                    _response_retries=_response_retries - 1,
+                    _response_feedback=f"{type(exc).__name__}: {exc}",
+                    _partial_proposals=proposed,
+                )
             if not client.use_mock_when_fails:
                 raise
             client.mock_fallback_count += 1

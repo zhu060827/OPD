@@ -1,0 +1,38 @@
+{
+  "fit_split": "train",
+  "scaling": "none",
+  "task_type": "classification",
+  "columns": [
+    "left-weight",
+    "left-distance",
+    "right-weight",
+    "right-distance"
+  ],
+  "numeric_columns": [
+    "left-weight",
+    "left-distance",
+    "right-weight",
+    "right-distance"
+  ],
+  "medians": {
+    "left-weight": 3.0,
+    "left-distance": 3.0,
+    "right-weight": 3.0,
+    "right-distance": 3.0
+  },
+  "categories": {},
+  "categorical_encoding": "ordinal",
+  "onehot_columns": {},
+  "generator_columns": [
+    "left-weight",
+    "left-distance",
+    "right-weight",
+    "right-distance"
+  ],
+  "unknown_category_value": -1,
+  "target_classes": [
+    "B",
+    "L",
+    "R"
+  ]
+}

@@ -83,7 +83,7 @@ class FeatureProposalTests(unittest.TestCase):
         self.assertEqual(len(plans), 5)
         self.assertTrue(all(p.source in {"local_template", "cart_rule"} for p in plans))
         self.assertEqual(client.mock_fallback_count, 1)
-        self.assertEqual(client.real_call_count, 1)
+        self.assertEqual(client.real_call_count, 6)
 
     def test_dependency_ablation_removes_descendants(self):
         proposals = [{"name": "f1", "input_columns": ["a", "b"]},

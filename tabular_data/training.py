@@ -327,6 +327,8 @@ def run_training(dataset, *, iterations=DEFAULT_ROUNDS, profile="weak", noise_st
                   "cuda_version": ".".join(map(str, build_info().get("CUDA_VERSION", [])))},
         "selection_policy": SELECTION_POLICY.copy(), "noise": noise.to_dict(),
         "feature_generation": {"client": type(client).__name__, "version": GENERATOR_VERSION,
+                               "llm_model": getattr(client, "model", None),
+                               "fallback_allowed": getattr(client, "use_mock_when_fails", False),
                                "mode": feature_mode, "rounds": iterations, "candidates_per_round": candidates_per_round,
                                "feedback_learning": "prior_round_validation_only",
                                "evaluated_candidates": sum(len(row["candidates"]) for row in rounds),

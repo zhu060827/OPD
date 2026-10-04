@@ -1,0 +1,61 @@
+{
+  "fit_split": "train",
+  "scaling": "none",
+  "task_type": "classification",
+  "columns": [
+    "white_king_file",
+    "white_king_rank",
+    "white_rook_file",
+    "white_rook_rank",
+    "black_king_file",
+    "black_king_rank"
+  ],
+  "numeric_columns": [
+    "white_king_file",
+    "white_king_rank",
+    "white_rook_file",
+    "white_rook_rank",
+    "black_king_file",
+    "black_king_rank"
+  ],
+  "medians": {
+    "white_king_file": 3.0,
+    "white_king_rank": 2.0,
+    "white_rook_file": 5.0,
+    "white_rook_rank": 5.0,
+    "black_king_file": 5.0,
+    "black_king_rank": 4.0
+  },
+  "categories": {},
+  "categorical_encoding": "ordinal",
+  "onehot_columns": {},
+  "generator_columns": [
+    "white_king_file",
+    "white_king_rank",
+    "white_rook_file",
+    "white_rook_rank",
+    "black_king_file",
+    "black_king_rank"
+  ],
+  "unknown_category_value": -1,
+  "target_classes": [
+    "1",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9"
+  ]
+}

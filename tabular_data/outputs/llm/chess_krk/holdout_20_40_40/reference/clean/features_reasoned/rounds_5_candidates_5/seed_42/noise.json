@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "kind": "additive_gaussian_feature_noise",
+  "strength_in_train_std": 0.0,
+  "seed": 42,
+  "scale_fit_split": "train",
+  "train_feature_std": {},
+  "affected_splits": [],
+  "target_unchanged": true,
+  "source_csv_unchanged": true
+}

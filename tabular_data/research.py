@@ -35,12 +35,16 @@ def write_summary(results, directory):
              "|---|---|---|---:|---:|---:|---|---:|---:|"]
     for r in results:
         b, o = r["test"]["baseline"], r["test"]["optimized"]
+        generation = r["feature_generation"]
+        source = "LLM" if generation["api_calls_succeeded"] else "离线"
         lines.append(f"| {r['dataset']}/{r['experiment']['dataset_view']} | {r['model']['profile']} | "
-            f"{r['feature_generation']['mode']} | {r['model']['parameters']['random_state']} | {r['rows']['train']} | "
+            f"{generation['mode']} / {generation.get('version', '未记录')} ({source}) | {r['model']['parameters']['random_state']} | {r['rows']['train']} | "
             f"{len(r['accepted_features'])} | {b['f1_macro']:.4f} → {o['f1_macro']:.4f} | "
             f"{100*(o['f1_macro']-b['f1_macro']):+.4f} | {r['feature_generation']['api_calls_succeeded']} |")
     for r in results:
         name = f"{r['dataset']}/{r['experiment']['dataset_view']}/{r['model']['profile']}/{r['feature_generation']['mode']}/seed_{r['model']['parameters']['random_state']}"
+        generation = r["feature_generation"]
+        name += "/LLM" if generation["api_calls_succeeded"] else "/offline"
         link = Path(os.path.relpath(Path(r["output_dir"]), directory)).as_posix()
         lines += ["", f"## {name}", "", f"[完整日志]({link}/training.log) · [机器报告]({link}/training_results.json)", "",
                   "| 指标 | baseline | optimized | 改善量（正数更好） |", "|---|---:|---:|---:|"]
@@ -49,6 +53,9 @@ def write_summary(results, directory):
         lines += ["", "接受特征：" + (", ".join(r["accepted_features"]) or "无"),
                   f"实际训练预算：{r['experiment']['training_budget']['used_rows']}/{r['experiment']['training_budget']['available_rows']}。"]
         lines += [f"训练流程版本：{r.get('training_version', '未记录')}；生成器版本：{r['feature_generation'].get('version', '未记录')}。"]
+        lines += [f"真实响应次数：{generation['api_calls_succeeded']}；本地规则/回退次数：{generation.get('local_rule_calls', 0)}。格式修复重试计入真实响应次数，因此可能超过轮数。"]
+        if generation.get("llm_model"):
+            lines += [f"LLM 模型：`{generation['llm_model']}`；允许回退：{generation.get('fallback_allowed', False)}。"]
         if r.get("test_class_diagnostics"):
             counts = r["experiment"]["training_budget"]["class_counts"]
             lines += ["", "| 类别 | 训练样本/比例 | 测试样本 | Precision：基线 → 优化 | Recall：基线 → 优化 | F1：基线 → 优化 |",
@@ -71,6 +78,7 @@ def write_summary(results, directory):
     lines += ["", "## 解释边界", "", "CART 和残差预筛只使用训练集；正式接受仍要求验证主指标改善且其他指标不退化。测试退化照实保留。",
               "这是固定外层划分的实验。多个 seed 改变模型/CART/预算采样，不代表多个独立数据划分；同一测试集反复评估也不构成独立重复。",
               "局部模板与 CART 生成结果不等于真实 LLM 成绩。训练残差预筛不是 OpenFE FeatureBoost 的原样复现。",
+              "离线与 LLM 对照还需核对生成器版本。当前 Jungle Chess 离线报告为 v5、LLM 为 v6，不能把两者差异完全归因于 LLM；各自相对 baseline 的增益仍来自对应独立测试报告。",
               "当前生成器包含候选池、CART 路径与预筛策略；不能将收益单独归因于任一组件。CART 是从训练标签学习的监督式特征构造。",
               "当前是固定划分的三个已筛选任务，不能推广为所有表格任务的有效性证据；棋盘任务的随机划分不证明对未见棋子组合的泛化。", ""]
     directory.mkdir(parents=True, exist_ok=True)

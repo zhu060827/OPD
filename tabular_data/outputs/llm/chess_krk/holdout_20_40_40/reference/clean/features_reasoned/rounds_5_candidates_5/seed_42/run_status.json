@@ -1,0 +1,25 @@
+{
+  "run_id": "008ed2d7835d4cb3b5d94de9534cbe22",
+  "training_version": "multiclass_reasoned_v7",
+  "status": "completed",
+  "started_at_utc": "2026-10-04T13:10:07.658404+00:00",
+  "output_dir": "/home/asus/OPD/-OPD/tabular_data/outputs/llm/chess_krk/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42",
+  "log_file": "/home/asus/OPD/-OPD/tabular_data/outputs/llm/chess_krk/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42/training.log",
+  "configuration": {
+    "dataset": "chess_krk",
+    "iterations": 5,
+    "profile": "reference",
+    "noise": 0.0,
+    "seed": 42,
+    "offline": false,
+    "feature_mode": "reasoned",
+    "dataset_view": "full",
+    "train_fraction": 1.0,
+    "candidates_per_round": 5,
+    "permutation_repeats": 10,
+    "importance_threshold": 0.001
+  },
+  "note": "运行中或失败时，training_results.json 如存在可能属于上一次成功运行；请比较 run_id，以本文件和 progress.json 为准。",
+  "exit_code": 0,
+  "finished_at_utc": "2026-10-04T13:20:16.172476+00:00"
+}

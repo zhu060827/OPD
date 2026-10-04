@@ -1,0 +1,149 @@
+{
+  "status": "passed",
+  "policy": {
+    "schema_version": 1,
+    "protocol": "holdout_20_40_40",
+    "seed": 42,
+    "ratios": {
+      "train": 0.2,
+      "validation": 0.4,
+      "test": 0.4
+    },
+    "roles": {
+      "train": "拟合预处理、构造统计参数并训练 XGBoost",
+      "validation": "评价候选并反馈下一轮，不参与拟合预处理",
+      "test": "候选和模型冻结后的一次独立评估及消融，不反馈特征搜索"
+    },
+    "stratify_column": "target",
+    "class_ratio_policy": "preserve_original",
+    "minimum_class_count_per_split": 5,
+    "maximum_rounding_error_in_samples": 2,
+    "note": "由人明确指定三份数据的职责及 20/40/40 比例，固定种子分层随机选取；每份均保留去重后原始类别比例。二次分层取整允许每类最多 2 条样本偏差，不进行正负 50/50 重采样。"
+  },
+  "original_class_counts": {
+    "b": 17422,
+    "d": 4335,
+    "w": 23062
+  },
+  "total_rows": 44819,
+  "records": [
+    {
+      "split": "train",
+      "class": "b",
+      "count": 3484,
+      "split_rows": 8963,
+      "proportion": 0.38870913756554726,
+      "percentage": 38.8709,
+      "original_count": 17422,
+      "original_proportion": 0.38871907003726097,
+      "expected_count": 3484.08902474397,
+      "rounding_error_samples": -0.08902474397018523,
+      "difference_percentage_points": -0.000993247171371392
+    },
+    {
+      "split": "train",
+      "class": "d",
+      "count": 867,
+      "split_rows": 8963,
+      "proportion": 0.09673100524377999,
+      "percentage": 9.6731,
+      "original_count": 4335,
+      "original_proportion": 0.09672237220821527,
+      "expected_count": 866.9226221022334,
+      "rounding_error_samples": 0.07737789776660975,
+      "difference_percentage_points": 0.0008633035564725722
+    },
+    {
+      "split": "train",
+      "class": "w",
+      "count": 4612,
+      "split_rows": 8963,
+      "proportion": 0.5145598571906728,
+      "percentage": 51.456,
+      "original_count": 23062,
+      "original_proportion": 0.5145585577545237,
+      "expected_count": 4611.988353153796,
+      "rounding_error_samples": 0.011646846203802852,
+      "difference_percentage_points": 0.00012994361490159534
+    },
+    {
+      "split": "validation",
+      "class": "b",
+      "count": 6969,
+      "split_rows": 17928,
+      "proportion": 0.3887215528781794,
+      "percentage": 38.8722,
+      "original_count": 17422,
+      "original_proportion": 0.38871907003726097,
+      "expected_count": 6968.955487628014,
+      "rounding_error_samples": 0.04451237198554736,
+      "difference_percentage_points": 0.0002482840918416329
+    },
+    {
+      "split": "validation",
+      "class": "d",
+      "count": 1734,
+      "split_rows": 17928,
+      "proportion": 0.0967202141900937,
+      "percentage": 9.672,
+      "original_count": 4335,
+      "original_proportion": 0.09672237220821527,
+      "expected_count": 1734.0386889488832,
+      "rounding_error_samples": -0.03868894888319119,
+      "difference_percentage_points": -0.0002158018121561911
+    },
+    {
+      "split": "validation",
+      "class": "w",
+      "count": 9225,
+      "split_rows": 17928,
+      "proportion": 0.5145582329317269,
+      "percentage": 51.4558,
+      "original_count": 23062,
+      "original_proportion": 0.5145585577545237,
+      "expected_count": 9225.005823423102,
+      "rounding_error_samples": -0.005823423101901426,
+      "difference_percentage_points": -3.2482279688217375e-05
+    },
+    {
+      "split": "test",
+      "class": "b",
+      "count": 6969,
+      "split_rows": 17928,
+      "proportion": 0.3887215528781794,
+      "percentage": 38.8722,
+      "original_count": 17422,
+      "original_proportion": 0.38871907003726097,
+      "expected_count": 6968.955487628014,
+      "rounding_error_samples": 0.04451237198554736,
+      "difference_percentage_points": 0.0002482840918416329
+    },
+    {
+      "split": "test",
+      "class": "d",
+      "count": 1734,
+      "split_rows": 17928,
+      "proportion": 0.0967202141900937,
+      "percentage": 9.672,
+      "original_count": 4335,
+      "original_proportion": 0.09672237220821527,
+      "expected_count": 1734.0386889488832,
+      "rounding_error_samples": -0.03868894888319119,
+      "difference_percentage_points": -0.0002158018121561911
+    },
+    {
+      "split": "test",
+      "class": "w",
+      "count": 9225,
+      "split_rows": 17928,
+      "proportion": 0.5145582329317269,
+      "percentage": 51.4558,
+      "original_count": 23062,
+      "original_proportion": 0.5145585577545237,
+      "expected_count": 9225.005823423102,
+      "rounding_error_samples": -0.005823423101901426,
+      "difference_percentage_points": -3.2482279688217375e-05
+    }
+  ],
+  "note": "类别占比一致指原始分布在三个集合中保持；有限整数样本不保证比例小数完全相等。"
+}

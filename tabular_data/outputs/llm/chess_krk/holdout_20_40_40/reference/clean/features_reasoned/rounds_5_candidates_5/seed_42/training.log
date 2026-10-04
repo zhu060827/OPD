@@ -1,0 +1,1211 @@
+训练版本：multiclass_reasoned_v7
+开始时间：2026-10-04T13:10:07.658404+00:00
+结果目录：/home/asus/OPD/-OPD/tabular_data/outputs/llm/chess_krk/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42
+完整日志：/home/asus/OPD/-OPD/tabular_data/outputs/llm/chess_krk/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42/training.log
+类别分布校验通过：按原始类别比例分层；允许每类至多 2 条样本的取整误差。
+  train: 1=559 (9.96%)；10=5 (0.09%)；11=287 (5.12%)；12=571 (10.18%)；13=433 (7.72%)；14=94 (1.68%)；15=40 (0.71%)；16=911 (16.24%)；17=342 (6.10%)；18=16 (0.29%)；2=137 (2.44%)；3=118 (2.10%)；4=78 (1.39%)；5=397 (7.08%)；6=839 (14.95%)；7=16 (0.29%)；8=719 (12.81%)；9=49 (0.87%)
+  validation: 1=1,118 (9.96%)；10=11 (0.10%)；11=573 (5.11%)；12=1,141 (10.17%)；13=866 (7.72%)；14=189 (1.68%)；15=79 (0.70%)；16=1,821 (16.23%)；17=685 (6.10%)；18=31 (0.28%)；2=273 (2.43%)；3=237 (2.11%)；4=156 (1.39%)；5=794 (7.08%)；6=1,677 (14.94%)；7=33 (0.29%)；8=1,439 (12.82%)；9=99 (0.88%)
+  test: 1=1,119 (9.97%)；10=11 (0.10%)；11=573 (5.11%)；12=1,142 (10.18%)；13=867 (7.73%)；14=188 (1.68%)；15=79 (0.70%)；16=1,821 (16.23%)；17=685 (6.10%)；18=31 (0.28%)；2=273 (2.43%)；3=237 (2.11%)；4=156 (1.39%)；5=794 (7.07%)；6=1,678 (14.95%)；7=32 (0.29%)；8=1,439 (12.82%)；9=98 (0.87%)
+实验视图：full，使用 6/6 列；训练预算 5611/5611，实际类别数量 {'1': 559, '10': 5, '11': 287, '12': 571, '13': 433, '14': 94, '15': 40, '16': 911, '17': 342, '18': 16, '2': 137, '3': 118, '4': 78, '5': 397, '6': 839, '7': 16, '8': 719, '9': 49}。
+开始训练：chess_krk，train=5,611，validation=11,222，test=11,223；GPU reference，reasoned 特征 5 轮、每轮 5 个候选，clean。
+基线验证指标：{'accuracy': '0.4247', 'balanced_accuracy': '0.3491', 'f1': '0.4071', 'f1_macro': '0.3548', 'auc': '0.9183', 'log_loss': '1.6418'}
+
+阶段：特征生成与验证，第 1/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_king_rank <= 1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_rook_rank <= 3.5000
+|   |   |   |--- white_rook_rank <= 2.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_rook_rank >  2.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_rook_rank >  3.5000
+|   |   |   |--- white_king_file <= 2.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  2.5000
+|   |   |   |   |--- class: 3
+|   |--- black_king_rank >  2.5000
+|   |   |--- black_king_file <= 2.5000
+|   |   |   |--- white_rook_file <= 3.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_rook_file >  3.5000
+|   |   |   |   |--- class: 14
+|   |   |--- black_king_file >  2.5000
+|   |   |   |--- black_king_rank <= 6.5000
+|   |   |   |   |--- class: 7
+|   |   |   |--- black_king_rank >  6.5000
+|   |   |   |   |--- class: 7
+|--- white_king_rank >  1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_king_file <= 3.5000
+|   |   |   |--- black_king_file <= 4.5000
+|   |   |   |   |--- class: 17
+|   |   |   |--- black_king_file >  4.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_king_file >  3.5000
+|   |   |   |--- white_king_rank <= 3.5000
+|   |   |   |   |--- class: 11
+|   |   |   |--- white_king_rank >  3.5000
+|   |   |   |   |--- class: 2
+|   |--- black_king_rank >  2.5000
+|   |   |--- white_king_rank <= 2.5000
+|   |   |   |--- black_king_file <= 2.5000
+|   |   |   |   |--- class: 3
+|   |   |   |--- black_king_file >  2.5000
+|   |   |   |   |--- class: 14
+|   |   |--- white_king_rank >  2.5000
+|   |   |   |--- white_king_file <= 3.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  3.5000
+|   |   |   |   |--- class: 3
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 559, 'recall': '0.5134'}, {'class': 1, 'rows': 5, 'recall': '0'}, {'class': 2, 'rows': 287, 'recall': '0.547'}, {'class': 3, 'rows': 571, 'recall': '0.268'}, {'class': 4, 'rows': 433, 'recall': '0.4758'}, {'class': 5, 'rows': 94, 'recall': '0.6383'}, {'class': 6, 'rows': 40, 'recall': '0.3'}, {'class': 7, 'rows': 911, 'recall': '0.7201'}, {'class': 8, 'rows': 342, 'recall': '0.3304'}, {'class': 9, 'rows': 16, 'recall': '0'}, {'class': 10, 'rows': 137, 'recall': '0.1387'}, {'class': 11, 'rows': 118, 'recall': '0.6271'}, {'class': 12, 'rows': 78, 'recall': '0.3846'}, {'class': 13, 'rows': 397, 'recall': '0.3149'}, {'class': 14, 'rows': 839, 'recall': '0.4958'}, {'class': 15, 'rows': 16, 'recall': '0.1875'}, {'class': 16, 'rows': 719, 'recall': '0.2962'}, {'class': 17, 'rows': 49, 'recall': '0.8163'}]
+  第 1 轮候选 1 [multicolumn/llm] oct_llm_king_manhattan_separation_r1
+    依据列：white_king_file, black_king_file, white_king_rank, black_king_rank
+    训练集依据：white_king_file: MI=0.1175, 中位数=3, 偏度=-0.6918；black_king_file: MI=0.1355, 中位数=5, 偏度=-0.3554；white_king_rank: MI=0.199, 中位数=2, 偏度=0.7386；black_king_rank: MI=0.2319, 中位数=4, 偏度=-0.0032
+    列间 Spearman：white_king_file / black_king_file=-0.1128；white_king_file / white_king_rank=0.4521；white_king_file / black_king_rank=0.091；black_king_file / white_king_rank=0.098；black_king_file / black_king_rank=-0.0891；white_king_rank / black_king_rank=-0.1167
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：可描述双方王的相对接近程度。
+    提取方式：将横纵坐标差的绝对值相加得到曼哈顿距离，再用训练尺度归一化并以 tanh 限幅。
+    可读公式：np.tanh((np.abs(df['white_king_file'] - df['black_king_file']) + np.abs(df['white_king_rank'] - df['black_king_rank'])) / (scale_white_king_file + scale_black_king_rank))
+    参数 scale_white_king_file ≈ 2 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=4、x[4208]=4；线性插值 Q=(1−0.5)×4+0.5×4=4。 IQR=Q75−Q25=4−2=2；均值 μ=Σx/n=17357/5611=3.0934；总体标准差 σ=√(Σ(x−μ)²/n)=√(5007.0647/5611)=0.9447（ddof=0）；scale=max(IQR,σ,ε)=2。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：将横纵坐标差的绝对值相加得到曼哈顿距离，再用训练尺度归一化并以 tanh 限幅。
+      u1 = df['white_king_file'] - df['black_king_file']
+      u2 = np.abs(u1)
+      u3 = df['white_king_rank'] - df['black_king_rank']
+      u4 = np.abs(u3)
+      u5 = u2 + u4
+      u6 = scale_white_king_file + scale_black_king_rank
+      u7 = u5 / u6
+      u8 = np.tanh(u7)
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4291', 'balanced_accuracy': '0.3828', 'f1': '0.4127', 'f1_macro': '0.3963', 'auc': '0.9179', 'log_loss': '1.6404'}
+    候选检查：拒绝：auc 退化（0.9183 → 0.9179；改善量 -0.0004）。；XGBoost 使用：{'oct_llm_king_manhattan_separation_r1': {'split_count': 345, 'used_by_xgboost': True, 'gain': '5.1438', 'total_gain': '1774.5968', 'total_gain_fraction': '0.0285'}}
+  第 1 轮候选 2 [multicolumn/llm] oct_llm_rook_king_alignment_r1
+    依据列：white_rook_file, white_king_file, white_rook_rank, white_king_rank, black_king_file
+    训练集依据：white_rook_file: MI=0.017, 中位数=5, 偏度=-0.0484；white_king_file: MI=0.1175, 中位数=3, 偏度=-0.6918；white_rook_rank: MI=0.0238, 中位数=5, 偏度=-0.0259；white_king_rank: MI=0.199, 中位数=2, 偏度=0.7386；black_king_file: MI=0.1355, 中位数=5, 偏度=-0.3554
+    列间 Spearman：white_rook_file / white_king_file=-0.0162；white_rook_file / white_rook_rank=0.0031；white_rook_file / white_king_rank=0.005；white_rook_file / black_king_file=-0.0139；white_king_file / white_rook_rank=0.0126；white_king_file / white_king_rank=0.4521；white_king_file / black_king_file=-0.1128；white_rook_rank / white_king_rank=-2.22e-05；white_rook_rank / black_king_file=-0.008；white_king_rank / black_king_file=0.098
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：可刻画白车相对己王的位置与黑王横向距离之间的关系。
+    提取方式：比较白车到白王的曼哈顿距离和黑王到白王的横向距离，以对应训练尺度归一化后限幅。
+    可读公式：np.tanh((np.abs(df['white_rook_file'] - df['white_king_file']) + np.abs(df['white_rook_rank'] - df['white_king_rank']) - np.abs(df['black_king_file'] - df['white_king_file'])) / (scale_white_rook_file + scale_white_rook_rank + scale_black_king_file))
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_rook_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25548/5611=4.5532；总体标准差 σ=√(Σ(x−μ)²/n)=√(29472.8701/5611)=2.2919（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_rook_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25543/5611=4.5523；总体标准差 σ=√(Σ(x−μ)²/n)=√(29173.3976/5611)=2.2802（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：比较白车到白王的曼哈顿距离和黑王到白王的横向距离，以对应训练尺度归一化后限幅。
+      u1 = df['white_rook_file'] - df['white_king_file']
+      u2 = np.abs(u1)
+      u3 = df['white_rook_rank'] - df['white_king_rank']
+      u4 = np.abs(u3)
+      u5 = u2 + u4
+      u6 = df['black_king_file'] - df['white_king_file']
+      u7 = np.abs(u6)
+      u8 = u5 - u7
+      u9 = scale_white_rook_file + scale_white_rook_rank
+      u10 = u9 + scale_black_king_file
+      u11 = u8 / u10
+      u12 = np.tanh(u11)
+      新列 = u12；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4037', 'balanced_accuracy': '0.3342', 'f1': '0.3843', 'f1_macro': '0.3373', 'auc': '0.9138', 'log_loss': '1.6771'}
+    候选检查：拒绝：accuracy 退化（0.4247 → 0.4037；改善量 -0.021）。；XGBoost 使用：{'oct_llm_rook_king_alignment_r1': {'split_count': 533, 'used_by_xgboost': True, 'gain': '4.9203', 'total_gain': '2622.5024', 'total_gain_fraction': '0.044'}}
+  第 1 轮候选 3 [nonlinear/llm] oct_llm_king_diagonal_balance_r1
+    依据列：white_king_file, black_king_file, white_king_rank, black_king_rank
+    训练集依据：white_king_file: MI=0.1175, 中位数=3, 偏度=-0.6918；black_king_file: MI=0.1355, 中位数=5, 偏度=-0.3554；white_king_rank: MI=0.199, 中位数=2, 偏度=0.7386；black_king_rank: MI=0.2319, 中位数=4, 偏度=-0.0032
+    列间 Spearman：white_king_file / black_king_file=-0.1128；white_king_file / white_king_rank=0.4521；white_king_file / black_king_rank=0.091；black_king_file / white_king_rank=0.098；black_king_file / black_king_rank=-0.0891；white_king_rank / black_king_rank=-0.1167
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：可区分双方王的横向间隔与纵向间隔是否相近。
+    提取方式：取横纵坐标绝对差之差以保留方向，再按训练尺度归一化并限幅。
+    可读公式：np.tanh((np.abs(df['white_king_file'] - df['black_king_file']) - np.abs(df['white_king_rank'] - df['black_king_rank'])) / (scale_white_king_file + scale_black_king_rank))
+    参数 scale_white_king_file ≈ 2 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=4、x[4208]=4；线性插值 Q=(1−0.5)×4+0.5×4=4。 IQR=Q75−Q25=4−2=2；均值 μ=Σx/n=17357/5611=3.0934；总体标准差 σ=√(Σ(x−μ)²/n)=√(5007.0647/5611)=0.9447（ddof=0）；scale=max(IQR,σ,ε)=2。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：取横纵坐标绝对差之差以保留方向，再按训练尺度归一化并限幅。
+      u1 = df['white_king_file'] - df['black_king_file']
+      u2 = np.abs(u1)
+      u3 = df['white_king_rank'] - df['black_king_rank']
+      u4 = np.abs(u3)
+      u5 = u2 - u4
+      u6 = scale_white_king_file + scale_black_king_rank
+      u7 = u5 / u6
+      u8 = np.tanh(u7)
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4252', 'balanced_accuracy': '0.3574', 'f1': '0.4084', 'f1_macro': '0.3629', 'auc': '0.917', 'log_loss': '1.6409'}
+    候选检查：拒绝：auc 退化（0.9183 → 0.917；改善量 -0.0013）。；XGBoost 使用：{'oct_llm_king_diagonal_balance_r1': {'split_count': 441, 'used_by_xgboost': True, 'gain': '4.7908', 'total_gain': '2112.7644', 'total_gain_fraction': '0.0337'}}
+  第 1 轮候选 4 [piecewise/llm] oct_llm_rook_rank_gate_r1
+    依据列：white_king_rank, black_king_rank, white_rook_rank
+    训练集依据：white_king_rank: MI=0.199, 中位数=2, 偏度=0.7386；black_king_rank: MI=0.2319, 中位数=4, 偏度=-0.0032；white_rook_rank: MI=0.0238, 中位数=5, 偏度=-0.0259
+    列间 Spearman：white_king_rank / black_king_rank=-0.1167；white_king_rank / white_rook_rank=-2.22e-05；black_king_rank / white_rook_rank=-0.0284
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：可表达特定王位置区域内白车纵向位置的变化。
+    提取方式：用训练树阈值限定王的位置区域；区域内以训练中位数居中并按尺度归一化、限幅，区域外置零。
+    可读公式：np.where((df['white_king_rank'] <= cart_r1_node0) & (df['black_king_rank'] <= cart_r1_node1), np.tanh((df['white_rook_rank'] - median_white_rook_rank) / scale_white_rook_rank), 0)
+    参数 cart_r1_node0 ≈ 1.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 5611 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 1 和 2。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 cart_r1_node1 ≈ 2.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 2519 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 2 和 3。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 scale_white_rook_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25543/5611=4.5523；总体标准差 σ=√(Σ(x−μ)²/n)=√(29173.3976/5611)=2.2802（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_rook_rank ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用训练树阈值限定王的位置区域；区域内以训练中位数居中并按尺度归一化、限幅，区域外置零。
+      u1 = df['white_king_rank'] <= cart_r1_node0
+      u2 = df['black_king_rank'] <= cart_r1_node1
+      u3 = u1 & u2
+      u4 = df['white_rook_rank'] - median_white_rook_rank
+      u5 = u4 / scale_white_rook_rank
+      u6 = np.tanh(u5)
+      u7 = np.where(u3, u6, 0)
+      新列 = u7；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4229', 'balanced_accuracy': '0.3453', 'f1': '0.4054', 'f1_macro': '0.3518', 'auc': '0.9174', 'log_loss': '1.6471'}
+    候选检查：拒绝：accuracy 退化（0.4247 → 0.4229；改善量 -0.0018）。；XGBoost 使用：{'oct_llm_rook_rank_gate_r1': {'split_count': 148, 'used_by_xgboost': True, 'gain': '3.7827', 'total_gain': '559.8442', 'total_gain_fraction': '0.0091'}}
+  第 1 轮候选 5 [nonlinear/llm] oct_llm_king_file_rank_interaction_r1
+    依据列：white_king_file, black_king_rank
+    训练集依据：white_king_file: MI=0.1175, 中位数=3, 偏度=-0.6918；black_king_rank: MI=0.2319, 中位数=4, 偏度=-0.0032
+    列间 Spearman：white_king_file / black_king_rank=0.091
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：可表示白王横向位置与黑王纵向位置的联合偏离。
+    提取方式：分别以训练中位数中心化后相乘形成交互项，用尺度乘积加小正数保护分母，再限幅。
+    可读公式：np.tanh((df['white_king_file'] - median_white_king_file) * (df['black_king_rank'] - median_black_king_rank) / (scale_white_king_file * scale_black_king_rank + 1e-06))
+    参数 median_white_king_file ≈ 3 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=3、x[2805]=3；线性插值 Q=(1−0)×3+0×3=3。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 median_black_king_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=4、x[2805]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_king_file ≈ 2 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=4、x[4208]=4；线性插值 Q=(1−0.5)×4+0.5×4=4。 IQR=Q75−Q25=4−2=2；均值 μ=Σx/n=17357/5611=3.0934；总体标准差 σ=√(Σ(x−μ)²/n)=√(5007.0647/5611)=0.9447（ddof=0）；scale=max(IQR,σ,ε)=2。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别以训练中位数中心化后相乘形成交互项，用尺度乘积加小正数保护分母，再限幅。
+      u1 = df['white_king_file'] - median_white_king_file
+      u2 = df['black_king_rank'] - median_black_king_rank
+      u3 = u1 * u2
+      u4 = scale_white_king_file * scale_black_king_rank
+      u5 = u4 + 1e-06
+      u6 = u3 / u5
+      u7 = np.tanh(u6)
+      新列 = u7；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4303', 'balanced_accuracy': '0.3546', 'f1': '0.4141', 'f1_macro': '0.36', 'auc': '0.9164', 'log_loss': '1.6466'}
+    候选检查：拒绝：auc 退化（0.9183 → 0.9164；改善量 -0.0019）。；XGBoost 使用：{'oct_llm_king_file_rank_interaction_r1': {'split_count': 445, 'used_by_xgboost': True, 'gain': '9.4385', 'total_gain': '4200.1357', 'total_gain_fraction': '0.0681'}}
+  第 1 轮结论：未接受新特征
+
+阶段：特征生成与验证，第 2/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_king_rank <= 1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_rook_rank <= 3.5000
+|   |   |   |--- white_rook_rank <= 2.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_rook_rank >  2.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_rook_rank >  3.5000
+|   |   |   |--- white_king_file <= 2.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  2.5000
+|   |   |   |   |--- class: 3
+|   |--- black_king_rank >  2.5000
+|   |   |--- black_king_file <= 2.5000
+|   |   |   |--- white_rook_file <= 3.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_rook_file >  3.5000
+|   |   |   |   |--- class: 14
+|   |   |--- black_king_file >  2.5000
+|   |   |   |--- black_king_rank <= 6.5000
+|   |   |   |   |--- class: 7
+|   |   |   |--- black_king_rank >  6.5000
+|   |   |   |   |--- class: 7
+|--- white_king_rank >  1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_king_file <= 3.5000
+|   |   |   |--- black_king_file <= 4.5000
+|   |   |   |   |--- class: 17
+|   |   |   |--- black_king_file >  4.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_king_file >  3.5000
+|   |   |   |--- white_king_rank <= 3.5000
+|   |   |   |   |--- class: 11
+|   |   |   |--- white_king_rank >  3.5000
+|   |   |   |   |--- class: 2
+|   |--- black_king_rank >  2.5000
+|   |   |--- white_king_rank <= 2.5000
+|   |   |   |--- black_king_file <= 2.5000
+|   |   |   |   |--- class: 3
+|   |   |   |--- black_king_file >  2.5000
+|   |   |   |   |--- class: 14
+|   |   |--- white_king_rank >  2.5000
+|   |   |   |--- white_king_file <= 3.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  3.5000
+|   |   |   |   |--- class: 3
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 559, 'recall': '0.5134'}, {'class': 1, 'rows': 5, 'recall': '0'}, {'class': 2, 'rows': 287, 'recall': '0.547'}, {'class': 3, 'rows': 571, 'recall': '0.268'}, {'class': 4, 'rows': 433, 'recall': '0.4758'}, {'class': 5, 'rows': 94, 'recall': '0.6383'}, {'class': 6, 'rows': 40, 'recall': '0.3'}, {'class': 7, 'rows': 911, 'recall': '0.7201'}, {'class': 8, 'rows': 342, 'recall': '0.3304'}, {'class': 9, 'rows': 16, 'recall': '0'}, {'class': 10, 'rows': 137, 'recall': '0.1387'}, {'class': 11, 'rows': 118, 'recall': '0.6271'}, {'class': 12, 'rows': 78, 'recall': '0.3846'}, {'class': 13, 'rows': 397, 'recall': '0.3149'}, {'class': 14, 'rows': 839, 'recall': '0.4958'}, {'class': 15, 'rows': 16, 'recall': '0.1875'}, {'class': 16, 'rows': 719, 'recall': '0.2962'}, {'class': 17, 'rows': 49, 'recall': '0.8163'}]
+  第 2 轮候选 1 [multicolumn/llm] oct_llm_rook_black_king_distance_balance_r2
+    依据列：white_rook_file, black_king_file, white_rook_rank, black_king_rank
+    训练集依据：white_rook_file: MI=0.017, 中位数=5, 偏度=-0.0484；black_king_file: MI=0.1355, 中位数=5, 偏度=-0.3554；white_rook_rank: MI=0.0238, 中位数=5, 偏度=-0.0259；black_king_rank: MI=0.2319, 中位数=4, 偏度=-0.0032
+    列间 Spearman：white_rook_file / black_king_file=-0.0139；white_rook_file / white_rook_rank=0.0031；white_rook_file / black_king_rank=0.0231；black_king_file / white_rook_rank=-0.008；black_king_file / black_king_rank=-0.0891；white_rook_rank / black_king_rank=-0.0284
+    历史反馈调整：避开双方王的原组合，改用车与黑王的两轴距离，并增加尺度归一化和双重边界保护。
+    来自第 1 轮 oct_llm_king_manhattan_separation_r1：metric_regression；拒绝：auc 退化（0.9183 → 0.9179；改善量 -0.0004）。
+    关系假说：车与黑王的文件和横向距离组合，可能补充双方空间关系信息。
+    提取方式：分别计算文件与横向的绝对距离，并用对应尺度和保护项归一化；求和后除以2平衡两项，再用tanh压缩极端值并用clip限制范围。
+    可读公式：np.clip(np.tanh((np.abs(df['white_rook_file'] - df['black_king_file']) / np.maximum(scale_white_rook_file + scale_black_king_file, 1e-06) + np.abs(df['white_rook_rank'] - df['black_king_rank']) / np.maximum(scale_white_rook_rank + scale_black_king_rank, 1e-06)) / 2), -1, 1)
+    参数 scale_white_rook_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25548/5611=4.5532；总体标准差 σ=√(Σ(x−μ)²/n)=√(29472.8701/5611)=2.2919（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_rook_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25543/5611=4.5523；总体标准差 σ=√(Σ(x−μ)²/n)=√(29173.3976/5611)=2.2802（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别计算文件与横向的绝对距离，并用对应尺度和保护项归一化；求和后除以2平衡两项，再用tanh压缩极端值并用clip限制范围。
+      u1 = df['white_rook_file'] - df['black_king_file']
+      u2 = np.abs(u1)
+      u3 = scale_white_rook_file + scale_black_king_file
+      u4 = np.maximum(u3, 1e-06)
+      u5 = u2 / u4
+      u6 = df['white_rook_rank'] - df['black_king_rank']
+      u7 = np.abs(u6)
+      u8 = scale_white_rook_rank + scale_black_king_rank
+      u9 = np.maximum(u8, 1e-06)
+      u10 = u7 / u9
+      u11 = u5 + u10
+      u12 = u11 / 2
+      u13 = np.tanh(u12)
+      u14 = -1
+      u15 = np.clip(u13, u14, 1)
+      新列 = u15；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4727', 'balanced_accuracy': '0.3713', 'f1': '0.4474', 'f1_macro': '0.3737', 'auc': '0.9253', 'log_loss': '1.4943'}
+    候选检查：符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.019，其余可用指标均未退化。；XGBoost 使用：{'oct_llm_rook_black_king_distance_balance_r2': {'split_count': 453, 'used_by_xgboost': True, 'gain': '40.1386', 'total_gain': '18182.7656', 'total_gain_fraction': '0.2505'}}
+  第 2 轮候选 2 [nonlinear/llm] oct_llm_rook_file_black_rank_log_product_r2
+    依据列：white_rook_file, black_king_rank
+    训练集依据：white_rook_file: MI=0.017, 中位数=5, 偏度=-0.0484；black_king_rank: MI=0.2319, 中位数=4, 偏度=-0.0032
+    列间 Spearman：white_rook_file / black_king_rank=0.0231
+    历史反馈调整：更换输入列并把直接乘积改为中心化乘积后取对数，以降低极端交互造成的指标回退。
+    来自第 1 轮 oct_llm_king_file_rank_interaction_r1：metric_regression；拒绝：auc 退化（0.9183 → 0.9164；改善量 -0.0019）。
+    关系假说：车文件与黑王横向偏移的乘积，可能表示联合作用强度而非单列趋势。
+    提取方式：先以训练中位数中心化两列，再相乘形成交互；取绝对值后用log1p缓和大乘积，按尺度乘积归一化，最后用tanh限制输出。
+    可读公式：np.tanh(np.log1p(np.abs((df['white_rook_file'] - median_white_rook_file) * (df['black_king_rank'] - median_black_king_rank))) / np.maximum(scale_white_rook_file * scale_black_king_rank, 1e-06))
+    参数 scale_white_rook_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25548/5611=4.5532；总体标准差 σ=√(Σ(x−μ)²/n)=√(29472.8701/5611)=2.2919（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_rook_file ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 median_black_king_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=4、x[2805]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 np.log1p ≈ 1 [数学定义]：log1p(x)=ln(1+x)：固定加 1 使 x=0 时输出 0，ln 的底数为自然常数 e。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：先以训练中位数中心化两列，再相乘形成交互；取绝对值后用log1p缓和大乘积，按尺度乘积归一化，最后用tanh限制输出。
+      u1 = df['white_rook_file'] - median_white_rook_file
+      u2 = df['black_king_rank'] - median_black_king_rank
+      u3 = u1 * u2
+      u4 = np.abs(u3)
+      u5 = np.log1p(u4)
+      u6 = scale_white_rook_file * scale_black_king_rank
+      u7 = np.maximum(u6, 1e-06)
+      u8 = u5 / u7
+      u9 = np.tanh(u8)
+      新列 = u9；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4294', 'balanced_accuracy': '0.3504', 'f1': '0.4108', 'f1_macro': '0.3522', 'auc': '0.9174', 'log_loss': '1.6469'}
+    候选检查：拒绝：f1_macro 退化（0.3548 → 0.3522；改善量 -0.0025）。；XGBoost 使用：{'oct_llm_rook_file_black_rank_log_product_r2': {'split_count': 342, 'used_by_xgboost': True, 'gain': '4.567', 'total_gain': '1561.9066', 'total_gain_fraction': '0.0253'}}
+  第 2 轮候选 3 [piecewise/llm] oct_llm_king_rank_file_conditional_rook_signal_r2
+    依据列：white_king_rank, black_king_file, white_rook_rank
+    训练集依据：white_king_rank: MI=0.199, 中位数=2, 偏度=0.7386；black_king_file: MI=0.1355, 中位数=5, 偏度=-0.3554；white_rook_rank: MI=0.0238, 中位数=5, 偏度=-0.0259
+    列间 Spearman：white_king_rank / black_king_file=0.098；white_king_rank / white_rook_rank=-2.22e-05；black_king_file / white_rook_rank=-0.008
+    历史反馈调整：保留分段思路但替换第二个门控列，并加入输出限幅和安全尺度，减少原门控组合的极端影响。
+    来自第 1 轮 oct_llm_rook_rank_gate_r1：metric_regression；拒绝：accuracy 退化（0.4247 → 0.4229；改善量 -0.0018）。
+    关系假说：特定王位置区域内，车的横向偏移可能呈现不同的类别关联。
+    提取方式：用训练树阈值构造双条件门；满足条件时将车横向相对中位数的偏移按尺度标准化并用tanh和clip限幅，否则返回0。
+    可读公式：np.where((df['white_king_rank'] <= cart_r2_node0) & (df['black_king_file'] > cart_r2_node9), np.clip(np.tanh((df['white_rook_rank'] - median_white_rook_rank) / np.maximum(scale_white_rook_rank, 1e-06)), -1, 1), 0)
+    参数 cart_r2_node0 ≈ 1.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 5611 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 1 和 2。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 cart_r2_node9 ≈ 2.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 1991 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 2 和 3。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 median_white_rook_rank ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_rook_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25543/5611=4.5523；总体标准差 σ=√(Σ(x−μ)²/n)=√(29173.3976/5611)=2.2802（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用训练树阈值构造双条件门；满足条件时将车横向相对中位数的偏移按尺度标准化并用tanh和clip限幅，否则返回0。
+      u1 = df['white_king_rank'] <= cart_r2_node0
+      u2 = df['black_king_file'] > cart_r2_node9
+      u3 = u1 & u2
+      u4 = df['white_rook_rank'] - median_white_rook_rank
+      u5 = np.maximum(scale_white_rook_rank, 1e-06)
+      u6 = u4 / u5
+      u7 = np.tanh(u6)
+      u8 = -1
+      u9 = np.clip(u7, u8, 1)
+      u10 = np.where(u3, u9, 0)
+      新列 = u10；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4339', 'balanced_accuracy': '0.3606', 'f1': '0.417', 'f1_macro': '0.3631', 'auc': '0.9188', 'log_loss': '1.6367'}
+    候选检查：符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0083，其余可用指标均未退化。；XGBoost 使用：{'oct_llm_king_rank_file_conditional_rook_signal_r2': {'split_count': 263, 'used_by_xgboost': True, 'gain': '8.7516', 'total_gain': '2301.6604', 'total_gain_fraction': '0.0371'}}
+  第 2 轮候选 4 [multicolumn/llm] oct_llm_three_piece_centered_signed_balance_r2
+    依据列：white_king_rank, black_king_rank, white_king_file, black_king_file
+    训练集依据：white_king_rank: MI=0.199, 中位数=2, 偏度=0.7386；black_king_rank: MI=0.2319, 中位数=4, 偏度=-0.0032；white_king_file: MI=0.1175, 中位数=3, 偏度=-0.6918；black_king_file: MI=0.1355, 中位数=5, 偏度=-0.3554
+    列间 Spearman：white_king_rank / black_king_rank=-0.1167；white_king_rank / white_king_file=0.4521；white_king_rank / black_king_file=0.098；black_king_rank / white_king_file=0.091；black_king_rank / black_king_file=-0.0891；white_king_file / black_king_file=-0.1128
+    历史反馈调整：不再使用车王对齐距离，改为双方王的中心化位置与有向间隔，并限制组合幅度。
+    来自第 1 轮 oct_llm_rook_king_alignment_r1：metric_regression；拒绝：accuracy 退化（0.4247 → 0.4037；改善量 -0.021）。
+    关系假说：双方王的横向位置、文件方向和横向间隔的联合平衡，可能区分不同局面结构。
+    提取方式：将两项横向位置按各自中位数和尺度中心化，再加入带方向符号的文件间隔；合成后除以2并用tanh与clip控制数值范围。
+    可读公式：np.clip(np.tanh(((df['white_king_rank'] - median_white_king_rank) / np.maximum(scale_white_king_rank, 1e-06) + (df['black_king_rank'] - median_black_king_rank) / np.maximum(scale_black_king_rank, 1e-06) + np.sign(df['white_king_file'] - df['black_king_file']) * np.abs(df['white_king_file'] - df['black_king_file']) / np.maximum(scale_white_king_file + scale_black_king_file, 1e-06)) / 2), -1, 1)
+    参数 median_white_king_rank ≈ 2 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=2、x[2805]=2；线性插值 Q=(1−0)×2+0×2=2。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_king_rank ≈ 1 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=1、x[1403]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=2、x[4208]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 IQR=Q75−Q25=2−1=1；均值 μ=Σx/n=10438/5611=1.8603；总体标准差 σ=√(Σ(x−μ)²/n)=√(4828.4552/5611)=0.9276（ddof=0）；scale=max(IQR,σ,ε)=1。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_black_king_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=4、x[2805]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_king_file ≈ 2 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=4、x[4208]=4；线性插值 Q=(1−0.5)×4+0.5×4=4。 IQR=Q75−Q25=4−2=2；均值 μ=Σx/n=17357/5611=3.0934；总体标准差 σ=√(Σ(x−μ)²/n)=√(5007.0647/5611)=0.9447（ddof=0）；scale=max(IQR,σ,ε)=2。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：将两项横向位置按各自中位数和尺度中心化，再加入带方向符号的文件间隔；合成后除以2并用tanh与clip控制数值范围。
+      u1 = df['white_king_rank'] - median_white_king_rank
+      u2 = np.maximum(scale_white_king_rank, 1e-06)
+      u3 = u1 / u2
+      u4 = df['black_king_rank'] - median_black_king_rank
+      u5 = np.maximum(scale_black_king_rank, 1e-06)
+      u6 = u4 / u5
+      u7 = u3 + u6
+      u8 = df['white_king_file'] - df['black_king_file']
+      u9 = np.sign(u8)
+      u10 = df['white_king_file'] - df['black_king_file']
+      u11 = np.abs(u10)
+      u12 = u9 * u11
+      u13 = scale_white_king_file + scale_black_king_file
+      u14 = np.maximum(u13, 1e-06)
+      u15 = u12 / u14
+      u16 = u7 + u15
+      u17 = u16 / 2
+      u18 = np.tanh(u17)
+      u19 = -1
+      u20 = np.clip(u18, u19, 1)
+      新列 = u20；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.433', 'balanced_accuracy': '0.3801', 'f1': '0.4171', 'f1_macro': '0.3894', 'auc': '0.9194', 'log_loss': '1.6204'}
+    候选检查：符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0347，其余可用指标均未退化。；XGBoost 使用：{'oct_llm_three_piece_centered_signed_balance_r2': {'split_count': 1059, 'used_by_xgboost': True, 'gain': '9.782', 'total_gain': '10359.0977', 'total_gain_fraction': '0.1622'}}
+  第 2 轮候选 5 [nonlinear/llm] oct_llm_rook_black_file_periodic_tension_r2
+    依据列：white_rook_file, black_king_file
+    训练集依据：white_rook_file: MI=0.017, 中位数=5, 偏度=-0.0484；black_king_file: MI=0.1355, 中位数=5, 偏度=-0.3554
+    列间 Spearman：white_rook_file / black_king_file=-0.0139
+    历史反馈调整：避开王文件与王横向差异的直接平衡，改用车文件与黑王文件的周期编码和中心化共同偏移，并保护归一化分母。
+    来自第 1 轮 oct_llm_king_diagonal_balance_r1：metric_regression；拒绝：auc 退化（0.9183 → 0.917；改善量 -0.0013）。
+    关系假说：车与黑王的文件差异及共同偏移可能形成非线性位置模式。
+    提取方式：用尺度和保护项归一化文件差异，再乘以pi形成周期角度并取余弦；同时将两列相对中位数的和按联合尺度压缩，二者相乘表达局部张力。
+    可读公式：np.cos(np.pi * (df['white_rook_file'] - df['black_king_file']) / np.maximum(scale_white_rook_file + scale_black_king_file, 1e-06)) * np.tanh((df['white_rook_file'] - median_white_rook_file + (df['black_king_file'] - median_black_king_file)) / np.maximum(scale_white_rook_file + scale_black_king_file, 1e-06))
+    参数 scale_white_rook_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25548/5611=4.5532；总体标准差 σ=√(Σ(x−μ)²/n)=√(29472.8701/5611)=2.2919（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_rook_file ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 median_black_king_file ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 np.pi ≈ 3.1416 [数学定义]：π 是圆周率，来自圆/椭圆几何或弧度换算，不从数据估计。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用尺度和保护项归一化文件差异，再乘以pi形成周期角度并取余弦；同时将两列相对中位数的和按联合尺度压缩，二者相乘表达局部张力。
+      u1 = df['white_rook_file'] - df['black_king_file']
+      u2 = np.pi * u1
+      u3 = scale_white_rook_file + scale_black_king_file
+      u4 = np.maximum(u3, 1e-06)
+      u5 = u2 / u4
+      u6 = np.cos(u5)
+      u7 = df['white_rook_file'] - median_white_rook_file
+      u8 = df['black_king_file'] - median_black_king_file
+      u9 = u7 + u8
+      u10 = scale_white_rook_file + scale_black_king_file
+      u11 = np.maximum(u10, 1e-06)
+      u12 = u9 / u11
+      u13 = np.tanh(u12)
+      u14 = u6 * u13
+      新列 = u14；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4379', 'balanced_accuracy': '0.3839', 'f1': '0.4209', 'f1_macro': '0.3939', 'auc': '0.9219', 'log_loss': '1.602'}
+    候选检查：符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0392，其余可用指标均未退化。；XGBoost 使用：{'oct_llm_rook_black_file_periodic_tension_r2': {'split_count': 751, 'used_by_xgboost': True, 'gain': '9.3948', 'total_gain': '7055.4829', 'total_gain_fraction': '0.1083'}}
+  第 2 轮结论：接受 oct_llm_rook_black_file_periodic_tension_r2
+
+阶段：特征生成与验证，第 3/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_king_rank <= 1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_rook_rank <= 3.5000
+|   |   |   |--- white_rook_rank <= 2.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_rook_rank >  2.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_rook_rank >  3.5000
+|   |   |   |--- white_king_file <= 2.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  2.5000
+|   |   |   |   |--- class: 3
+|   |--- black_king_rank >  2.5000
+|   |   |--- black_king_file <= 2.5000
+|   |   |   |--- oct_llm_rook_black_file_periodic_tension_r2 <= -0.3879
+|   |   |   |   |--- class: 0
+|   |   |   |--- oct_llm_rook_black_file_periodic_tension_r2 >  -0.3879
+|   |   |   |   |--- class: 14
+|   |   |--- black_king_file >  2.5000
+|   |   |   |--- black_king_rank <= 6.5000
+|   |   |   |   |--- class: 7
+|   |   |   |--- black_king_rank >  6.5000
+|   |   |   |   |--- class: 7
+|--- white_king_rank >  1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_king_file <= 3.5000
+|   |   |   |--- black_king_file <= 4.5000
+|   |   |   |   |--- class: 17
+|   |   |   |--- black_king_file >  4.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_king_file >  3.5000
+|   |   |   |--- white_king_rank <= 3.5000
+|   |   |   |   |--- class: 11
+|   |   |   |--- white_king_rank >  3.5000
+|   |   |   |   |--- class: 2
+|   |--- black_king_rank >  2.5000
+|   |   |--- white_king_rank <= 2.5000
+|   |   |   |--- black_king_file <= 2.5000
+|   |   |   |   |--- class: 3
+|   |   |   |--- black_king_file >  2.5000
+|   |   |   |   |--- class: 14
+|   |   |--- white_king_rank >  2.5000
+|   |   |   |--- white_king_file <= 3.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  3.5000
+|   |   |   |   |--- class: 3
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 559, 'recall': '0.6798'}, {'class': 1, 'rows': 5, 'recall': '0.8'}, {'class': 2, 'rows': 287, 'recall': '0.5366'}, {'class': 3, 'rows': 571, 'recall': '0.2837'}, {'class': 4, 'rows': 433, 'recall': '0.5058'}, {'class': 5, 'rows': 94, 'recall': '0.6489'}, {'class': 6, 'rows': 40, 'recall': '0.275'}, {'class': 7, 'rows': 911, 'recall': '0.6905'}, {'class': 8, 'rows': 342, 'recall': '0.345'}, {'class': 9, 'rows': 16, 'recall': '0'}, {'class': 10, 'rows': 137, 'recall': '0.1679'}, {'class': 11, 'rows': 118, 'recall': '0.6356'}, {'class': 12, 'rows': 78, 'recall': '0.3846'}, {'class': 13, 'rows': 397, 'recall': '0.3224'}, {'class': 14, 'rows': 839, 'recall': '0.503'}, {'class': 15, 'rows': 16, 'recall': '0.1875'}, {'class': 16, 'rows': 719, 'recall': '0.3018'}, {'class': 17, 'rows': 49, 'recall': '0.8163'}]
+  第 3 轮候选 1 [multicolumn/llm] oct_llm_oct_llm_king_rook_pressure_mix_r3_r3
+    依据列：white_rook_file, black_king_file, white_rook_rank, black_king_rank, white_king_rank
+    训练集依据：white_rook_file: MI=0.0269, 中位数=5, 偏度=-0.0484；black_king_file: MI=0.1189, 中位数=5, 偏度=-0.3554；white_rook_rank: MI=0.0192, 中位数=5, 偏度=-0.0259；black_king_rank: MI=0.2233, 中位数=4, 偏度=-0.0032；white_king_rank: MI=0.1946, 中位数=2, 偏度=0.7386
+    列间 Spearman：white_rook_file / black_king_file=-0.0139；white_rook_file / white_rook_rank=0.0031；white_rook_file / black_king_rank=0.0231；white_rook_file / white_king_rank=0.005；black_king_file / white_rook_rank=-0.008；black_king_file / black_king_rank=-0.0891；black_king_file / white_king_rank=0.098；white_rook_rank / black_king_rank=-0.0284；white_rook_rank / white_king_rank=-2.22e-05；black_king_rank / white_king_rank=-0.1167
+    历史反馈调整：在获接受的车王距离方向上加入白王纵向差异调制，改变组合结构并压缩极端值。
+    来自第 2 轮 oct_llm_rook_black_king_distance_balance_r2：not_selected；本轮另一个可接受候选的主指标更优，故未保留。
+    关系假说：可探索车与黑王的相对位置是否会随双方王的纵向差异呈现交互变化。
+    提取方式：分别用稳健尺度归一化车王在横纵方向的相对位移，再以双曲正切压缩距离项和王位差，乘积表达两种关系共同出现时的信号。
+    可读公式：np.tanh(((df['white_rook_file'] - df['black_king_file']) / np.maximum(scale_white_rook_file + scale_black_king_file, 1e-06) + (df['white_rook_rank'] - df['black_king_rank']) / np.maximum(scale_white_rook_rank + scale_black_king_rank, 1e-06)) / 2) * np.tanh((df['white_king_rank'] - df['black_king_rank']) / np.maximum(scale_white_king_rank + scale_black_king_rank, 1e-06))
+    参数 scale_white_king_rank ≈ 1 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=1、x[1403]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=2、x[4208]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 IQR=Q75−Q25=2−1=1；均值 μ=Σx/n=10438/5611=1.8603；总体标准差 σ=√(Σ(x−μ)²/n)=√(4828.4552/5611)=0.9276（ddof=0）；scale=max(IQR,σ,ε)=1。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_rook_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25548/5611=4.5532；总体标准差 σ=√(Σ(x−μ)²/n)=√(29472.8701/5611)=2.2919（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_rook_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25543/5611=4.5523；总体标准差 σ=√(Σ(x−μ)²/n)=√(29173.3976/5611)=2.2802（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别用稳健尺度归一化车王在横纵方向的相对位移，再以双曲正切压缩距离项和王位差，乘积表达两种关系共同出现时的信号。
+      u1 = df['white_rook_file'] - df['black_king_file']
+      u2 = scale_white_rook_file + scale_black_king_file
+      u3 = np.maximum(u2, 1e-06)
+      u4 = u1 / u3
+      u5 = df['white_rook_rank'] - df['black_king_rank']
+      u6 = scale_white_rook_rank + scale_black_king_rank
+      u7 = np.maximum(u6, 1e-06)
+      u8 = u5 / u7
+      u9 = u4 + u8
+      u10 = u9 / 2
+      u11 = np.tanh(u10)
+      u12 = df['white_king_rank'] - df['black_king_rank']
+      u13 = scale_white_king_rank + scale_black_king_rank
+      u14 = np.maximum(u13, 1e-06)
+      u15 = u12 / u14
+      u16 = np.tanh(u15)
+      u17 = u11 * u16
+      新列 = u17；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4372', 'balanced_accuracy': '0.3543', 'f1': '0.4193', 'f1_macro': '0.3586', 'auc': '0.9216', 'log_loss': '1.5985'}
+    候选检查：拒绝：accuracy 退化（0.4379 → 0.4372；改善量 -0.0007）。；XGBoost 使用：{'oct_llm_oct_llm_king_rook_pressure_mix_r3_r3': {'split_count': 646, 'used_by_xgboost': True, 'gain': '9.9668', 'total_gain': '6438.5322', 'total_gain_fraction': '0.0973'}}
+  第 3 轮候选 2 [multicolumn/llm] oct_llm_oct_llm_king_rank_rook_tension_r3_r3
+    依据列：black_king_rank, white_king_rank, white_rook_file, black_king_file
+    训练集依据：black_king_rank: MI=0.2233, 中位数=4, 偏度=-0.0032；white_king_rank: MI=0.1946, 中位数=2, 偏度=0.7386；white_rook_file: MI=0.0269, 中位数=5, 偏度=-0.0484；black_king_file: MI=0.1189, 中位数=5, 偏度=-0.3554
+    列间 Spearman：black_king_rank / white_king_rank=-0.1167；black_king_rank / white_rook_file=0.0231；black_king_rank / black_king_file=-0.0891；white_king_rank / white_rook_file=0.005；white_king_rank / black_king_file=0.098；white_rook_file / black_king_file=-0.0139
+    历史反馈调整：从多子位置平衡改为王的纵向偏移与车王横向关系的乘积，形成不同交互。
+    来自第 2 轮 oct_llm_three_piece_centered_signed_balance_r2：not_selected；本轮另一个可接受候选的主指标更优，故未保留。
+    关系假说：可探索双方王的纵向位置与车对黑王横向相对位置是否存在联合变化模式。
+    提取方式：将两王相对各自训练中位数的纵向偏移按尺度归一化后合并，并与尺度归一化的车王横向位移相乘；双曲正切限制数值范围。
+    可读公式：np.tanh((df['black_king_rank'] - median_black_king_rank) / np.maximum(scale_black_king_rank, 1e-06) + (df['white_king_rank'] - median_white_king_rank) / np.maximum(scale_white_king_rank, 1e-06)) * np.tanh((df['white_rook_file'] - df['black_king_file']) / np.maximum(scale_white_rook_file + scale_black_king_file, 1e-06))
+    参数 median_black_king_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=4、x[2805]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_king_rank ≈ 2 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=2、x[2805]=2；线性插值 Q=(1−0)×2+0×2=2。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_king_rank ≈ 1 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=1、x[1403]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=2、x[4208]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 IQR=Q75−Q25=2−1=1；均值 μ=Σx/n=10438/5611=1.8603；总体标准差 σ=√(Σ(x−μ)²/n)=√(4828.4552/5611)=0.9276（ddof=0）；scale=max(IQR,σ,ε)=1。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_rook_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25548/5611=4.5532；总体标准差 σ=√(Σ(x−μ)²/n)=√(29472.8701/5611)=2.2919（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：将两王相对各自训练中位数的纵向偏移按尺度归一化后合并，并与尺度归一化的车王横向位移相乘；双曲正切限制数值范围。
+      u1 = df['black_king_rank'] - median_black_king_rank
+      u2 = np.maximum(scale_black_king_rank, 1e-06)
+      u3 = u1 / u2
+      u4 = df['white_king_rank'] - median_white_king_rank
+      u5 = np.maximum(scale_white_king_rank, 1e-06)
+      u6 = u4 / u5
+      u7 = u3 + u6
+      u8 = np.tanh(u7)
+      u9 = df['white_rook_file'] - df['black_king_file']
+      u10 = scale_white_rook_file + scale_black_king_file
+      u11 = np.maximum(u10, 1e-06)
+      u12 = u9 / u11
+      u13 = np.tanh(u12)
+      u14 = u8 * u13
+      新列 = u14；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4368', 'balanced_accuracy': '0.377', 'f1': '0.4205', 'f1_macro': '0.3896', 'auc': '0.9205', 'log_loss': '1.6084'}
+    候选检查：拒绝：accuracy 退化（0.4379 → 0.4368；改善量 -0.0011）。；XGBoost 使用：{'oct_llm_oct_llm_king_rank_rook_tension_r3_r3': {'split_count': 747, 'used_by_xgboost': True, 'gain': '9.3346', 'total_gain': '6972.9326', 'total_gain_fraction': '0.1071'}}
+  第 3 轮候选 3 [nonlinear/llm] oct_llm_oct_llm_king_rank_periodic_phase_r3_r3
+    依据列：white_king_rank, black_king_rank
+    训练集依据：white_king_rank: MI=0.1946, 中位数=2, 偏度=0.7386；black_king_rank: MI=0.2233, 中位数=4, 偏度=-0.0032
+    列间 Spearman：white_king_rank / black_king_rank=-0.1167
+    历史反馈调整：保留周期函数与有界调制的思路，但改用王位纵向相位及黑王偏移，避开已用的车文件组合。
+    来自第 2 轮 oct_llm_rook_black_file_periodic_tension_r2：accepted；符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0392，其余可用指标均未退化。
+    关系假说：可探索王位纵向差异的周期性相位是否与黑王自身所处位置共同变化。
+    提取方式：以尺度归一化的双方王纵向差异构造余弦相位，再乘以黑王相对训练中位数的归一化偏移；余弦表达周期关系，双曲正切压缩位置偏移。
+    可读公式：np.cos(np.pi * (df['white_king_rank'] - df['black_king_rank']) / np.maximum(scale_white_king_rank + scale_black_king_rank, 1e-06)) * np.tanh((df['black_king_rank'] - median_black_king_rank) / np.maximum(scale_black_king_rank, 1e-06))
+    参数 median_black_king_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=4、x[2805]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_king_rank ≈ 1 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=1、x[1403]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=2、x[4208]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 IQR=Q75−Q25=2−1=1；均值 μ=Σx/n=10438/5611=1.8603；总体标准差 σ=√(Σ(x−μ)²/n)=√(4828.4552/5611)=0.9276（ddof=0）；scale=max(IQR,σ,ε)=1。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 np.pi ≈ 3.1416 [数学定义]：π 是圆周率，来自圆/椭圆几何或弧度换算，不从数据估计。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：以尺度归一化的双方王纵向差异构造余弦相位，再乘以黑王相对训练中位数的归一化偏移；余弦表达周期关系，双曲正切压缩位置偏移。
+      u1 = df['white_king_rank'] - df['black_king_rank']
+      u2 = np.pi * u1
+      u3 = scale_white_king_rank + scale_black_king_rank
+      u4 = np.maximum(u3, 1e-06)
+      u5 = u2 / u4
+      u6 = np.cos(u5)
+      u7 = df['black_king_rank'] - median_black_king_rank
+      u8 = np.maximum(scale_black_king_rank, 1e-06)
+      u9 = u7 / u8
+      u10 = np.tanh(u9)
+      u11 = u6 * u10
+      新列 = u11；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4485', 'balanced_accuracy': '0.392', 'f1': '0.4327', 'f1_macro': '0.4032', 'auc': '0.922', 'log_loss': '1.5966'}
+    候选检查：符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0093，其余可用指标均未退化。；XGBoost 使用：{'oct_llm_oct_llm_king_rank_periodic_phase_r3_r3': {'split_count': 488, 'used_by_xgboost': True, 'gain': '8.485', 'total_gain': '4140.6924', 'total_gain_fraction': '0.0628'}}
+  第 3 轮候选 4 [piecewise/llm] oct_llm_oct_llm_king_rank_rook_rank_gate_r3_r3
+    依据列：white_king_rank, black_king_rank, white_rook_rank
+    训练集依据：white_king_rank: MI=0.1946, 中位数=2, 偏度=0.7386；black_king_rank: MI=0.2233, 中位数=4, 偏度=-0.0032；white_rook_rank: MI=0.0192, 中位数=5, 偏度=-0.0259
+    列间 Spearman：white_king_rank / black_king_rank=-0.1167；white_king_rank / white_rook_rank=-2.22e-05；black_king_rank / white_rook_rank=-0.0284
+    历史反馈调整：重用训练树分段思路但更换阈值来源并以有界标准化信号替代原门内量。
+    来自第 1 轮 oct_llm_rook_rank_gate_r1：metric_regression；拒绝：accuracy 退化（0.4247 → 0.4229；改善量 -0.0018）。
+    关系假说：可探索特定王位区间内，白车纵向位置偏移是否呈现不同关联。
+    提取方式：用训练树阈值限定白王与黑王的联合区间；仅在区间内输出经训练中位数中心化、尺度归一化并由双曲正切压缩的车位偏移，否则置零。
+    可读公式：np.where((df['white_king_rank'] <= cart_r3_node0) & (df['black_king_rank'] <= cart_r3_node1), np.tanh((df['white_rook_rank'] - median_white_rook_rank) / np.maximum(scale_white_rook_rank, 1e-06)), 0)
+    参数 cart_r3_node0 ≈ 1.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 5611 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 1 和 2。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 cart_r3_node1 ≈ 2.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 2519 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 2 和 3。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 median_white_rook_rank ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_rook_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25543/5611=4.5523；总体标准差 σ=√(Σ(x−μ)²/n)=√(29173.3976/5611)=2.2802（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用训练树阈值限定白王与黑王的联合区间；仅在区间内输出经训练中位数中心化、尺度归一化并由双曲正切压缩的车位偏移，否则置零。
+      u1 = df['white_king_rank'] <= cart_r3_node0
+      u2 = df['black_king_rank'] <= cart_r3_node1
+      u3 = u1 & u2
+      u4 = df['white_rook_rank'] - median_white_rook_rank
+      u5 = np.maximum(scale_white_rook_rank, 1e-06)
+      u6 = u4 / u5
+      u7 = np.tanh(u6)
+      u8 = np.where(u3, u7, 0)
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4349', 'balanced_accuracy': '0.3781', 'f1': '0.4174', 'f1_macro': '0.3867', 'auc': '0.9208', 'log_loss': '1.612'}
+    候选检查：拒绝：accuracy 退化（0.4379 → 0.4349；改善量 -0.003）。；XGBoost 使用：{'oct_llm_oct_llm_king_rank_rook_rank_gate_r3_r3': {'split_count': 123, 'used_by_xgboost': True, 'gain': '4.9626', 'total_gain': '610.3961', 'total_gain_fraction': '0.0095'}}
+  第 3 轮候选 5 [piecewise/llm] oct_llm_oct_llm_black_king_file_rook_tension_gate_r3_r3
+    依据列：black_king_file, white_king_rank, oct_llm_rook_black_file_periodic_tension_r2
+    训练集依据：black_king_file: MI=0.1189, 中位数=5, 偏度=-0.3554；white_king_rank: MI=0.1946, 中位数=2, 偏度=0.7386；oct_llm_rook_black_file_periodic_tension_r2: MI=0.1712, 中位数=0, 偏度=-0.4466
+    列间 Spearman：black_king_file / white_king_rank=0.098；black_king_file / oct_llm_rook_black_file_periodic_tension_r2=0.6016；white_king_rank / oct_llm_rook_black_file_periodic_tension_r2=0.0672
+    历史反馈调整：沿用条件门控方向，改用黑王横向与白王纵向联合条件，并调制既有张力信号。
+    来自第 2 轮 oct_llm_king_rank_file_conditional_rook_signal_r2：not_selected；本轮另一个可接受候选的主指标更优，故未保留。
+    关系假说：可探索黑王横向区间与白王纵向区间是否会调节既有车王张力信号的表现。
+    提取方式：使用训练树阈值定义两个位置条件；条件成立时输出已保留张力特征的中心化尺度值，并以双曲正切限制幅度，否则输出零。
+    可读公式：np.where((df['black_king_file'] <= cart_r3_node9) & (df['white_king_rank'] > cart_r3_node0), np.tanh((df['oct_llm_rook_black_file_periodic_tension_r2'] - median_oct_llm_rook_black_file_periodic_tension_r2) / np.maximum(scale_oct_llm_rook_black_file_periodic_tension_r2, 1e-06)), 0)
+    参数 cart_r3_node9 ≈ 2.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 1991 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 2 和 3。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 cart_r3_node0 ≈ 1.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 5611 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 1 和 2。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 median_oct_llm_rook_black_file_periodic_tension_r2 ≈ 0 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=-0、x[2805]=-0；线性插值 Q=(1−0)×-0+0×-0=-0。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_oct_llm_rook_black_file_periodic_tension_r2 ≈ 0.2881 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=-0.1149、x[1403]=-0.1149；线性插值 Q=(1−0.5)×-0.1149+0.5×-0.1149=-0.1149。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=0.1732、x[4208]=0.1732；线性插值 Q=(1−0.5)×0.1732+0.5×0.1732=0.1732。 IQR=Q75−Q25=0.1732−-0.1149=0.2881；均值 μ=Σx/n=79.8583/5611=0.0142；总体标准差 σ=√(Σ(x−μ)²/n)=√(450.8453/5611)=0.2835（ddof=0）；scale=max(IQR,σ,ε)=0.2881。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：使用训练树阈值定义两个位置条件；条件成立时输出已保留张力特征的中心化尺度值，并以双曲正切限制幅度，否则输出零。
+      u1 = df['black_king_file'] <= cart_r3_node9
+      u2 = df['white_king_rank'] > cart_r3_node0
+      u3 = u1 & u2
+      u4 = df['oct_llm_rook_black_file_periodic_tension_r2'] - median_oct_llm_rook_black_file_periodic_tension_r2
+      u5 = np.maximum(scale_oct_llm_rook_black_file_periodic_tension_r2, 1e-06)
+      u6 = u4 / u5
+      u7 = np.tanh(u6)
+      u8 = np.where(u3, u7, 0)
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4426', 'balanced_accuracy': '0.3798', 'f1': '0.4259', 'f1_macro': '0.393', 'auc': '0.9224', 'log_loss': '1.6015'}
+    候选检查：拒绝：balanced_accuracy 退化（0.3839 → 0.3798；改善量 -0.0041）。；XGBoost 使用：{'oct_llm_oct_llm_black_king_file_rook_tension_gate_r3_r3': {'split_count': 297, 'used_by_xgboost': True, 'gain': '3.5723', 'total_gain': '1060.9685', 'total_gain_fraction': '0.0163'}}
+  第 3 轮结论：接受 oct_llm_oct_llm_king_rank_periodic_phase_r3_r3
+
+阶段：特征生成与验证，第 4/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_king_rank <= 1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_rook_rank <= 3.5000
+|   |   |   |--- white_rook_rank <= 2.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_rook_rank >  2.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_rook_rank >  3.5000
+|   |   |   |--- white_king_file <= 2.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  2.5000
+|   |   |   |   |--- class: 3
+|   |--- black_king_rank >  2.5000
+|   |   |--- black_king_file <= 2.5000
+|   |   |   |--- oct_llm_rook_black_file_periodic_tension_r2 <= -0.3879
+|   |   |   |   |--- class: 0
+|   |   |   |--- oct_llm_rook_black_file_periodic_tension_r2 >  -0.3879
+|   |   |   |   |--- class: 14
+|   |   |--- black_king_file >  2.5000
+|   |   |   |--- black_king_rank <= 6.5000
+|   |   |   |   |--- class: 7
+|   |   |   |--- black_king_rank >  6.5000
+|   |   |   |   |--- class: 7
+|--- white_king_rank >  1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_king_file <= 3.5000
+|   |   |   |--- black_king_file <= 4.5000
+|   |   |   |   |--- class: 17
+|   |   |   |--- black_king_file >  4.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_king_file >  3.5000
+|   |   |   |--- white_king_rank <= 3.5000
+|   |   |   |   |--- class: 11
+|   |   |   |--- white_king_rank >  3.5000
+|   |   |   |   |--- class: 2
+|   |--- black_king_rank >  2.5000
+|   |   |--- white_king_rank <= 2.5000
+|   |   |   |--- black_king_file <= 2.5000
+|   |   |   |   |--- class: 3
+|   |   |   |--- black_king_file >  2.5000
+|   |   |   |   |--- class: 14
+|   |   |--- white_king_rank >  2.5000
+|   |   |   |--- white_king_file <= 3.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  3.5000
+|   |   |   |   |--- class: 3
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 559, 'recall': '0.6708'}, {'class': 1, 'rows': 5, 'recall': '0.8'}, {'class': 2, 'rows': 287, 'recall': '0.5679'}, {'class': 3, 'rows': 571, 'recall': '0.2715'}, {'class': 4, 'rows': 433, 'recall': '0.5219'}, {'class': 5, 'rows': 94, 'recall': '0.7128'}, {'class': 6, 'rows': 40, 'recall': '0.275'}, {'class': 7, 'rows': 911, 'recall': '0.685'}, {'class': 8, 'rows': 342, 'recall': '0.3509'}, {'class': 9, 'rows': 16, 'recall': '0'}, {'class': 10, 'rows': 137, 'recall': '0.2336'}, {'class': 11, 'rows': 118, 'recall': '0.6102'}, {'class': 12, 'rows': 78, 'recall': '0.4231'}, {'class': 13, 'rows': 397, 'recall': '0.3224'}, {'class': 14, 'rows': 839, 'recall': '0.4875'}, {'class': 15, 'rows': 16, 'recall': '0.1875'}, {'class': 16, 'rows': 719, 'recall': '0.3421'}, {'class': 17, 'rows': 49, 'recall': '0.8163'}]
+  第 4 轮候选 1 [multicolumn/llm] oct_llm_oct_llm_king_phase_rank_balance_r4_r4
+    依据列：white_king_rank, black_king_file, oct_llm_oct_llm_king_rank_periodic_phase_r3_r3
+    训练集依据：white_king_rank: MI=0.2026, 中位数=2, 偏度=0.7386；black_king_file: MI=0.1306, 中位数=5, 偏度=-0.3554；oct_llm_oct_llm_king_rank_periodic_phase_r3_r3: MI=0.2734, 中位数=-0.2353, 偏度=-0.0346
+    列间 Spearman：white_king_rank / black_king_file=0.098；white_king_rank / oct_llm_oct_llm_king_rank_periodic_phase_r3_r3=0.1895；black_king_file / oct_llm_oct_llm_king_rank_periodic_phase_r3_r3=0.0029
+    历史反馈调整：移除表现退化的车王位移组合，改用周期相位与两侧王位置，并保留tanh以压缩极端值。
+    来自第 3 轮 oct_llm_oct_llm_king_rook_pressure_mix_r3_r3：metric_regression；拒绝：accuracy 退化（0.4379 → 0.4372；改善量 -0.0007）。
+    关系假说：白王纵向位置、黑王横向位置与周期相位的联合偏离可能补充类别边界信息。
+    提取方式：分别减去训练中位数得到中心化偏离，再用对应尺度和安全下界归一化；三项取平均后用tanh压缩极端值，形成有界综合信号。
+    可读公式：np.tanh(((df['white_king_rank'] - median_white_king_rank) / np.maximum(scale_white_king_rank, 1e-06) + (df['black_king_file'] - median_black_king_file) / np.maximum(scale_black_king_file, 1e-06) + (df['oct_llm_oct_llm_king_rank_periodic_phase_r3_r3'] - median_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3) / np.maximum(scale_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3, 1e-06)) / 2)
+    参数 median_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3 ≈ -0.2353 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=-0.2353、x[2805]=-0.2353；线性插值 Q=(1−0)×-0.2353+0×-0.2353=-0.2353。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3 ≈ 0.4382 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=-0.5138、x[1403]=-0.5138；线性插值 Q=(1−0.5)×-0.5138+0.5×-0.5138=-0.5138。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=-0.0757、x[4208]=-0.0757；线性插值 Q=(1−0.5)×-0.0757+0.5×-0.0757=-0.0757。 IQR=Q75−Q25=-0.0757−-0.5138=0.4382；均值 μ=Σx/n=-1608.6637/5611=-0.2867；总体标准差 σ=√(Σ(x−μ)²/n)=√(312.2332/5611)=0.2359（ddof=0）；scale=max(IQR,σ,ε)=0.4382。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_king_rank ≈ 2 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=2、x[2805]=2；线性插值 Q=(1−0)×2+0×2=2。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_king_rank ≈ 1 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=1、x[1403]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=2、x[4208]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 IQR=Q75−Q25=2−1=1；均值 μ=Σx/n=10438/5611=1.8603；总体标准差 σ=√(Σ(x−μ)²/n)=√(4828.4552/5611)=0.9276（ddof=0）；scale=max(IQR,σ,ε)=1。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_black_king_file ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别减去训练中位数得到中心化偏离，再用对应尺度和安全下界归一化；三项取平均后用tanh压缩极端值，形成有界综合信号。
+      u1 = df['white_king_rank'] - median_white_king_rank
+      u2 = np.maximum(scale_white_king_rank, 1e-06)
+      u3 = u1 / u2
+      u4 = df['black_king_file'] - median_black_king_file
+      u5 = np.maximum(scale_black_king_file, 1e-06)
+      u6 = u4 / u5
+      u7 = u3 + u6
+      u8 = df['oct_llm_oct_llm_king_rank_periodic_phase_r3_r3'] - median_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3
+      u9 = np.maximum(scale_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3, 1e-06)
+      u10 = u8 / u9
+      u11 = u7 + u10
+      u12 = u11 / 2
+      u13 = np.tanh(u12)
+      新列 = u13；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4549', 'balanced_accuracy': '0.3919', 'f1': '0.4395', 'f1_macro': '0.4033', 'auc': '0.9227', 'log_loss': '1.5867'}
+    候选检查：拒绝：balanced_accuracy 退化（0.392 → 0.3919；改善量 -8.40e-05）。；XGBoost 使用：{'oct_llm_oct_llm_king_phase_rank_balance_r4_r4': {'split_count': 591, 'used_by_xgboost': True, 'gain': '7.2294', 'total_gain': '4272.5767', 'total_gain_fraction': '0.0638'}}
+  第 4 轮候选 2 [multicolumn/llm] oct_llm_oct_llm_rook_blackfile_rank_modulation_r4_r4
+    依据列：white_rook_file, black_king_file, black_king_rank
+    训练集依据：white_rook_file: MI=0.0293, 中位数=5, 偏度=-0.0484；black_king_file: MI=0.1306, 中位数=5, 偏度=-0.3554；black_king_rank: MI=0.2496, 中位数=4, 偏度=-0.0032
+    列间 Spearman：white_rook_file / black_king_file=-0.0139；white_rook_file / black_king_rank=0.0231；black_king_file / black_king_rank=-0.0891
+    历史反馈调整：保留已接受的周期间隔方向，但加入黑王纵向调制并进一步缩小幅度，探索新的三列组合。
+    来自第 2 轮 oct_llm_rook_black_file_periodic_tension_r2：accepted；符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0392，其余可用指标均未退化。
+    关系假说：车王横向间隔的周期关系可能随黑王纵向位置变化而呈现不同信号。
+    提取方式：用尺度和安全下界标准化横向差值，并通过余弦表达周期相位；再乘以中心化的黑王纵向位置，最后用tanh和平均因子限制幅度。
+    可读公式：np.tanh(np.cos(np.pi * (df['white_rook_file'] - df['black_king_file']) / np.maximum(scale_white_rook_file + scale_black_king_file, 1e-06)) * ((df['black_king_rank'] - median_black_king_rank) / np.maximum(scale_black_king_rank, 1e-06)) / 2)
+    参数 median_black_king_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=4、x[2805]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_rook_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25548/5611=4.5532；总体标准差 σ=√(Σ(x−μ)²/n)=√(29472.8701/5611)=2.2919（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    参数 np.pi ≈ 3.1416 [数学定义]：π 是圆周率，来自圆/椭圆几何或弧度换算，不从数据估计。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用尺度和安全下界标准化横向差值，并通过余弦表达周期相位；再乘以中心化的黑王纵向位置，最后用tanh和平均因子限制幅度。
+      u1 = df['white_rook_file'] - df['black_king_file']
+      u2 = np.pi * u1
+      u3 = scale_white_rook_file + scale_black_king_file
+      u4 = np.maximum(u3, 1e-06)
+      u5 = u2 / u4
+      u6 = np.cos(u5)
+      u7 = df['black_king_rank'] - median_black_king_rank
+      u8 = np.maximum(scale_black_king_rank, 1e-06)
+      u9 = u7 / u8
+      u10 = u6 * u9
+      u11 = u10 / 2
+      u12 = np.tanh(u11)
+      新列 = u12；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4529', 'balanced_accuracy': '0.3911', 'f1': '0.4365', 'f1_macro': '0.4045', 'auc': '0.9213', 'log_loss': '1.5794'}
+    候选检查：拒绝：balanced_accuracy 退化（0.392 → 0.3911；改善量 -0.0009）。；XGBoost 使用：{'oct_llm_oct_llm_rook_blackfile_rank_modulation_r4_r4': {'split_count': 375, 'used_by_xgboost': True, 'gain': '5.3427', 'total_gain': '2003.506', 'total_gain_fraction': '0.0298'}}
+  第 4 轮候选 3 [nonlinear/llm] oct_llm_oct_llm_king_file_periodic_log_gap_r4_r4
+    依据列：white_king_file, black_king_file
+    训练集依据：white_king_file: MI=0.1285, 中位数=3, 偏度=-0.6918；black_king_file: MI=0.1306, 中位数=5, 偏度=-0.3554
+    列间 Spearman：white_king_file / black_king_file=-0.1128
+    历史反馈调整：放弃表现退化的乘积关系，改为两王横向间隔的周期编码与受保护对数距离组合。
+    来自第 2 轮 oct_llm_rook_file_black_rank_log_product_r2：metric_regression；拒绝：f1_macro 退化（0.3548 → 0.3522；改善量 -0.0025）。
+    关系假说：王之间的横向间隔可能同时包含周期位置和距离强度信息。
+    提取方式：先用余弦编码尺度化横向差值的周期相位，再对绝对间隔加一取对数以缓和大间隔增长，并用tanh限制距离项，二者相乘形成有界非线性关系。
+    可读公式：np.cos(np.pi * (df['white_king_file'] - df['black_king_file']) / np.maximum(scale_white_king_file + scale_black_king_file, 1e-06)) * np.tanh(np.log1p(np.abs(df['white_king_file'] - df['black_king_file'])) / np.maximum(scale_white_king_file + scale_black_king_file, 1e-06))
+    参数 scale_white_king_file ≈ 2 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=4、x[4208]=4；线性插值 Q=(1−0.5)×4+0.5×4=4。 IQR=Q75−Q25=4−2=2；均值 μ=Σx/n=17357/5611=3.0934；总体标准差 σ=√(Σ(x−μ)²/n)=√(5007.0647/5611)=0.9447（ddof=0）；scale=max(IQR,σ,ε)=2。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 np.pi ≈ 3.1416 [数学定义]：π 是圆周率，来自圆/椭圆几何或弧度换算，不从数据估计。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    参数 np.log1p ≈ 1 [数学定义]：log1p(x)=ln(1+x)：固定加 1 使 x=0 时输出 0，ln 的底数为自然常数 e。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：先用余弦编码尺度化横向差值的周期相位，再对绝对间隔加一取对数以缓和大间隔增长，并用tanh限制距离项，二者相乘形成有界非线性关系。
+      u1 = df['white_king_file'] - df['black_king_file']
+      u2 = np.pi * u1
+      u3 = scale_white_king_file + scale_black_king_file
+      u4 = np.maximum(u3, 1e-06)
+      u5 = u2 / u4
+      u6 = np.cos(u5)
+      u7 = df['white_king_file'] - df['black_king_file']
+      u8 = np.abs(u7)
+      u9 = np.log1p(u8)
+      u10 = scale_white_king_file + scale_black_king_file
+      u11 = np.maximum(u10, 1e-06)
+      u12 = u9 / u11
+      u13 = np.tanh(u12)
+      u14 = u6 * u13
+      新列 = u14；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4471', 'balanced_accuracy': '0.3942', 'f1': '0.4303', 'f1_macro': '0.4091', 'auc': '0.9219', 'log_loss': '1.5962'}
+    候选检查：拒绝：accuracy 退化（0.4485 → 0.4471；改善量 -0.0014）。；XGBoost 使用：{'oct_llm_oct_llm_king_file_periodic_log_gap_r4_r4': {'split_count': 190, 'used_by_xgboost': True, 'gain': '6.1085', 'total_gain': '1160.6187', 'total_gain_fraction': '0.0176'}}
+  第 4 轮候选 4 [piecewise/llm] oct_llm_oct_llm_phase_blackrank_upper_gate_r4_r4
+    依据列：white_king_rank, black_king_rank, oct_llm_oct_llm_king_rank_periodic_phase_r3_r3
+    训练集依据：white_king_rank: MI=0.2026, 中位数=2, 偏度=0.7386；black_king_rank: MI=0.2496, 中位数=4, 偏度=-0.0032；oct_llm_oct_llm_king_rank_periodic_phase_r3_r3: MI=0.2734, 中位数=-0.2353, 偏度=-0.0346
+    列间 Spearman：white_king_rank / black_king_rank=-0.1167；white_king_rank / oct_llm_oct_llm_king_rank_periodic_phase_r3_r3=0.1895；black_king_rank / oct_llm_oct_llm_king_rank_periodic_phase_r3_r3=-0.2286
+    历史反馈调整：改变失败的黑王横向门控输入，改用树路径中的双王纵向区域，并采用已标准化的相位信号。
+    来自第 3 轮 oct_llm_oct_llm_black_king_file_rook_tension_gate_r3_r3：metric_regression；拒绝：balanced_accuracy 退化（0.3839 → 0.3798；改善量 -0.0041）。
+    关系假说：在白王位置较高且黑王位置较低的分段区域内，周期相位可能具有不同区分度。
+    提取方式：使用训练树阈值构造两个条件门；仅在指定区域输出相位的中心化尺度信号，并用tanh压缩，否则输出零以保持分段解释性。
+    可读公式：np.where((df['white_king_rank'] > cart_r4_node0) & (df['black_king_rank'] <= cart_r4_node16), np.tanh((df['oct_llm_oct_llm_king_rank_periodic_phase_r3_r3'] - median_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3) / np.maximum(scale_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3, 1e-06)), 0)
+    参数 cart_r4_node0 ≈ 1.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 5611 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 1 和 2。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 cart_r4_node16 ≈ 2.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 3092 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 2 和 3。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 median_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3 ≈ -0.2353 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=-0.2353、x[2805]=-0.2353；线性插值 Q=(1−0)×-0.2353+0×-0.2353=-0.2353。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3 ≈ 0.4382 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=-0.5138、x[1403]=-0.5138；线性插值 Q=(1−0.5)×-0.5138+0.5×-0.5138=-0.5138。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=-0.0757、x[4208]=-0.0757；线性插值 Q=(1−0.5)×-0.0757+0.5×-0.0757=-0.0757。 IQR=Q75−Q25=-0.0757−-0.5138=0.4382；均值 μ=Σx/n=-1608.6637/5611=-0.2867；总体标准差 σ=√(Σ(x−μ)²/n)=√(312.2332/5611)=0.2359（ddof=0）；scale=max(IQR,σ,ε)=0.4382。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：使用训练树阈值构造两个条件门；仅在指定区域输出相位的中心化尺度信号，并用tanh压缩，否则输出零以保持分段解释性。
+      u1 = df['white_king_rank'] > cart_r4_node0
+      u2 = df['black_king_rank'] <= cart_r4_node16
+      u3 = u1 & u2
+      u4 = df['oct_llm_oct_llm_king_rank_periodic_phase_r3_r3'] - median_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3
+      u5 = np.maximum(scale_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3, 1e-06)
+      u6 = u4 / u5
+      u7 = np.tanh(u6)
+      u8 = np.where(u3, u7, 0)
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4473', 'balanced_accuracy': '0.4038', 'f1': '0.4309', 'f1_macro': '0.4226', 'auc': '0.9211', 'log_loss': '1.599'}
+    候选检查：拒绝：accuracy 退化（0.4485 → 0.4473；改善量 -0.0012）。；XGBoost 使用：{'oct_llm_oct_llm_phase_blackrank_upper_gate_r4_r4': {'split_count': 283, 'used_by_xgboost': True, 'gain': '7.3211', 'total_gain': '2071.8792', 'total_gain_fraction': '0.0316'}}
+  第 4 轮候选 5 [piecewise/llm] oct_llm_oct_llm_rookrank_kingfile_balance_gate_r4_r4
+    依据列：white_rook_rank, black_king_file, white_king_file
+    训练集依据：white_rook_rank: MI=0.0285, 中位数=5, 偏度=-0.0259；black_king_file: MI=0.1306, 中位数=5, 偏度=-0.3554；white_king_file: MI=0.1285, 中位数=3, 偏度=-0.6918
+    列间 Spearman：white_rook_rank / black_king_file=-0.008；white_rook_rank / white_king_file=0.0126；black_king_file / white_king_file=-0.1128
+    历史反馈调整：改变原有双王纵向门槛，加入车纵向与黑王横向交叉区域，并使用更稳健的王间横向差值。
+    来自第 1 轮 oct_llm_rook_rank_gate_r1：metric_regression；拒绝：accuracy 退化（0.4247 → 0.4229；改善量 -0.0018）。
+    关系假说：车的纵向区域与黑王横向区域的交叉条件下，双方王的横向差值可能更具区分性。
+    提取方式：用两个训练树阈值定义可解释的区域门；在门内计算双方王横向差值，按联合尺度和安全下界归一化，再用tanh限制极端差异，门外置零。
+    可读公式：np.where((df['white_rook_rank'] > cart_r4_node2) & (df['black_king_file'] <= cart_r4_node9), np.tanh((df['white_king_file'] - df['black_king_file']) / np.maximum(scale_white_king_file + scale_black_king_file, 1e-06)), 0)
+    参数 cart_r4_node2 ≈ 3.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 528 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 3 和 4。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 cart_r4_node9 ≈ 2.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 1991 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 2 和 3。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 scale_white_king_file ≈ 2 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=4、x[4208]=4；线性插值 Q=(1−0.5)×4+0.5×4=4。 IQR=Q75−Q25=4−2=2；均值 μ=Σx/n=17357/5611=3.0934；总体标准差 σ=√(Σ(x−μ)²/n)=√(5007.0647/5611)=0.9447（ddof=0）；scale=max(IQR,σ,ε)=2。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用两个训练树阈值定义可解释的区域门；在门内计算双方王横向差值，按联合尺度和安全下界归一化，再用tanh限制极端差异，门外置零。
+      u1 = df['white_rook_rank'] > cart_r4_node2
+      u2 = df['black_king_file'] <= cart_r4_node9
+      u3 = u1 & u2
+      u4 = df['white_king_file'] - df['black_king_file']
+      u5 = scale_white_king_file + scale_black_king_file
+      u6 = np.maximum(u5, 1e-06)
+      u7 = u4 / u6
+      u8 = np.tanh(u7)
+      u9 = np.where(u3, u8, 0)
+      新列 = u9；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4428', 'balanced_accuracy': '0.3868', 'f1': '0.4269', 'f1_macro': '0.3974', 'auc': '0.9217', 'log_loss': '1.5978'}
+    候选检查：拒绝：accuracy 退化（0.4485 → 0.4428；改善量 -0.0057）。；XGBoost 使用：{'oct_llm_oct_llm_rookrank_kingfile_balance_gate_r4_r4': {'split_count': 124, 'used_by_xgboost': True, 'gain': '3.3527', 'total_gain': '415.729', 'total_gain_fraction': '0.0063'}}
+  第 4 轮结论：未接受新特征
+
+阶段：特征生成与验证，第 5/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_king_rank <= 1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_rook_rank <= 3.5000
+|   |   |   |--- white_rook_rank <= 2.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_rook_rank >  2.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_rook_rank >  3.5000
+|   |   |   |--- white_king_file <= 2.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  2.5000
+|   |   |   |   |--- class: 3
+|   |--- black_king_rank >  2.5000
+|   |   |--- black_king_file <= 2.5000
+|   |   |   |--- oct_llm_rook_black_file_periodic_tension_r2 <= -0.3879
+|   |   |   |   |--- class: 0
+|   |   |   |--- oct_llm_rook_black_file_periodic_tension_r2 >  -0.3879
+|   |   |   |   |--- class: 14
+|   |   |--- black_king_file >  2.5000
+|   |   |   |--- black_king_rank <= 6.5000
+|   |   |   |   |--- class: 7
+|   |   |   |--- black_king_rank >  6.5000
+|   |   |   |   |--- class: 7
+|--- white_king_rank >  1.5000
+|   |--- black_king_rank <= 2.5000
+|   |   |--- white_king_file <= 3.5000
+|   |   |   |--- black_king_file <= 4.5000
+|   |   |   |   |--- class: 17
+|   |   |   |--- black_king_file >  4.5000
+|   |   |   |   |--- class: 8
+|   |   |--- white_king_file >  3.5000
+|   |   |   |--- white_king_rank <= 3.5000
+|   |   |   |   |--- class: 11
+|   |   |   |--- white_king_rank >  3.5000
+|   |   |   |   |--- class: 2
+|   |--- black_king_rank >  2.5000
+|   |   |--- white_king_rank <= 2.5000
+|   |   |   |--- black_king_file <= 2.5000
+|   |   |   |   |--- class: 3
+|   |   |   |--- black_king_file >  2.5000
+|   |   |   |   |--- class: 14
+|   |   |--- white_king_rank >  2.5000
+|   |   |   |--- white_king_file <= 3.5000
+|   |   |   |   |--- class: 16
+|   |   |   |--- white_king_file >  3.5000
+|   |   |   |   |--- class: 3
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 559, 'recall': '0.6708'}, {'class': 1, 'rows': 5, 'recall': '0.8'}, {'class': 2, 'rows': 287, 'recall': '0.5679'}, {'class': 3, 'rows': 571, 'recall': '0.2715'}, {'class': 4, 'rows': 433, 'recall': '0.5219'}, {'class': 5, 'rows': 94, 'recall': '0.7128'}, {'class': 6, 'rows': 40, 'recall': '0.275'}, {'class': 7, 'rows': 911, 'recall': '0.685'}, {'class': 8, 'rows': 342, 'recall': '0.3509'}, {'class': 9, 'rows': 16, 'recall': '0'}, {'class': 10, 'rows': 137, 'recall': '0.2336'}, {'class': 11, 'rows': 118, 'recall': '0.6102'}, {'class': 12, 'rows': 78, 'recall': '0.4231'}, {'class': 13, 'rows': 397, 'recall': '0.3224'}, {'class': 14, 'rows': 839, 'recall': '0.4875'}, {'class': 15, 'rows': 16, 'recall': '0.1875'}, {'class': 16, 'rows': 719, 'recall': '0.3421'}, {'class': 17, 'rows': 49, 'recall': '0.8163'}]
+  第 5 轮候选 1 [multicolumn/llm] oct_llm_king_side_signed_rank_balance_v5_r5
+    依据列：white_king_file, black_king_file, white_king_rank, black_king_rank
+    训练集依据：white_king_file: MI=0.1285, 中位数=3, 偏度=-0.6918；black_king_file: MI=0.1306, 中位数=5, 偏度=-0.3554；white_king_rank: MI=0.2026, 中位数=2, 偏度=0.7386；black_king_rank: MI=0.2496, 中位数=4, 偏度=-0.0032
+    列间 Spearman：white_king_file / black_king_file=-0.1128；white_king_file / white_king_rank=0.4521；white_king_file / black_king_rank=0.091；black_king_file / white_king_rank=0.098；black_king_file / black_king_rank=-0.0891；white_king_rank / black_king_rank=-0.1167
+    历史反馈调整：保留其多列平衡思路，但改用文件方向符号调制单侧王列信号，减少原组合的重复累加。
+    来自第 2 轮 oct_llm_three_piece_centered_signed_balance_r2：not_selected；本轮另一个可接受候选的主指标更优，故未保留。
+    关系假说：可检验王翼文件方向与双方王列位置共同刻画类别差异。
+    提取方式：先用中心化和尺度保护分别压缩双方王列位置，再以文件差的符号赋予方向，求和后除以参与项数量并用双曲正切限制极端值。
+    可读公式：np.tanh((np.sign(df['white_king_file'] - df['black_king_file']) * np.tanh((df['white_king_rank'] - median_white_king_rank) / np.maximum(scale_white_king_rank, 1e-06)) + np.tanh((df['black_king_rank'] - median_black_king_rank) / np.maximum(scale_black_king_rank, 1e-06))) / 2)
+    参数 median_black_king_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=4、x[2805]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_black_king_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=2、x[1403]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=6、x[4208]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−2=4；均值 μ=Σx/n=24794/5611=4.4188；总体标准差 σ=√(Σ(x−μ)²/n)=√(28833.7726/5611)=2.2669（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_king_rank ≈ 2 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=2、x[2805]=2；线性插值 Q=(1−0)×2+0×2=2。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_king_rank ≈ 1 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=1、x[1403]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=2、x[4208]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 IQR=Q75−Q25=2−1=1；均值 μ=Σx/n=10438/5611=1.8603；总体标准差 σ=√(Σ(x−μ)²/n)=√(4828.4552/5611)=0.9276（ddof=0）；scale=max(IQR,σ,ε)=1。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：先用中心化和尺度保护分别压缩双方王列位置，再以文件差的符号赋予方向，求和后除以参与项数量并用双曲正切限制极端值。
+      u1 = df['white_king_file'] - df['black_king_file']
+      u2 = np.sign(u1)
+      u3 = df['white_king_rank'] - median_white_king_rank
+      u4 = np.maximum(scale_white_king_rank, 1e-06)
+      u5 = u3 / u4
+      u6 = np.tanh(u5)
+      u7 = u2 * u6
+      u8 = df['black_king_rank'] - median_black_king_rank
+      u9 = np.maximum(scale_black_king_rank, 1e-06)
+      u10 = u8 / u9
+      u11 = np.tanh(u10)
+      u12 = u7 + u11
+      u13 = u12 / 2
+      u14 = np.tanh(u13)
+      新列 = u14；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.447', 'balanced_accuracy': '0.3826', 'f1': '0.4319', 'f1_macro': '0.3964', 'auc': '0.9213', 'log_loss': '1.5964'}
+    候选检查：拒绝：accuracy 退化（0.4485 → 0.447；改善量 -0.0015）。；XGBoost 使用：{'oct_llm_king_side_signed_rank_balance_v5_r5': {'split_count': 613, 'used_by_xgboost': True, 'gain': '7.862', 'total_gain': '4819.4282', 'total_gain_fraction': '0.0726'}}
+  第 5 轮候选 2 [nonlinear/llm] oct_llm_rook_blackking_file_root_gap_v5_r5
+    依据列：white_rook_file, black_king_file
+    训练集依据：white_rook_file: MI=0.0293, 中位数=5, 偏度=-0.0484；black_king_file: MI=0.1306, 中位数=5, 偏度=-0.3554
+    列间 Spearman：white_rook_file / black_king_file=-0.0139
+    历史反馈调整：从已接受的车王文件方向周期组合改为根号间隔，不再使用相同的周期门控结构。
+    来自第 2 轮 oct_llm_rook_black_file_periodic_tension_r2：accepted；符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0392，其余可用指标均未退化。
+    关系假说：可检验车与黑王文件间的非线性间隔是否比线性距离更有区分度。
+    提取方式：绝对值去除方向后取平方根以减弱大间隔，尺度和后加保护项后再开平方归一化，最后用双曲正切界定输出。
+    可读公式：np.tanh(np.sqrt(np.abs(df['white_rook_file'] - df['black_king_file'])) / np.sqrt(np.maximum(scale_white_rook_file + scale_black_king_file, 1e-06)))
+    参数 scale_white_rook_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25548/5611=4.5532；总体标准差 σ=√(Σ(x−μ)²/n)=√(29472.8701/5611)=2.2919（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_king_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=28171/5611=5.0207；总体标准差 σ=√(Σ(x−μ)²/n)=√(29561.6019/5611)=2.2953（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 np.sqrt ≈ 0.5 [数学定义]：sqrt(x)=x^(1/2)，1/2 是平方根定义；用于把面积还原为长度量纲。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：绝对值去除方向后取平方根以减弱大间隔，尺度和后加保护项后再开平方归一化，最后用双曲正切界定输出。
+      u1 = df['white_rook_file'] - df['black_king_file']
+      u2 = np.abs(u1)
+      u3 = np.sqrt(u2)
+      u4 = scale_white_rook_file + scale_black_king_file
+      u5 = np.maximum(u4, 1e-06)
+      u6 = np.sqrt(u5)
+      u7 = u3 / u6
+      u8 = np.tanh(u7)
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4666', 'balanced_accuracy': '0.4005', 'f1': '0.4435', 'f1_macro': '0.4114', 'auc': '0.9256', 'log_loss': '1.5469'}
+    候选检查：符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0082，其余可用指标均未退化。；XGBoost 使用：{'oct_llm_rook_blackking_file_root_gap_v5_r5': {'split_count': 308, 'used_by_xgboost': True, 'gain': '29.879', 'total_gain': '9202.7383', 'total_gain_fraction': '0.1328'}}
+  第 5 轮候选 3 [multicolumn/llm] oct_llm_phase_rookrank_filepolarity_mix_v5_r5
+    依据列：oct_llm_oct_llm_king_rank_periodic_phase_r3_r3, white_rook_rank, black_king_file
+    训练集依据：oct_llm_oct_llm_king_rank_periodic_phase_r3_r3: MI=0.2734, 中位数=-0.2353, 偏度=-0.0346；white_rook_rank: MI=0.0285, 中位数=5, 偏度=-0.0259；black_king_file: MI=0.1306, 中位数=5, 偏度=-0.3554
+    列间 Spearman：oct_llm_oct_llm_king_rank_periodic_phase_r3_r3 / white_rook_rank=0.0143；oct_llm_oct_llm_king_rank_periodic_phase_r3_r3 / black_king_file=0.0029；white_rook_rank / black_king_file=-0.008
+    历史反馈调整：不再直接相加多个标准化量，改为相位与车列位置的乘性交互并加入文件侧别符号，以探索新的组合。
+    来自第 4 轮 oct_llm_oct_llm_king_phase_rank_balance_r4_r4：metric_regression；拒绝：balanced_accuracy 退化（0.392 → 0.3919；改善量 -8.40e-05）。
+    关系假说：可检验已有周期相位与白车列位置在黑王文件侧别下是否形成互补信号。
+    提取方式：先将相位和车列位置分别中心化并用双曲正切限制，再以乘法表达交互，叠加黑王文件相对中位数的方向符号，外层双曲正切控制整体幅度。
+    可读公式：np.tanh((df['oct_llm_oct_llm_king_rank_periodic_phase_r3_r3'] - median_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3) / np.maximum(scale_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3, 1e-06) * np.tanh((df['white_rook_rank'] - median_white_rook_rank) / np.maximum(scale_white_rook_rank, 1e-06)) + np.sign(df['black_king_file'] - median_black_king_file))
+    参数 median_black_king_file ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 median_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3 ≈ -0.2353 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=-0.2353、x[2805]=-0.2353；线性插值 Q=(1−0)×-0.2353+0×-0.2353=-0.2353。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3 ≈ 0.4382 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=-0.5138、x[1403]=-0.5138；线性插值 Q=(1−0.5)×-0.5138+0.5×-0.5138=-0.5138。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=-0.0757、x[4208]=-0.0757；线性插值 Q=(1−0.5)×-0.0757+0.5×-0.0757=-0.0757。 IQR=Q75−Q25=-0.0757−-0.5138=0.4382；均值 μ=Σx/n=-1608.6637/5611=-0.2867；总体标准差 σ=√(Σ(x−μ)²/n)=√(312.2332/5611)=0.2359（ddof=0）；scale=max(IQR,σ,ε)=0.4382。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_rook_rank ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_rook_rank ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25543/5611=4.5523；总体标准差 σ=√(Σ(x−μ)²/n)=√(29173.3976/5611)=2.2802（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：先将相位和车列位置分别中心化并用双曲正切限制，再以乘法表达交互，叠加黑王文件相对中位数的方向符号，外层双曲正切控制整体幅度。
+      u1 = df['oct_llm_oct_llm_king_rank_periodic_phase_r3_r3'] - median_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3
+      u2 = np.maximum(scale_oct_llm_oct_llm_king_rank_periodic_phase_r3_r3, 1e-06)
+      u3 = u1 / u2
+      u4 = df['white_rook_rank'] - median_white_rook_rank
+      u5 = np.maximum(scale_white_rook_rank, 1e-06)
+      u6 = u4 / u5
+      u7 = np.tanh(u6)
+      u8 = u3 * u7
+      u9 = df['black_king_file'] - median_black_king_file
+      u10 = np.sign(u9)
+      u11 = u8 + u10
+      u12 = np.tanh(u11)
+      新列 = u12；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.446', 'balanced_accuracy': '0.3657', 'f1': '0.4298', 'f1_macro': '0.3775', 'auc': '0.9228', 'log_loss': '1.5915'}
+    候选检查：拒绝：accuracy 退化（0.4485 → 0.446；改善量 -0.0025）。；XGBoost 使用：{'oct_llm_phase_rookrank_filepolarity_mix_v5_r5': {'split_count': 522, 'used_by_xgboost': True, 'gain': '5.9774', 'total_gain': '3120.2029', 'total_gain_fraction': '0.0469'}}
+  第 5 轮候选 4 [piecewise/llm] oct_llm_upper_kingfile_rookfile_gate_v5_r5
+    依据列：white_king_rank, black_king_file, white_rook_file
+    训练集依据：white_king_rank: MI=0.2026, 中位数=2, 偏度=0.7386；black_king_file: MI=0.1306, 中位数=5, 偏度=-0.3554；white_rook_file: MI=0.0293, 中位数=5, 偏度=-0.0484
+    列间 Spearman：white_king_rank / black_king_file=0.098；white_king_rank / white_rook_file=0.005；black_king_file / white_rook_file=-0.0139
+    历史反馈调整：改变失败候选的车列输出与门控方向：改用白王等级和黑王文件作条件，输出白车文件而非王文件差。
+    来自第 4 轮 oct_llm_oct_llm_rookrank_kingfile_balance_gate_r4_r4：metric_regression；拒绝：accuracy 退化（0.4485 → 0.4428；改善量 -0.0057）。
+    关系假说：可检验在白王较低且黑王位于另一侧时，白车文件位置是否具有条件性信息。
+    提取方式：用训练树阈值构造双条件门，仅在指定区域保留白车文件的中心化尺度信号，并用双曲正切压缩输出，否则返回零。
+    可读公式：np.where((df['white_king_rank'] <= cart_r5_node0) & (df['black_king_file'] > cart_r5_node9), np.tanh((df['white_rook_file'] - median_white_rook_file) / np.maximum(scale_white_rook_file, 1e-06)), 0)
+    参数 cart_r5_node0 ≈ 1.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 5611 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 1 和 2。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 cart_r5_node9 ≈ 2.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 1991 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 2 和 3。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 median_white_rook_file ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=5、x[2805]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_rook_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=3、x[1403]=3；线性插值 Q=(1−0.5)×3+0.5×3=3。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=7、x[4208]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−3=4；均值 μ=Σx/n=25548/5611=4.5532；总体标准差 σ=√(Σ(x−μ)²/n)=√(29472.8701/5611)=2.2919（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用训练树阈值构造双条件门，仅在指定区域保留白车文件的中心化尺度信号，并用双曲正切压缩输出，否则返回零。
+      u1 = df['white_king_rank'] <= cart_r5_node0
+      u2 = df['black_king_file'] > cart_r5_node9
+      u3 = u1 & u2
+      u4 = df['white_rook_file'] - median_white_rook_file
+      u5 = np.maximum(scale_white_rook_file, 1e-06)
+      u6 = u4 / u5
+      u7 = np.tanh(u6)
+      u8 = np.where(u3, u7, 0)
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4483', 'balanced_accuracy': '0.3873', 'f1': '0.4327', 'f1_macro': '0.4028', 'auc': '0.9221', 'log_loss': '1.5955'}
+    候选检查：拒绝：accuracy 退化（0.4485 → 0.4483；改善量 -0.0002）。；XGBoost 使用：{'oct_llm_upper_kingfile_rookfile_gate_v5_r5': {'split_count': 196, 'used_by_xgboost': True, 'gain': '9.1824', 'total_gain': '1799.7562', 'total_gain_fraction': '0.0273'}}
+  第 5 轮候选 5 [piecewise/llm] oct_llm_blackrank_phase_corner_gate_v5_r5
+    依据列：black_king_rank, white_king_file, oct_llm_rook_black_file_periodic_tension_r2
+    训练集依据：black_king_rank: MI=0.2496, 中位数=4, 偏度=-0.0032；white_king_file: MI=0.1285, 中位数=3, 偏度=-0.6918；oct_llm_rook_black_file_periodic_tension_r2: MI=0.1688, 中位数=0, 偏度=-0.4466
+    列间 Spearman：black_king_rank / white_king_file=0.091；black_king_rank / oct_llm_rook_black_file_periodic_tension_r2=-0.0462；white_king_file / oct_llm_rook_black_file_periodic_tension_r2=-0.0691
+    历史反馈调整：避开原有黑王文件低位门，改用黑王高等级与白王文件条件，并对已保留周期信号重新标准化。
+    来自第 3 轮 oct_llm_oct_llm_black_king_file_rook_tension_gate_r3_r3：metric_regression；拒绝：balanced_accuracy 退化（0.3839 → 0.3798；改善量 -0.0041）。
+    关系假说：可检验黑王高等级且白王位于较低文件区域时，保留的车王周期信号是否更具条件区分力。
+    提取方式：以两个训练树边界定义局部区域，在区域内对周期张力做中心化和尺度保护后用双曲正切压缩，区域外置零以减少无关极值。
+    可读公式：np.where((df['black_king_rank'] > cart_r5_node13) & (df['white_king_file'] <= cart_r5_node17), np.tanh((df['oct_llm_rook_black_file_periodic_tension_r2'] - median_oct_llm_rook_black_file_periodic_tension_r2) / np.maximum(scale_oct_llm_rook_black_file_periodic_tension_r2, 1e-06)), 0)
+    参数 cart_r5_node13 ≈ 6.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 1528 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 6 和 7。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 cart_r5_node17 ≈ 3.5 [train]：CART 深度上限 4、最小叶样本 57，在本节点 895 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 3 和 4。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 median_oct_llm_rook_black_file_periodic_tension_r2 ≈ 0 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(5611−1)×0.5=2805；相邻值 x[2805]=-0、x[2805]=-0；线性插值 Q=(1−0)×-0+0×-0=-0。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_oct_llm_rook_black_file_periodic_tension_r2 ≈ 0.2881 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(5611−1)×0.25=1402.5；相邻值 x[1402]=-0.1149、x[1403]=-0.1149；线性插值 Q=(1−0.5)×-0.1149+0.5×-0.1149=-0.1149。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(5611−1)×0.75=4207.5；相邻值 x[4207]=0.1732、x[4208]=0.1732；线性插值 Q=(1−0.5)×0.1732+0.5×0.1732=0.1732。 IQR=Q75−Q25=0.1732−-0.1149=0.2881；均值 μ=Σx/n=79.8583/5611=0.0142；总体标准差 σ=√(Σ(x−μ)²/n)=√(450.8453/5611)=0.2835（ddof=0）；scale=max(IQR,σ,ε)=0.2881。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：以两个训练树边界定义局部区域，在区域内对周期张力做中心化和尺度保护后用双曲正切压缩，区域外置零以减少无关极值。
+      u1 = df['black_king_rank'] > cart_r5_node13
+      u2 = df['white_king_file'] <= cart_r5_node17
+      u3 = u1 & u2
+      u4 = df['oct_llm_rook_black_file_periodic_tension_r2'] - median_oct_llm_rook_black_file_periodic_tension_r2
+      u5 = np.maximum(scale_oct_llm_rook_black_file_periodic_tension_r2, 1e-06)
+      u6 = u4 / u5
+      u7 = np.tanh(u6)
+      u8 = np.where(u3, u7, 0)
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.4491', 'balanced_accuracy': '0.395', 'f1': '0.433', 'f1_macro': '0.4062', 'auc': '0.9216', 'log_loss': '1.5979'}
+    候选检查：拒绝：auc 退化（0.922 → 0.9216；改善量 -0.0003）。；XGBoost 使用：{'oct_llm_blackrank_phase_corner_gate_v5_r5': {'split_count': 52, 'used_by_xgboost': True, 'gain': '4.7091', 'total_gain': '244.8747', 'total_gain_fraction': '0.0037'}}
+  第 5 轮结论：接受 oct_llm_rook_blackking_file_root_gap_v5_r5
+
+阶段：特征与模型已冻结，开始独立测试集评估。
+独立测试基线指标：{'accuracy': '0.4276', 'balanced_accuracy': '0.3579', 'f1': '0.4097', 'f1_macro': '0.3705', 'auc': '0.9176', 'log_loss': '1.6419'}
+独立测试优化指标：{'accuracy': '0.4673', 'balanced_accuracy': '0.3934', 'f1': '0.4435', 'f1_macro': '0.4046', 'auc': '0.9248', 'log_loss': '1.5453'}
+阶段：执行特征重要性与消融检查。
+  消融 oct_llm_rook_black_file_periodic_tension_r2: 置换 Δf1_macro=0.0461 ± 0.0047；删除重训 Δf1_macro=0.0230；贡献证据=支持
+  消融 oct_llm_oct_llm_king_rank_periodic_phase_r3_r3: 置换 Δf1_macro=0.0525 ± 0.0027；删除重训 Δf1_macro=0.0029；贡献证据=支持
+  消融 oct_llm_rook_blackking_file_root_gap_v5_r5: 置换 Δf1_macro=0.0576 ± 0.0082；删除重训 Δf1_macro=-0.0012；贡献证据=不足
+  消融 __all_generated__: 置换 Δf1_macro=0.1464 ± 0.0047；删除重训 Δf1_macro=0.0341；贡献证据=支持
+结果已保存到：/home/asus/OPD/-OPD/tabular_data/outputs/llm/chess_krk/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42
+{
+  "dataset": "chess_krk",
+  "model": {
+    "backend": "xgboost",
+    "device": "cuda:0",
+    "profile": "reference",
+    "parameters": {
+      "n_estimators": 60,
+      "max_depth": 3,
+      "learning_rate": "0.08",
+      "subsample": "1",
+      "colsample_bytree": "1",
+      "random_state": 42,
+      "tree_method": "hist"
+    },
+    "xgboost_version": "3.4.1",
+    "cuda_version": "12.9"
+  },
+  "validation": {
+    "baseline": {
+      "accuracy": "0.4247",
+      "balanced_accuracy": "0.3491",
+      "f1": "0.4071",
+      "f1_macro": "0.3548",
+      "auc": "0.9183",
+      "log_loss": "1.6418"
+    },
+    "optimized": {
+      "accuracy": "0.4666",
+      "balanced_accuracy": "0.4005",
+      "f1": "0.4435",
+      "f1_macro": "0.4114",
+      "auc": "0.9256",
+      "log_loss": "1.5469"
+    },
+    "improvement": {
+      "accuracy": "0.0419",
+      "balanced_accuracy": "0.0514",
+      "f1": "0.0364",
+      "f1_macro": "0.0566",
+      "auc": "0.0073",
+      "log_loss": "0.0949"
+    }
+  },
+  "test": {
+    "baseline": {
+      "accuracy": "0.4276",
+      "balanced_accuracy": "0.3579",
+      "f1": "0.4097",
+      "f1_macro": "0.3705",
+      "auc": "0.9176",
+      "log_loss": "1.6419"
+    },
+    "optimized": {
+      "accuracy": "0.4673",
+      "balanced_accuracy": "0.3934",
+      "f1": "0.4435",
+      "f1_macro": "0.4046",
+      "auc": "0.9248",
+      "log_loss": "1.5453"
+    },
+    "improvement": {
+      "accuracy": "0.0397",
+      "balanced_accuracy": "0.0355",
+      "f1": "0.0338",
+      "f1_macro": "0.0341",
+      "auc": "0.0072",
+      "log_loss": "0.0966"
+    }
+  },
+  "accepted_features": [
+    "oct_llm_rook_black_file_periodic_tension_r2",
+    "oct_llm_oct_llm_king_rank_periodic_phase_r3_r3",
+    "oct_llm_rook_blackking_file_root_gap_v5_r5"
+  ],
+  "feature_generation": {
+    "client": "LLMClient",
+    "version": "cart_residual_v6",
+    "llm_model": "gpt-6-luna",
+    "fallback_allowed": false,
+    "mode": "reasoned",
+    "rounds": 5,
+    "candidates_per_round": 5,
+    "feedback_learning": "prior_round_validation_only",
+    "evaluated_candidates": 25,
+    "api_calls_succeeded": 5,
+    "local_rule_calls": 0
+  },
+  "ablation_status": "completed"
+}
+
+运行状态：completed；退出码：0；结束时间：2026-10-04T13:20:16.172476+00:00
+日志已保存：/home/asus/OPD/-OPD/tabular_data/outputs/llm/chess_krk/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42/training.log

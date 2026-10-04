@@ -1,0 +1,1152 @@
+训练版本：multiclass_reasoned_v7
+开始时间：2026-10-04T12:51:41.210488+00:00
+结果目录：/home/asus/OPD/-OPD/tabular_data/outputs/llm/jungle_chess/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42
+完整日志：/home/asus/OPD/-OPD/tabular_data/outputs/llm/jungle_chess/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42/training.log
+类别分布校验通过：按原始类别比例分层；允许每类至多 2 条样本的取整误差。
+  train: b=3,484 (38.87%)；d=867 (9.67%)；w=4,612 (51.46%)
+  validation: b=6,969 (38.87%)；d=1,734 (9.67%)；w=9,225 (51.46%)
+  test: b=6,969 (38.87%)；d=1,734 (9.67%)；w=9,225 (51.46%)
+实验视图：full，使用 6/6 列；训练预算 8963/8963，实际类别数量 {'b': 3484, 'd': 867, 'w': 4612}。
+开始训练：jungle_chess，train=8,963，validation=17,928，test=17,928；GPU reference，reasoned 特征 5 轮、每轮 5 个候选，clean。
+基线验证指标：{'accuracy': '0.7725', 'balanced_accuracy': '0.5798', 'f1': '0.7401', 'f1_macro': '0.5696', 'auc': '0.9109', 'log_loss': '0.5548'}
+
+阶段：特征生成与验证，第 1/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_piece0_rank <= 5.5000
+|   |--- black_piece0_rank <= 2.5000
+|   |   |--- white_piece0_strength <= 5.5000
+|   |   |   |--- black_piece0_strength <= 2.0000
+|   |   |   |   |--- class: 0
+|   |   |   |--- black_piece0_strength >  2.0000
+|   |   |   |   |--- class: 0
+|   |   |--- white_piece0_strength >  5.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  2.5000
+|   |   |--- white_piece0_strength <= 5.5000
+|   |   |   |--- black_piece0_strength <= 5.0000
+|   |   |   |   |--- class: 2
+|   |   |   |--- black_piece0_strength >  5.0000
+|   |   |   |   |--- class: 0
+|   |   |--- white_piece0_strength >  5.5000
+|   |   |   |--- black_piece0_strength <= 5.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- black_piece0_strength >  5.5000
+|   |   |   |   |--- class: 2
+|--- white_piece0_rank >  5.5000
+|   |--- black_piece0_rank <= 1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 3484, 'recall': '0.8123'}, {'class': 1, 'rows': 867, 'recall': '0.0507'}, {'class': 2, 'rows': 4612, 'recall': '0.8907'}]
+LLM 候选格式校验失败，重新请求修复；剩余重试 5 次。
+  第 1 轮候选 1 [multicolumn/llm] oct_llm_joint_rank_strength_balance_r1
+    依据列：white_piece0_rank, black_piece0_strength, black_piece0_rank
+    训练集依据：white_piece0_rank: MI=0.1153, 中位数=4, 偏度=0.0125；black_piece0_strength: MI=0.0242, 中位数=5, 偏度=-0.6217；black_piece0_rank: MI=0.0966, 中位数=4, 偏度=-0.0215
+    列间 Spearman：white_piece0_rank / black_piece0_strength=0.0005；white_piece0_rank / black_piece0_rank=-0.0312；black_piece0_strength / black_piece0_rank=0.0029
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：白方位置与力量相对黑方位置的组合，可能补充单列信息。
+    提取方式：分别用训练中位数居中、训练尺度归一化，再合成并以双曲正切限制极端值。
+    可读公式：np.tanh((df['white_piece0_rank'] - median_white_piece0_rank) / scale_white_piece0_rank + (df['black_piece0_strength'] - median_black_piece0_strength) / scale_black_piece0_strength - (df['black_piece0_rank'] - median_black_piece0_rank) / scale_black_piece0_rank)
+    参数 scale_black_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=2、x[2241]=2；线性插值 Q=(1−0.5)×2+0.5×2=2。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=7、x[6722]=7；线性插值 Q=(1−0.5)×7+0.5×7=7。 IQR=Q75−Q25=7−2=5；均值 μ=Σx/n=36107/8963=4.0285；总体标准差 σ=√(Σ(x−μ)²/n)=√(66401.7452/8963)=2.7218（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_black_piece0_strength ≈ 6 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=0、x[2241]=0；线性插值 Q=(1−0.5)×0+0.5×0=0。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−0=6；均值 μ=Σx/n=37174/8963=4.1475；总体标准差 σ=√(Σ(x−μ)²/n)=√(68429.0113/8963)=2.7631（ddof=0）；scale=max(IQR,σ,ε)=6。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_black_piece0_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=4、x[4481]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 median_white_piece0_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=4、x[4481]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 median_black_piece0_strength ≈ 5 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=5、x[4481]=5；线性插值 Q=(1−0)×5+0×5=5。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别用训练中位数居中、训练尺度归一化，再合成并以双曲正切限制极端值。
+      u1 = df['white_piece0_rank'] - median_white_piece0_rank
+      u2 = u1 / scale_white_piece0_rank
+      u3 = df['black_piece0_strength'] - median_black_piece0_strength
+      u4 = u3 / scale_black_piece0_strength
+      u5 = u2 + u4
+      u6 = df['black_piece0_rank'] - median_black_piece0_rank
+      u7 = u6 / scale_black_piece0_rank
+      u8 = u5 - u7
+      u9 = np.tanh(u8)
+      新列 = u9；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7694', 'balanced_accuracy': '0.567', 'f1': '0.7318', 'f1_macro': '0.5442', 'auc': '0.9073', 'log_loss': '0.5598'}
+    候选检查：拒绝：accuracy 退化（0.7725 → 0.7694；改善量 -0.0032）。；XGBoost 使用：{'oct_llm_joint_rank_strength_balance_r1': {'split_count': 132, 'used_by_xgboost': True, 'gain': '29.0614', 'total_gain': '3836.1042', 'total_gain_fraction': '0.086'}}
+  第 1 轮候选 2 [nonlinear/llm] oct_llm_file_rank_phase_interaction_r1
+    依据列：white_piece0_file, white_piece0_rank
+    训练集依据：white_piece0_file: MI=0.0163, 中位数=3, 偏度=-0.0046；white_piece0_rank: MI=0.1153, 中位数=4, 偏度=0.0125
+    列间 Spearman：white_piece0_file / white_piece0_rank=0.0054
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：白方横纵位置的联合作用可能随所在区域变化。
+    提取方式：将两坐标按训练中位数和尺度标准化后相乘，以双曲正切压缩交互值。
+    可读公式：np.tanh((df['white_piece0_file'] - median_white_piece0_file) / scale_white_piece0_file * ((df['white_piece0_rank'] - median_white_piece0_rank) / scale_white_piece0_rank))
+    参数 scale_white_piece0_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=5、x[6722]=5；线性插值 Q=(1−0.5)×5+0.5×5=5。 IQR=Q75−Q25=5−1=4；均值 μ=Σx/n=26782/8963=2.9881；总体标准差 σ=√(Σ(x−μ)²/n)=√(39651.7226/8963)=2.1033（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_piece0_file ≈ 3 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=3、x[4481]=3；线性插值 Q=(1−0)×3+0×3=3。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 median_white_piece0_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=4、x[4481]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：将两坐标按训练中位数和尺度标准化后相乘，以双曲正切压缩交互值。
+      u1 = df['white_piece0_file'] - median_white_piece0_file
+      u2 = u1 / scale_white_piece0_file
+      u3 = df['white_piece0_rank'] - median_white_piece0_rank
+      u4 = u3 / scale_white_piece0_rank
+      u5 = u2 * u4
+      u6 = np.tanh(u5)
+      新列 = u6；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7718', 'balanced_accuracy': '0.5785', 'f1': '0.7391', 'f1_macro': '0.5674', 'auc': '0.9111', 'log_loss': '0.5544'}
+    候选检查：拒绝：accuracy 退化（0.7725 → 0.7718；改善量 -0.0007）。；XGBoost 使用：{'oct_llm_file_rank_phase_interaction_r1': {'split_count': 4, 'used_by_xgboost': True, 'gain': '6.9192', 'total_gain': '27.677', 'total_gain_fraction': '0.0006'}}
+  第 1 轮候选 3 [nonlinear/llm] oct_llm_strength_gap_log_r1
+    依据列：white_piece0_strength, black_piece0_strength
+    训练集依据：white_piece0_strength: MI=0.0167, 中位数=6, 偏度=-0.6401；black_piece0_strength: MI=0.0242, 中位数=5, 偏度=-0.6217
+    列间 Spearman：white_piece0_strength / black_piece0_strength=-0.015
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：双方力量差的方向与差距大小可能共同提供区分信息。
+    提取方式：用符号保留强弱方向，以绝对差的 log1p 温和压缩较大差距。
+    可读公式：np.sign(df['white_piece0_strength'] - df['black_piece0_strength']) * np.log1p(np.abs(df['white_piece0_strength'] - df['black_piece0_strength']))
+    参数 np.log1p ≈ 1 [数学定义]：log1p(x)=ln(1+x)：固定加 1 使 x=0 时输出 0，ln 的底数为自然常数 e。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用符号保留强弱方向，以绝对差的 log1p 温和压缩较大差距。
+      u1 = df['white_piece0_strength'] - df['black_piece0_strength']
+      u2 = np.sign(u1)
+      u3 = df['white_piece0_strength'] - df['black_piece0_strength']
+      u4 = np.abs(u3)
+      u5 = np.log1p(u4)
+      u6 = u2 * u5
+      新列 = u6；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7978', 'balanced_accuracy': '0.6585', 'f1': '0.7846', 'f1_macro': '0.6844', 'auc': '0.9366', 'log_loss': '0.4935'}
+    候选检查：符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.1149，其余可用指标均未退化。；XGBoost 使用：{'oct_llm_strength_gap_log_r1': {'split_count': 277, 'used_by_xgboost': True, 'gain': '45.7597', 'total_gain': '12675.4424', 'total_gain_fraction': '0.2418'}}
+  第 1 轮候选 4 [piecewise/llm] oct_llm_rank_advantage_gate_r1
+    依据列：white_piece0_rank
+    训练集依据：white_piece0_rank: MI=0.1153, 中位数=4, 偏度=0.0125
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：白方纵向位置在训练树分界两侧可能呈现不同关联。
+    提取方式：以训练树切分点为中心分段，并按训练尺度归一化后裁剪到有界范围。
+    可读公式：np.where(df['white_piece0_rank'] > cart_r1_node0, np.clip((df['white_piece0_rank'] - cart_r1_node0) / scale_white_piece0_rank, 0, 1), np.clip((df['white_piece0_rank'] - cart_r1_node0) / scale_white_piece0_rank, -1, 0))
+    参数 cart_r1_node0 ≈ 5.5 [train]：CART 深度上限 4、最小叶样本 90，在本节点 8963 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 5 和 6。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：以训练树切分点为中心分段，并按训练尺度归一化后裁剪到有界范围。
+      u1 = df['white_piece0_rank'] > cart_r1_node0
+      u2 = df['white_piece0_rank'] - cart_r1_node0
+      u3 = u2 / scale_white_piece0_rank
+      u4 = np.clip(u3, 0, 1)
+      u5 = df['white_piece0_rank'] - cart_r1_node0
+      u6 = u5 / scale_white_piece0_rank
+      u7 = -1
+      u8 = np.clip(u6, u7, 0)
+      u9 = np.where(u1, u4, u8)
+      新列 = u9；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7725', 'balanced_accuracy': '0.5798', 'f1': '0.7401', 'f1_macro': '0.5696', 'auc': '0.9109', 'log_loss': '0.5548'}
+    候选检查：拒绝：主指标 f1_macro 改善 0，未超过阈值 0.0001。；XGBoost 使用：{'oct_llm_rank_advantage_gate_r1': {'split_count': 0, 'used_by_xgboost': False, 'gain': '0', 'total_gain': '0', 'total_gain_fraction': '0'}}
+  第 1 轮候选 5 [multicolumn/llm] oct_llm_multi_position_alignment_r1
+    依据列：white_piece0_rank, black_piece0_rank, white_piece0_file, black_piece0_file
+    训练集依据：white_piece0_rank: MI=0.1153, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0966, 中位数=4, 偏度=-0.0215；white_piece0_file: MI=0.0163, 中位数=3, 偏度=-0.0046；black_piece0_file: MI=0.0332, 中位数=3, 偏度=0.026
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312；white_piece0_rank / white_piece0_file=0.0054；white_piece0_rank / black_piece0_file=0.0051；black_piece0_rank / white_piece0_file=-0.0027；black_piece0_rank / black_piece0_file=-0.0068；white_piece0_file / black_piece0_file=-0.019
+    历史反馈调整：首轮基于训练画像提出假说。
+    关系假说：双方纵向差异与横向位置组合可能表征局面空间关系。
+    提取方式：对纵向差用训练尺度归一化，对横向坐标按训练中位数居中并归一化，合并后压缩极值。
+    可读公式：np.tanh((df['white_piece0_rank'] - df['black_piece0_rank']) / scale_white_piece0_rank + (df['white_piece0_file'] - median_white_piece0_file) / scale_white_piece0_file - (df['black_piece0_file'] - median_black_piece0_file) / scale_black_piece0_file)
+    参数 scale_black_piece0_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=5、x[6722]=5；线性插值 Q=(1−0.5)×5+0.5×5=5。 IQR=Q75−Q25=5−1=4；均值 μ=Σx/n=26644/8963=2.9727；总体标准差 σ=√(Σ(x−μ)²/n)=√(39748.303/8963)=2.1059（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=5、x[6722]=5；线性插值 Q=(1−0.5)×5+0.5×5=5。 IQR=Q75−Q25=5−1=4；均值 μ=Σx/n=26782/8963=2.9881；总体标准差 σ=√(Σ(x−μ)²/n)=√(39651.7226/8963)=2.1033（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_black_piece0_file ≈ 3 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=3、x[4481]=3；线性插值 Q=(1−0)×3+0×3=3。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 median_white_piece0_file ≈ 3 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=3、x[4481]=3；线性插值 Q=(1−0)×3+0×3=3。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：对纵向差用训练尺度归一化，对横向坐标按训练中位数居中并归一化，合并后压缩极值。
+      u1 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u2 = u1 / scale_white_piece0_rank
+      u3 = df['white_piece0_file'] - median_white_piece0_file
+      u4 = u3 / scale_white_piece0_file
+      u5 = u2 + u4
+      u6 = df['black_piece0_file'] - median_black_piece0_file
+      u7 = u6 / scale_black_piece0_file
+      u8 = u5 - u7
+      u9 = np.tanh(u8)
+      新列 = u9；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7726', 'balanced_accuracy': '0.57', 'f1': '0.735', 'f1_macro': '0.5479', 'auc': '0.9024', 'log_loss': '0.564'}
+    候选检查：拒绝：balanced_accuracy 退化（0.5798 → 0.57；改善量 -0.0098）。；XGBoost 使用：{'oct_llm_multi_position_alignment_r1': {'split_count': 121, 'used_by_xgboost': True, 'gain': '22.7617', 'total_gain': '2754.1655', 'total_gain_fraction': '0.0621'}}
+  第 1 轮结论：接受 oct_llm_strength_gap_log_r1
+
+阶段：特征生成与验证，第 2/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_piece0_rank <= 5.5000
+|   |--- black_piece0_rank <= 2.5000
+|   |   |--- oct_llm_strength_gap_log_r1 <= -0.3466
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= -2.0127
+|   |   |   |   |--- class: 0
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  -2.0127
+|   |   |   |   |--- class: 0
+|   |   |--- oct_llm_strength_gap_log_r1 >  -0.3466
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  2.5000
+|   |   |--- oct_llm_strength_gap_log_r1 <= -0.3466
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= -2.0127
+|   |   |   |   |--- class: 2
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  -2.0127
+|   |   |   |   |--- class: 0
+|   |   |--- oct_llm_strength_gap_log_r1 >  -0.3466
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= 0.3466
+|   |   |   |   |--- class: 2
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  0.3466
+|   |   |   |   |--- class: 2
+|--- white_piece0_rank >  5.5000
+|   |--- black_piece0_rank <= 1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 3484, 'recall': '0.8295'}, {'class': 1, 'rows': 867, 'recall': '0.2872'}, {'class': 2, 'rows': 4612, 'recall': '0.8894'}]
+  第 2 轮候选 1 [multicolumn/llm] oct_llm_oct_piece_strength_rank_context_r2
+    依据列：white_piece0_strength, black_piece0_strength, white_piece0_rank, black_piece0_rank
+    训练集依据：white_piece0_strength: MI=0.0313, 中位数=6, 偏度=-0.6401；black_piece0_strength: MI=0.0137, 中位数=5, 偏度=-0.6217；white_piece0_rank: MI=0.113, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0865, 中位数=4, 偏度=-0.0215
+    列间 Spearman：white_piece0_strength / black_piece0_strength=-0.015；white_piece0_strength / white_piece0_rank=-0.0065；white_piece0_strength / black_piece0_rank=0.0174；black_piece0_strength / white_piece0_rank=0.0005；black_piece0_strength / black_piece0_rank=0.0029；white_piece0_rank / black_piece0_rank=-0.0312
+    历史反馈调整：改用白黑双方差值的乘积，并将两个标准化分量截断，避免复用原加和结构及放大极值。
+    来自第 1 轮 oct_llm_joint_rank_strength_balance_r1：metric_regression；拒绝：accuracy 退化（0.7725 → 0.7694；改善量 -0.0032）。
+    关系假说：强度差与纵向位置差的方向和幅度可能共同刻画局面差异。
+    提取方式：分别用训练尺度归一化两种差值，再截断极端值并相乘，以表示二者同向或反向的联合关系。
+    可读公式：np.clip((df['white_piece0_strength'] - df['black_piece0_strength']) / (scale_white_piece0_strength + 1e-06), -1, 1) * np.clip((df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06), -1, 1)
+    参数 scale_white_piece0_strength ≈ 6 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=0、x[2241]=0；线性插值 Q=(1−0.5)×0+0.5×0=0。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−0=6；均值 μ=Σx/n=37441/8963=4.1773；总体标准差 σ=√(Σ(x−μ)²/n)=√(67979.2951/8963)=2.754（ddof=0）；scale=max(IQR,σ,ε)=6。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别用训练尺度归一化两种差值，再截断极端值并相乘，以表示二者同向或反向的联合关系。
+      u1 = df['white_piece0_strength'] - df['black_piece0_strength']
+      u2 = scale_white_piece0_strength + 1e-06
+      u3 = u1 / u2
+      u4 = -1
+      u5 = np.clip(u3, u4, 1)
+      u6 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u7 = scale_white_piece0_rank + 1e-06
+      u8 = u6 / u7
+      u9 = -1
+      u10 = np.clip(u8, u9, 1)
+      u11 = u5 * u10
+      新列 = u11；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7981', 'balanced_accuracy': '0.6631', 'f1': '0.7861', 'f1_macro': '0.6886', 'auc': '0.9373', 'log_loss': '0.491'}
+    候选检查：符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0042，其余可用指标均未退化。；XGBoost 使用：{'oct_llm_oct_piece_strength_rank_context_r2': {'split_count': 68, 'used_by_xgboost': True, 'gain': '30.8905', 'total_gain': '2100.5549', 'total_gain_fraction': '0.0398'}}
+  第 2 轮候选 2 [multicolumn/llm] oct_llm_oct_gap_file_asymmetry_r2
+    依据列：oct_llm_strength_gap_log_r1, white_piece0_file, black_piece0_file
+    训练集依据：oct_llm_strength_gap_log_r1: MI=0.0948, 中位数=0, 偏度=0.0005；white_piece0_file: MI=0.0226, 中位数=3, 偏度=-0.0046；black_piece0_file: MI=0.0274, 中位数=3, 偏度=0.026
+    列间 Spearman：oct_llm_strength_gap_log_r1 / white_piece0_file=0.0184；oct_llm_strength_gap_log_r1 / black_piece0_file=-0.0046；white_piece0_file / black_piece0_file=-0.019
+    历史反馈调整：保留已验证的强度差输入，但改与横向位置差相乘并截断，不重复单独的强度差特征。
+    来自第 1 轮 oct_llm_strength_gap_log_r1：accepted；符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.1149，其余可用指标均未退化。
+    关系假说：强度差与横向位置不对称可能共同描述局面中的方向性差异。
+    提取方式：将已有强度差按训练尺度归一化，并与双方文件差的归一化值相乘；截断分量以限制极端贡献。
+    可读公式：np.clip(df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06), -1, 1) * np.clip((df['white_piece0_file'] - df['black_piece0_file']) / (scale_white_piece0_file + 1e-06), -1, 1)
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=5、x[6722]=5；线性插值 Q=(1−0.5)×5+0.5×5=5。 IQR=Q75−Q25=5−1=4；均值 μ=Σx/n=26782/8963=2.9881；总体标准差 σ=√(Σ(x−μ)²/n)=√(39651.7226/8963)=2.1033（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：将已有强度差按训练尺度归一化，并与双方文件差的归一化值相乘；截断分量以限制极端贡献。
+      u1 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u2 = df['oct_llm_strength_gap_log_r1'] / u1
+      u3 = -1
+      u4 = np.clip(u2, u3, 1)
+      u5 = df['white_piece0_file'] - df['black_piece0_file']
+      u6 = scale_white_piece0_file + 1e-06
+      u7 = u5 / u6
+      u8 = -1
+      u9 = np.clip(u7, u8, 1)
+      u10 = u4 * u9
+      新列 = u10；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7964', 'balanced_accuracy': '0.6553', 'f1': '0.7827', 'f1_macro': '0.6807', 'auc': '0.9363', 'log_loss': '0.4942'}
+    候选检查：拒绝：accuracy 退化（0.7978 → 0.7964；改善量 -0.0015）。；XGBoost 使用：{'oct_llm_oct_gap_file_asymmetry_r2': {'split_count': 17, 'used_by_xgboost': True, 'gain': '6.4881', 'total_gain': '110.2977', 'total_gain_fraction': '0.0021'}}
+  第 2 轮候选 3 [multicolumn/llm] oct_llm_oct_three_axis_compact_context_r2
+    依据列：white_piece0_rank, black_piece0_rank, white_piece0_file, black_piece0_file, oct_llm_strength_gap_log_r1
+    训练集依据：white_piece0_rank: MI=0.113, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0865, 中位数=4, 偏度=-0.0215；white_piece0_file: MI=0.0226, 中位数=3, 偏度=-0.0046；black_piece0_file: MI=0.0274, 中位数=3, 偏度=0.026；oct_llm_strength_gap_log_r1: MI=0.0948, 中位数=0, 偏度=0.0005
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312；white_piece0_rank / white_piece0_file=0.0054；white_piece0_rank / black_piece0_file=0.0051；white_piece0_rank / oct_llm_strength_gap_log_r1=-0.0069；black_piece0_rank / white_piece0_file=-0.0027；black_piece0_rank / black_piece0_file=-0.0068；black_piece0_rank / oct_llm_strength_gap_log_r1=0.0109；white_piece0_file / black_piece0_file=-0.019；white_piece0_file / oct_llm_strength_gap_log_r1=0.0184；black_piece0_file / oct_llm_strength_gap_log_r1=-0.0046
+    历史反馈调整：替换原四位置对齐式，加入强度差并截断各分量以控制幅度，同时保持组合结构简洁。
+    来自第 1 轮 oct_llm_multi_position_alignment_r1：metric_regression；拒绝：balanced_accuracy 退化（0.5798 → 0.57；改善量 -0.0098）。
+    关系假说：纵向、横向与强度差异的紧凑组合可能补充单列所表达的局面信息。
+    提取方式：将三种差异各自按训练尺度归一化并截断，再相加形成有界范围的综合指标。
+    可读公式：np.clip((df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06), -1, 1) + np.clip((df['white_piece0_file'] - df['black_piece0_file']) / (scale_white_piece0_file + 1e-06), -1, 1) + np.clip(df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06), -1, 1)
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=5、x[6722]=5；线性插值 Q=(1−0.5)×5+0.5×5=5。 IQR=Q75−Q25=5−1=4；均值 μ=Σx/n=26782/8963=2.9881；总体标准差 σ=√(Σ(x−μ)²/n)=√(39651.7226/8963)=2.1033（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：将三种差异各自按训练尺度归一化并截断，再相加形成有界范围的综合指标。
+      u1 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u2 = scale_white_piece0_rank + 1e-06
+      u3 = u1 / u2
+      u4 = -1
+      u5 = np.clip(u3, u4, 1)
+      u6 = df['white_piece0_file'] - df['black_piece0_file']
+      u7 = scale_white_piece0_file + 1e-06
+      u8 = u6 / u7
+      u9 = -1
+      u10 = np.clip(u8, u9, 1)
+      u11 = u5 + u10
+      u12 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u13 = df['oct_llm_strength_gap_log_r1'] / u12
+      u14 = -1
+      u15 = np.clip(u13, u14, 1)
+      u16 = u11 + u15
+      新列 = u16；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7987', 'balanced_accuracy': '0.6553', 'f1': '0.7845', 'f1_macro': '0.6802', 'auc': '0.9366', 'log_loss': '0.4948'}
+    候选检查：拒绝：balanced_accuracy 退化（0.6585 → 0.6553；改善量 -0.0032）。；XGBoost 使用：{'oct_llm_oct_three_axis_compact_context_r2': {'split_count': 50, 'used_by_xgboost': True, 'gain': '19.3607', 'total_gain': '968.0352', 'total_gain_fraction': '0.0184'}}
+  第 2 轮候选 4 [nonlinear/llm] oct_llm_oct_rank_gap_soft_magnitude_r2
+    依据列：white_piece0_rank, black_piece0_rank
+    训练集依据：white_piece0_rank: MI=0.113, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0865, 中位数=4, 偏度=-0.0215
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312
+    历史反馈调整：改用双方纵向位置差的绝对幅度，不再组合文件与排名中心化值的乘积。
+    来自第 1 轮 oct_llm_file_rank_phase_interaction_r1：metric_regression；拒绝：accuracy 退化（0.7725 → 0.7718；改善量 -0.0007）。
+    关系假说：双方纵向位置差的大小可能呈现非线性关联，而不依赖差值方向。
+    提取方式：取纵向差的绝对值以表达距离，再按训练尺度归一化并用双曲正切压缩极端值。
+    可读公式：np.tanh(np.abs(df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06))
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：取纵向差的绝对值以表达距离，再按训练尺度归一化并用双曲正切压缩极端值。
+      u1 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u2 = np.abs(u1)
+      u3 = scale_white_piece0_rank + 1e-06
+      u4 = u2 / u3
+      u5 = np.tanh(u4)
+      新列 = u5；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7975', 'balanced_accuracy': '0.6601', 'f1': '0.7848', 'f1_macro': '0.6863', 'auc': '0.9367', 'log_loss': '0.4931'}
+    候选检查：拒绝：accuracy 退化（0.7978 → 0.7975；改善量 -0.0003）。；XGBoost 使用：{'oct_llm_oct_rank_gap_soft_magnitude_r2': {'split_count': 26, 'used_by_xgboost': True, 'gain': '5.7578', 'total_gain': '149.7039', 'total_gain_fraction': '0.0029'}}
+  第 2 轮候选 5 [piecewise/llm] oct_llm_oct_rank_strength_threshold_context_r2
+    依据列：white_piece0_rank, oct_llm_strength_gap_log_r1
+    训练集依据：white_piece0_rank: MI=0.113, 中位数=4, 偏度=0.0125；oct_llm_strength_gap_log_r1: MI=0.0948, 中位数=0, 偏度=0.0005
+    列间 Spearman：white_piece0_rank / oct_llm_strength_gap_log_r1=-0.0069
+    历史反馈调整：将单列门槛特征改为排名门控强度差，使分段关系结合另一输入，并截断门内幅度。
+    来自第 1 轮 oct_llm_rank_advantage_gate_r1：unused；拒绝：主指标 f1_macro 改善 0，未超过阈值 0.0001。
+    关系假说：白方排名越过训练树切分点时，强度差信息的作用可能有所不同。
+    提取方式：以训练树切分点作为分段门槛，仅在门槛上方保留归一化且截断后的强度差，下方置零。
+    可读公式：np.where(df['white_piece0_rank'] > cart_r2_node0, np.clip(df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06), -1, 1), 0)
+    参数 cart_r2_node0 ≈ 5.5 [train]：CART 深度上限 4、最小叶样本 90，在本节点 8963 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 5 和 6。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：以训练树切分点作为分段门槛，仅在门槛上方保留归一化且截断后的强度差，下方置零。
+      u1 = df['white_piece0_rank'] > cart_r2_node0
+      u2 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u3 = df['oct_llm_strength_gap_log_r1'] / u2
+      u4 = -1
+      u5 = np.clip(u3, u4, 1)
+      u6 = np.where(u1, u5, 0)
+      新列 = u6；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7945', 'balanced_accuracy': '0.642', 'f1': '0.7778', 'f1_macro': '0.6633', 'auc': '0.9345', 'log_loss': '0.5001'}
+    候选检查：拒绝：accuracy 退化（0.7978 → 0.7945；改善量 -0.0033）。；XGBoost 使用：{'oct_llm_oct_rank_strength_threshold_context_r2': {'split_count': 29, 'used_by_xgboost': True, 'gain': '11.4664', 'total_gain': '332.5257', 'total_gain_fraction': '0.0064'}}
+  第 2 轮结论：接受 oct_llm_oct_piece_strength_rank_context_r2
+
+阶段：特征生成与验证，第 3/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_piece0_rank <= 5.5000
+|   |--- black_piece0_rank <= 2.5000
+|   |   |--- oct_llm_strength_gap_log_r1 <= -0.3466
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= -2.0127
+|   |   |   |   |--- class: 0
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  -2.0127
+|   |   |   |   |--- class: 0
+|   |   |--- oct_llm_strength_gap_log_r1 >  -0.3466
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  2.5000
+|   |   |--- oct_llm_oct_piece_strength_rank_context_r2 <= 0.0500
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= 0.3466
+|   |   |   |   |--- class: 2
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  0.3466
+|   |   |   |   |--- class: 2
+|   |   |--- oct_llm_oct_piece_strength_rank_context_r2 >  0.0500
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= -2.0127
+|   |   |   |   |--- class: 2
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  -2.0127
+|   |   |   |   |--- class: 0
+|--- white_piece0_rank >  5.5000
+|   |--- black_piece0_rank <= 1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 3484, 'recall': '0.8252'}, {'class': 1, 'rows': 867, 'recall': '0.3149'}, {'class': 2, 'rows': 4612, 'recall': '0.8901'}]
+LLM 候选格式校验失败，重新请求修复；剩余重试 5 次。
+  第 3 轮候选 1 [multicolumn/llm] oct_llm_oct_rank_gap_strength_context_r3_r3
+    依据列：white_piece0_rank, black_piece0_rank, oct_llm_strength_gap_log_r1
+    训练集依据：white_piece0_rank: MI=0.1162, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.08, 中位数=4, 偏度=-0.0215；oct_llm_strength_gap_log_r1: MI=0.0799, 中位数=0, 偏度=0.0005
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312；white_piece0_rank / oct_llm_strength_gap_log_r1=-0.0069；black_piece0_rank / oct_llm_strength_gap_log_r1=0.0109
+    历史反馈调整：移除文件差并改为等级差与力量差的有界乘积，避免叠加多个轴向信号。
+    来自第 2 轮 oct_llm_oct_three_axis_compact_context_r2：metric_regression；拒绝：balanced_accuracy 退化（0.6585 → 0.6553；改善量 -0.0032）。
+    关系假说：等级差与力量差方向一致时，可能提供互补的局面信息。
+    提取方式：分别按训练尺度归一并截断以限制极值，再相乘编码两种差异的方向一致性。
+    可读公式：np.clip((df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06), -1, 1) * np.clip(df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06), -1, 1)
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别按训练尺度归一并截断以限制极值，再相乘编码两种差异的方向一致性。
+      u1 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u2 = scale_white_piece0_rank + 1e-06
+      u3 = u1 / u2
+      u4 = -1
+      u5 = np.clip(u3, u4, 1)
+      u6 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u7 = df['oct_llm_strength_gap_log_r1'] / u6
+      u8 = -1
+      u9 = np.clip(u7, u8, 1)
+      u10 = u5 * u9
+      新列 = u10；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7988', 'balanced_accuracy': '0.6655', 'f1': '0.7871', 'f1_macro': '0.6914', 'auc': '0.9365', 'log_loss': '0.4913'}
+    候选检查：拒绝：auc 退化（0.9373 → 0.9365；改善量 -0.0007）。；XGBoost 使用：{'oct_llm_oct_rank_gap_strength_context_r3_r3': {'split_count': 40, 'used_by_xgboost': True, 'gain': '27.7053', 'total_gain': '1108.2128', 'total_gain_fraction': '0.021'}}
+  第 3 轮候选 2 [nonlinear/llm] oct_llm_oct_rank_gap_log_soft_r3_r3
+    依据列：white_piece0_rank, black_piece0_rank
+    训练集依据：white_piece0_rank: MI=0.1162, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.08, 中位数=4, 偏度=-0.0215
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312
+    历史反馈调整：将双边饱和变换改为归一化后的对数压缩，保留幅度次序并控制极端值。
+    来自第 2 轮 oct_llm_oct_rank_gap_soft_magnitude_r2：metric_regression；拒绝：accuracy 退化（0.7978 → 0.7975；改善量 -0.0003）。
+    关系假说：等级差距的幅度可能具有非线性关系，且不依赖优势方向。
+    提取方式：先取等级差绝对值并按训练尺度归一，再用 log1p 压缩大差距、保留小差距变化。
+    可读公式：np.log1p(np.abs(df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06))
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.log1p ≈ 1 [数学定义]：log1p(x)=ln(1+x)：固定加 1 使 x=0 时输出 0，ln 的底数为自然常数 e。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：先取等级差绝对值并按训练尺度归一，再用 log1p 压缩大差距、保留小差距变化。
+      u1 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u2 = np.abs(u1)
+      u3 = scale_white_piece0_rank + 1e-06
+      u4 = u2 / u3
+      u5 = np.log1p(u4)
+      新列 = u5；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7995', 'balanced_accuracy': '0.6674', 'f1': '0.7881', 'f1_macro': '0.6934', 'auc': '0.9372', 'log_loss': '0.4908'}
+    候选检查：拒绝：auc 退化（0.9373 → 0.9372；改善量 -2.11e-05）。；XGBoost 使用：{'oct_llm_oct_rank_gap_log_soft_r3_r3': {'split_count': 23, 'used_by_xgboost': True, 'gain': '5.7031', 'total_gain': '131.1724', 'total_gain_fraction': '0.0025'}}
+  第 3 轮候选 3 [multicolumn/llm] oct_llm_oct_file_rank_geometry_strength_r3_r3
+    依据列：white_piece0_rank, black_piece0_rank, white_piece0_file, black_piece0_file, oct_llm_oct_piece_strength_rank_context_r2
+    训练集依据：white_piece0_rank: MI=0.1162, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.08, 中位数=4, 偏度=-0.0215；white_piece0_file: MI=0.0247, 中位数=3, 偏度=-0.0046；black_piece0_file: MI=0.0095, 中位数=3, 偏度=0.026；oct_llm_oct_piece_strength_rank_context_r2: MI=0.0615, 中位数=0, 偏度=-0.0304
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312；white_piece0_rank / white_piece0_file=0.0054；white_piece0_rank / black_piece0_file=0.0051；white_piece0_rank / oct_llm_oct_piece_strength_rank_context_r2=0.0472；black_piece0_rank / white_piece0_file=-0.0027；black_piece0_rank / black_piece0_file=-0.0068；black_piece0_rank / oct_llm_oct_piece_strength_rank_context_r2=0.0382；white_piece0_file / black_piece0_file=-0.019；white_piece0_file / oct_llm_oct_piece_strength_rank_context_r2=0.024；black_piece0_file / oct_llm_oct_piece_strength_rank_context_r2=0.0021
+    历史反馈调整：不再直接相加等级与文件差，改用二者有界乘积，并加入已验证的上下文信号。
+    来自第 1 轮 oct_llm_multi_position_alignment_r1：metric_regression；拒绝：balanced_accuracy 退化（0.5798 → 0.57；改善量 -0.0098）。
+    关系假说：等级与横向位置的相对关系，结合已有力量等级上下文，可能补充局面结构信息。
+    提取方式：将等级差和文件差分别按训练尺度归一并截断后相乘，表示方向配合；再加上尺度归一且截断的上下文项。
+    可读公式：np.clip((df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06), -1, 1) * np.clip((df['white_piece0_file'] - df['black_piece0_file']) / (scale_white_piece0_file + 1e-06), -1, 1) + np.clip(df['oct_llm_oct_piece_strength_rank_context_r2'] / (scale_oct_llm_oct_piece_strength_rank_context_r2 + 1e-06), -1, 1)
+    参数 scale_oct_llm_oct_piece_strength_rank_context_r2 ≈ 0.404 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-0.1667、x[2241]=-0.1667；线性插值 Q=(1−0.5)×-0.1667+0.5×-0.1667=-0.1667。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=0.1667、x[6722]=0.1667；线性插值 Q=(1−0.5)×0.1667+0.5×0.1667=0.1667。 IQR=Q75−Q25=0.1667−-0.1667=0.3333；均值 μ=Σx/n=-60.6333/8963=-0.0068；总体标准差 σ=√(Σ(x−μ)²/n)=√(1463.0036/8963)=0.404（ddof=0）；scale=max(IQR,σ,ε)=0.404。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=5、x[6722]=5；线性插值 Q=(1−0.5)×5+0.5×5=5。 IQR=Q75−Q25=5−1=4；均值 μ=Σx/n=26782/8963=2.9881；总体标准差 σ=√(Σ(x−μ)²/n)=√(39651.7226/8963)=2.1033（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：将等级差和文件差分别按训练尺度归一并截断后相乘，表示方向配合；再加上尺度归一且截断的上下文项。
+      u1 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u2 = scale_white_piece0_rank + 1e-06
+      u3 = u1 / u2
+      u4 = -1
+      u5 = np.clip(u3, u4, 1)
+      u6 = df['white_piece0_file'] - df['black_piece0_file']
+      u7 = scale_white_piece0_file + 1e-06
+      u8 = u6 / u7
+      u9 = -1
+      u10 = np.clip(u8, u9, 1)
+      u11 = u5 * u10
+      u12 = scale_oct_llm_oct_piece_strength_rank_context_r2 + 1e-06
+      u13 = df['oct_llm_oct_piece_strength_rank_context_r2'] / u12
+      u14 = -1
+      u15 = np.clip(u13, u14, 1)
+      u16 = u11 + u15
+      新列 = u16；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7985', 'balanced_accuracy': '0.6661', 'f1': '0.7871', 'f1_macro': '0.6918', 'auc': '0.9373', 'log_loss': '0.4908'}
+    候选检查：符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0032，其余可用指标均未退化。；XGBoost 使用：{'oct_llm_oct_file_rank_geometry_strength_r3_r3': {'split_count': 9, 'used_by_xgboost': True, 'gain': '6.0383', 'total_gain': '54.3445', 'total_gain_fraction': '0.001'}}
+  第 3 轮候选 4 [piecewise/llm] oct_llm_oct_black_rank_low_white_edge_r3_r3
+    依据列：black_piece0_rank, white_piece0_rank, white_piece0_file
+    训练集依据：black_piece0_rank: MI=0.08, 中位数=4, 偏度=-0.0215；white_piece0_rank: MI=0.1162, 中位数=4, 偏度=0.0125；white_piece0_file: MI=0.0247, 中位数=3, 偏度=-0.0046
+    列间 Spearman：black_piece0_rank / white_piece0_rank=-0.0312；black_piece0_rank / white_piece0_file=-0.0027；white_piece0_rank / white_piece0_file=0.0054
+    历史反馈调整：不使用单变量平滑等级门控，改为两个训练树分界共同限定局部区域，并以有界文件偏离量表达位置。
+    来自第 1 轮 oct_llm_rank_advantage_gate_r1：unused；拒绝：主指标 f1_macro 改善 0，未超过阈值 0.0001。
+    关系假说：黑方等级较低且白方等级较高的区域，白方文件位置可能呈现不同关联。
+    提取方式：用训练树的两个等级分界定义局部条件；满足时输出按训练尺度归一并截断的白方文件偏离量，否则置零。
+    可读公式：np.where((df['black_piece0_rank'] <= cart_r3_node16) & (df['white_piece0_rank'] > cart_r3_node24), np.clip((df['white_piece0_file'] - median_white_piece0_file) / (scale_white_piece0_file + 1e-06), -1, 1), 0)
+    参数 cart_r3_node16 ≈ 1.5 [train]：CART 深度上限 4、最小叶样本 90，在本节点 3413 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 1 和 2。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 cart_r3_node24 ≈ 6.5 [train]：CART 深度上限 4、最小叶样本 90，在本节点 2538 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 6 和 7。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 median_white_piece0_file ≈ 3 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=3、x[4481]=3；线性插值 Q=(1−0)×3+0×3=3。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_piece0_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=5、x[6722]=5；线性插值 Q=(1−0.5)×5+0.5×5=5。 IQR=Q75−Q25=5−1=4；均值 μ=Σx/n=26782/8963=2.9881；总体标准差 σ=√(Σ(x−μ)²/n)=√(39651.7226/8963)=2.1033（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用训练树的两个等级分界定义局部条件；满足时输出按训练尺度归一并截断的白方文件偏离量，否则置零。
+      u1 = df['black_piece0_rank'] <= cart_r3_node16
+      u2 = df['white_piece0_rank'] > cart_r3_node24
+      u3 = u1 & u2
+      u4 = df['white_piece0_file'] - median_white_piece0_file
+      u5 = scale_white_piece0_file + 1e-06
+      u6 = u4 / u5
+      u7 = -1
+      u8 = np.clip(u6, u7, 1)
+      u9 = np.where(u3, u8, 0)
+      新列 = u9；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7972', 'balanced_accuracy': '0.6604', 'f1': '0.7847', 'f1_macro': '0.6855', 'auc': '0.9369', 'log_loss': '0.4916'}
+    候选检查：拒绝：accuracy 退化（0.7981 → 0.7972；改善量 -0.0009）。；XGBoost 使用：{'oct_llm_oct_black_rank_low_white_edge_r3_r3': {'split_count': 32, 'used_by_xgboost': True, 'gain': '20.2069', 'total_gain': '646.6196', 'total_gain_fraction': '0.0123'}}
+  第 3 轮候选 5 [nonlinear/llm] oct_llm_oct_llm_gap_rank_signed_soft_product_r3_r3
+    依据列：oct_llm_strength_gap_log_r1, white_piece0_rank, black_piece0_rank
+    训练集依据：oct_llm_strength_gap_log_r1: MI=0.0799, 中位数=0, 偏度=0.0005；white_piece0_rank: MI=0.1162, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.08, 中位数=4, 偏度=-0.0215
+    列间 Spearman：oct_llm_strength_gap_log_r1 / white_piece0_rank=-0.0069；oct_llm_strength_gap_log_r1 / black_piece0_rank=0.0109；white_piece0_rank / black_piece0_rank=-0.0312
+    历史反馈调整：避开此前多位置线性求和导致的退化，改用强度差与纵向差的有界乘积，并通过双曲正切压缩极值。
+    来自第 1 轮 oct_llm_multi_position_alignment_r1：metric_regression；拒绝：balanced_accuracy 退化（0.5798 → 0.57；改善量 -0.0098）。
+    关系假说：强度差方向与双方纵向位置差方向一致时，可能提供更稳定的联合信号；效果需验证。
+    提取方式：分别用训练尺度加微小保护量进行归一化，再用双曲正切压缩两项极端值，最后相乘保留方向一致性与交互强度。
+    可读公式：np.tanh(df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06)) * np.tanh((df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06))
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别用训练尺度加微小保护量进行归一化，再用双曲正切压缩两项极端值，最后相乘保留方向一致性与交互强度。
+      u1 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u2 = df['oct_llm_strength_gap_log_r1'] / u1
+      u3 = np.tanh(u2)
+      u4 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u5 = scale_white_piece0_rank + 1e-06
+      u6 = u4 / u5
+      u7 = np.tanh(u6)
+      u8 = u3 * u7
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7981', 'balanced_accuracy': '0.6629', 'f1': '0.786', 'f1_macro': '0.6887', 'auc': '0.9366', 'log_loss': '0.4907'}
+    候选检查：拒绝：accuracy 退化（0.7981 → 0.7981；改善量 -5.58e-05）。；XGBoost 使用：{'oct_llm_oct_llm_gap_rank_signed_soft_product_r3_r3': {'split_count': 53, 'used_by_xgboost': True, 'gain': '23.5887', 'total_gain': '1250.2035', 'total_gain_fraction': '0.0236'}}
+  第 3 轮结论：接受 oct_llm_oct_file_rank_geometry_strength_r3_r3
+
+阶段：特征生成与验证，第 4/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_piece0_rank <= 5.5000
+|   |--- black_piece0_rank <= 2.5000
+|   |   |--- oct_llm_strength_gap_log_r1 <= -0.3466
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= -2.0127
+|   |   |   |   |--- class: 0
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  -2.0127
+|   |   |   |   |--- class: 0
+|   |   |--- oct_llm_strength_gap_log_r1 >  -0.3466
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  2.5000
+|   |   |--- oct_llm_oct_piece_strength_rank_context_r2 <= 0.0500
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= 0.3466
+|   |   |   |   |--- class: 2
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  0.3466
+|   |   |   |   |--- class: 2
+|   |   |--- oct_llm_oct_piece_strength_rank_context_r2 >  0.0500
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= -2.0127
+|   |   |   |   |--- class: 2
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  -2.0127
+|   |   |   |   |--- class: 0
+|--- white_piece0_rank >  5.5000
+|   |--- black_piece0_rank <= 1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 3484, 'recall': '0.8289'}, {'class': 1, 'rows': 867, 'recall': '0.3253'}, {'class': 2, 'rows': 4612, 'recall': '0.8883'}]
+  第 4 轮候选 1 [multicolumn/llm] oct_llm_oct_llm_rank_strength_contrast_r4_r4
+    依据列：white_piece0_rank, black_piece0_rank, white_piece0_strength, black_piece0_strength
+    训练集依据：white_piece0_rank: MI=0.1135, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0984, 中位数=4, 偏度=-0.0215；white_piece0_strength: MI=0.0245, 中位数=6, 偏度=-0.6401；black_piece0_strength: MI=0.0139, 中位数=5, 偏度=-0.6217
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312；white_piece0_rank / white_piece0_strength=-0.0065；white_piece0_rank / black_piece0_strength=0.0005；black_piece0_rank / white_piece0_strength=0.0174；black_piece0_rank / black_piece0_strength=0.0029；white_piece0_strength / black_piece0_strength=-0.015
+    历史反馈调整：沿用等级差组合但改用双方强度总量，并对两部分分别截断以限制极端影响。
+    来自第 3 轮 oct_llm_oct_rank_gap_strength_context_r3_r3：metric_regression；拒绝：auc 退化（0.9373 → 0.9365；改善量 -0.0007）。
+    关系假说：等级差与双方强度总量的交互或能补充描述位置优势背景。
+    提取方式：分别以训练尺度归一化等级差和中心化强度总量；截断以限制极端值，再相乘表示两种信号共同出现。
+    可读公式：np.clip((df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06), -1, 1) * np.clip((df['white_piece0_strength'] + df['black_piece0_strength'] - 2 * median_white_piece0_strength) / (2 * scale_white_piece0_strength + 1e-06), -1, 1)
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_piece0_strength ≈ 6 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=6、x[4481]=6；线性插值 Q=(1−0)×6+0×6=6。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_piece0_strength ≈ 6 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=0、x[2241]=0；线性插值 Q=(1−0.5)×0+0.5×0=0。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−0=6；均值 μ=Σx/n=37441/8963=4.1773；总体标准差 σ=√(Σ(x−μ)²/n)=√(67979.2951/8963)=2.754（ddof=0）；scale=max(IQR,σ,ε)=6。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别以训练尺度归一化等级差和中心化强度总量；截断以限制极端值，再相乘表示两种信号共同出现。
+      u1 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u2 = scale_white_piece0_rank + 1e-06
+      u3 = u1 / u2
+      u4 = -1
+      u5 = np.clip(u3, u4, 1)
+      u6 = df['white_piece0_strength'] + df['black_piece0_strength']
+      u7 = 2 * median_white_piece0_strength
+      u8 = u6 - u7
+      u9 = 2 * scale_white_piece0_strength
+      u10 = u9 + 1e-06
+      u11 = u8 / u10
+      u12 = -1
+      u13 = np.clip(u11, u12, 1)
+      u14 = u5 * u13
+      新列 = u14；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7979', 'balanced_accuracy': '0.6537', 'f1': '0.7832', 'f1_macro': '0.6797', 'auc': '0.9298', 'log_loss': '0.5033'}
+    候选检查：拒绝：accuracy 退化（0.7985 → 0.7979；改善量 -0.0007）。；XGBoost 使用：{'oct_llm_oct_llm_rank_strength_contrast_r4_r4': {'split_count': 167, 'used_by_xgboost': True, 'gain': '27.8365', 'total_gain': '4648.6973', 'total_gain_fraction': '0.0908'}}
+  第 4 轮候选 2 [nonlinear/llm] oct_llm_oct_llm_gap_rank_soft_interaction_r4_r4
+    依据列：oct_llm_strength_gap_log_r1, white_piece0_rank, black_piece0_rank
+    训练集依据：oct_llm_strength_gap_log_r1: MI=0.0895, 中位数=0, 偏度=0.0005；white_piece0_rank: MI=0.1135, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0984, 中位数=4, 偏度=-0.0215
+    列间 Spearman：oct_llm_strength_gap_log_r1 / white_piece0_rank=-0.0069；oct_llm_strength_gap_log_r1 / black_piece0_rank=0.0109；white_piece0_rank / black_piece0_rank=-0.0312
+    历史反馈调整：保留有界交互但将单方等级差替换为中心化双方等级总量，改变组合信号。
+    来自第 3 轮 oct_llm_oct_llm_gap_rank_signed_soft_product_r3_r3：metric_regression；拒绝：accuracy 退化（0.7981 → 0.7981；改善量 -5.58e-05）。
+    关系假说：强度差方向与双方等级所处位置的交互可能提供补充信息。
+    提取方式：将强度差和中心化等级总量按训练尺度缩放，经双曲正切压缩后相乘，保留方向并控制幅度。
+    可读公式：np.tanh(df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06)) * np.tanh((df['white_piece0_rank'] + df['black_piece0_rank'] - 2 * median_white_piece0_rank) / (2 * scale_white_piece0_rank + 1e-06))
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_piece0_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=4、x[4481]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：将强度差和中心化等级总量按训练尺度缩放，经双曲正切压缩后相乘，保留方向并控制幅度。
+      u1 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u2 = df['oct_llm_strength_gap_log_r1'] / u1
+      u3 = np.tanh(u2)
+      u4 = df['white_piece0_rank'] + df['black_piece0_rank']
+      u5 = 2 * median_white_piece0_rank
+      u6 = u4 - u5
+      u7 = 2 * scale_white_piece0_rank
+      u8 = u7 + 1e-06
+      u9 = u6 / u8
+      u10 = np.tanh(u9)
+      u11 = u3 * u10
+      新列 = u11；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.8019', 'balanced_accuracy': '0.6923', 'f1': '0.7953', 'f1_macro': '0.7136', 'auc': '0.9327', 'log_loss': '0.4914'}
+    候选检查：拒绝：auc 退化（0.9373 → 0.9327；改善量 -0.0046）。；XGBoost 使用：{'oct_llm_oct_llm_gap_rank_soft_interaction_r4_r4': {'split_count': 174, 'used_by_xgboost': True, 'gain': '39.6369', 'total_gain': '6896.8149', 'total_gain_fraction': '0.1304'}}
+  第 4 轮候选 3 [multicolumn/llm] oct_llm_oct_llm_rank_sum_strength_balance_r4_r4
+    依据列：white_piece0_rank, black_piece0_rank, white_piece0_strength, black_piece0_strength, white_piece0_file, black_piece0_file
+    训练集依据：white_piece0_rank: MI=0.1135, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0984, 中位数=4, 偏度=-0.0215；white_piece0_strength: MI=0.0245, 中位数=6, 偏度=-0.6401；black_piece0_strength: MI=0.0139, 中位数=5, 偏度=-0.6217；white_piece0_file: MI=0.0262, 中位数=3, 偏度=-0.0046；black_piece0_file: MI=0.0263, 中位数=3, 偏度=0.026
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312；white_piece0_rank / white_piece0_strength=-0.0065；white_piece0_rank / black_piece0_strength=0.0005；white_piece0_rank / white_piece0_file=0.0054；white_piece0_rank / black_piece0_file=0.0051；black_piece0_rank / white_piece0_strength=0.0174；black_piece0_rank / black_piece0_strength=0.0029；black_piece0_rank / white_piece0_file=-0.0027；black_piece0_rank / black_piece0_file=-0.0068；white_piece0_strength / black_piece0_strength=-0.015；white_piece0_strength / white_piece0_file=0.0022；white_piece0_strength / black_piece0_file=0.0063；black_piece0_strength / white_piece0_file=-0.0171；black_piece0_strength / black_piece0_file=0.0109；white_piece0_file / black_piece0_file=-0.019
+    历史反馈调整：重新搭配等级总量与强度、横向位置差，并逐项截断以约束合成范围。
+    来自第 2 轮 oct_llm_oct_three_axis_compact_context_r2：metric_regression；拒绝：balanced_accuracy 退化（0.6585 → 0.6553；改善量 -0.0032）。
+    关系假说：等级总量、强度差与横向位置差的合成或可表达不同维度的局面背景。
+    提取方式：将三个差异量按训练尺度归一化并截断，再相加以形成幅度受控的综合描述。
+    可读公式：np.clip((df['white_piece0_rank'] + df['black_piece0_rank'] - 2 * median_white_piece0_rank) / (2 * scale_white_piece0_rank + 1e-06), -1, 1) + np.clip((df['white_piece0_strength'] - df['black_piece0_strength']) / (scale_white_piece0_strength + 1e-06), -1, 1) + np.clip((df['white_piece0_file'] - df['black_piece0_file']) / (scale_white_piece0_file + 1e-06), -1, 1)
+    参数 scale_white_piece0_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=5、x[6722]=5；线性插值 Q=(1−0.5)×5+0.5×5=5。 IQR=Q75−Q25=5−1=4；均值 μ=Σx/n=26782/8963=2.9881；总体标准差 σ=√(Σ(x−μ)²/n)=√(39651.7226/8963)=2.1033（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_strength ≈ 6 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=0、x[2241]=0；线性插值 Q=(1−0.5)×0+0.5×0=0。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−0=6；均值 μ=Σx/n=37441/8963=4.1773；总体标准差 σ=√(Σ(x−μ)²/n)=√(67979.2951/8963)=2.754（ddof=0）；scale=max(IQR,σ,ε)=6。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_piece0_rank ≈ 4 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=4、x[4481]=4；线性插值 Q=(1−0)×4+0×4=4。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：将三个差异量按训练尺度归一化并截断，再相加以形成幅度受控的综合描述。
+      u1 = df['white_piece0_rank'] + df['black_piece0_rank']
+      u2 = 2 * median_white_piece0_rank
+      u3 = u1 - u2
+      u4 = 2 * scale_white_piece0_rank
+      u5 = u4 + 1e-06
+      u6 = u3 / u5
+      u7 = -1
+      u8 = np.clip(u6, u7, 1)
+      u9 = df['white_piece0_strength'] - df['black_piece0_strength']
+      u10 = scale_white_piece0_strength + 1e-06
+      u11 = u9 / u10
+      u12 = -1
+      u13 = np.clip(u11, u12, 1)
+      u14 = u8 + u13
+      u15 = df['white_piece0_file'] - df['black_piece0_file']
+      u16 = scale_white_piece0_file + 1e-06
+      u17 = u15 / u16
+      u18 = -1
+      u19 = np.clip(u17, u18, 1)
+      u20 = u14 + u19
+      新列 = u20；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7988', 'balanced_accuracy': '0.6645', 'f1': '0.7869', 'f1_macro': '0.6904', 'auc': '0.9375', 'log_loss': '0.4902'}
+    候选检查：拒绝：balanced_accuracy 退化（0.6661 → 0.6645；改善量 -0.0016）。；XGBoost 使用：{'oct_llm_oct_llm_rank_sum_strength_balance_r4_r4': {'split_count': 41, 'used_by_xgboost': True, 'gain': '9.3153', 'total_gain': '381.9272', 'total_gain_fraction': '0.0072'}}
+  第 4 轮候选 4 [piecewise/llm] oct_llm_oct_llm_strength_gap_rank_band_r4_r4
+    依据列：black_piece0_rank, oct_llm_strength_gap_log_r1, white_piece0_rank
+    训练集依据：black_piece0_rank: MI=0.0984, 中位数=4, 偏度=-0.0215；oct_llm_strength_gap_log_r1: MI=0.0895, 中位数=0, 偏度=0.0005；white_piece0_rank: MI=0.1135, 中位数=4, 偏度=0.0125
+    列间 Spearman：black_piece0_rank / oct_llm_strength_gap_log_r1=0.0109；black_piece0_rank / white_piece0_rank=-0.0312；oct_llm_strength_gap_log_r1 / white_piece0_rank=-0.0069
+    历史反馈调整：更换分段条件列，并在两个分支分别采用有界的强度差与等级差。
+    来自第 2 轮 oct_llm_oct_rank_strength_threshold_context_r2：metric_regression；拒绝：accuracy 退化（0.7978 → 0.7945；改善量 -0.0033）。
+    关系假说：对手等级处于较低区间时强调强度差，其余情形侧重等级差，或能区分不同局面区域。
+    提取方式：用训练树阈值划分对手等级区间；两侧分别选用尺度归一化且截断的强度差或等级差。
+    可读公式：np.where(df['black_piece0_rank'] <= cart_r4_node1, np.clip(df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06), -1, 1), np.clip((df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06), -1, 1))
+    参数 cart_r4_node1 ≈ 2.5 [train]：CART 深度上限 4、最小叶样本 90，在本节点 5550 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 2 和 3。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：用训练树阈值划分对手等级区间；两侧分别选用尺度归一化且截断的强度差或等级差。
+      u1 = df['black_piece0_rank'] <= cart_r4_node1
+      u2 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u3 = df['oct_llm_strength_gap_log_r1'] / u2
+      u4 = -1
+      u5 = np.clip(u3, u4, 1)
+      u6 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u7 = scale_white_piece0_rank + 1e-06
+      u8 = u6 / u7
+      u9 = -1
+      u10 = np.clip(u8, u9, 1)
+      u11 = np.where(u1, u5, u10)
+      新列 = u11；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7977', 'balanced_accuracy': '0.665', 'f1': '0.7862', 'f1_macro': '0.6911', 'auc': '0.9369', 'log_loss': '0.4909'}
+    候选检查：拒绝：accuracy 退化（0.7985 → 0.7977；改善量 -0.0008）。；XGBoost 使用：{'oct_llm_oct_llm_strength_gap_rank_band_r4_r4': {'split_count': 33, 'used_by_xgboost': True, 'gain': '18.6941', 'total_gain': '616.9052', 'total_gain_fraction': '0.0117'}}
+  第 4 轮候选 5 [multicolumn/llm] oct_llm_oct_llm_rank_file_weighted_context_r4_r4
+    依据列：white_piece0_rank, black_piece0_rank, white_piece0_file, black_piece0_file, white_piece0_strength, black_piece0_strength
+    训练集依据：white_piece0_rank: MI=0.1135, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0984, 中位数=4, 偏度=-0.0215；white_piece0_file: MI=0.0262, 中位数=3, 偏度=-0.0046；black_piece0_file: MI=0.0263, 中位数=3, 偏度=0.026；white_piece0_strength: MI=0.0245, 中位数=6, 偏度=-0.6401；black_piece0_strength: MI=0.0139, 中位数=5, 偏度=-0.6217
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312；white_piece0_rank / white_piece0_file=0.0054；white_piece0_rank / black_piece0_file=0.0051；white_piece0_rank / white_piece0_strength=-0.0065；white_piece0_rank / black_piece0_strength=0.0005；black_piece0_rank / white_piece0_file=-0.0027；black_piece0_rank / black_piece0_file=-0.0068；black_piece0_rank / white_piece0_strength=0.0174；black_piece0_rank / black_piece0_strength=0.0029；white_piece0_file / black_piece0_file=-0.019；white_piece0_file / white_piece0_strength=0.0022；white_piece0_file / black_piece0_strength=-0.0171；black_piece0_file / white_piece0_strength=0.0063；black_piece0_file / black_piece0_strength=0.0109；white_piece0_strength / black_piece0_strength=-0.015
+    历史反馈调整：避开原先横向位置差与等级差的直接相加，改用中心化位置总量调节等级差并限幅。
+    来自第 1 轮 oct_llm_multi_position_alignment_r1：metric_regression；拒绝：balanced_accuracy 退化（0.5798 → 0.57；改善量 -0.0098）。
+    关系假说：横向位置总量或会调节等级差所表达的背景，并与强度差互补。
+    提取方式：分别缩放并截断等级差、中心化横向位置总量和强度差；以位置总量加权等级差后加入强度差。
+    可读公式：np.clip((df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06), -1, 1) * np.clip((df['white_piece0_file'] + df['black_piece0_file'] - 2 * median_white_piece0_file) / (2 * scale_white_piece0_file + 1e-06), -1, 1) + np.clip((df['white_piece0_strength'] - df['black_piece0_strength']) / (scale_white_piece0_strength + 1e-06), -1, 1)
+    参数 scale_white_piece0_strength ≈ 6 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=0、x[2241]=0；线性插值 Q=(1−0.5)×0+0.5×0=0。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−0=6；均值 μ=Σx/n=37441/8963=4.1773；总体标准差 σ=√(Σ(x−μ)²/n)=√(67979.2951/8963)=2.754（ddof=0）；scale=max(IQR,σ,ε)=6。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 median_white_piece0_file ≈ 3 [train]：训练列升序排列，p=0.5；零基位置 h=(n−1)p=(8963−1)×0.5=4481；相邻值 x[4481]=3、x[4481]=3；线性插值 Q=(1−0)×3+0×3=3。 用中位数作为居中基准或均分门槛，减少极端值影响。
+    参数 scale_white_piece0_file ≈ 4 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=5、x[6722]=5；线性插值 Q=(1−0.5)×5+0.5×5=5。 IQR=Q75−Q25=5−1=4；均值 μ=Σx/n=26782/8963=2.9881；总体标准差 σ=√(Σ(x−μ)²/n)=√(39651.7226/8963)=2.1033（ddof=0）；scale=max(IQR,σ,ε)=4。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    参数 2 ≈ 2 [预先规定的数学或数值规则]：固定二次幂：x²=x×x；几何周长平方用于消去与面积的量纲差。不是训练得到的权重。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别缩放并截断等级差、中心化横向位置总量和强度差；以位置总量加权等级差后加入强度差。
+      u1 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u2 = scale_white_piece0_rank + 1e-06
+      u3 = u1 / u2
+      u4 = -1
+      u5 = np.clip(u3, u4, 1)
+      u6 = df['white_piece0_file'] + df['black_piece0_file']
+      u7 = 2 * median_white_piece0_file
+      u8 = u6 - u7
+      u9 = 2 * scale_white_piece0_file
+      u10 = u9 + 1e-06
+      u11 = u8 / u10
+      u12 = -1
+      u13 = np.clip(u11, u12, 1)
+      u14 = u5 * u13
+      u15 = df['white_piece0_strength'] - df['black_piece0_strength']
+      u16 = scale_white_piece0_strength + 1e-06
+      u17 = u15 / u16
+      u18 = -1
+      u19 = np.clip(u17, u18, 1)
+      u20 = u14 + u19
+      新列 = u20；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7992', 'balanced_accuracy': '0.6644', 'f1': '0.7872', 'f1_macro': '0.6899', 'auc': '0.9376', 'log_loss': '0.4913'}
+    候选检查：拒绝：balanced_accuracy 退化（0.6661 → 0.6644；改善量 -0.0017）。；XGBoost 使用：{'oct_llm_oct_llm_rank_file_weighted_context_r4_r4': {'split_count': 23, 'used_by_xgboost': True, 'gain': '14.9695', 'total_gain': '344.2977', 'total_gain_fraction': '0.0065'}}
+  第 4 轮结论：未接受新特征
+
+阶段：特征生成与验证，第 5/5 轮。
+训练 CART 分支（仅作生成依据）：
+|--- white_piece0_rank <= 5.5000
+|   |--- black_piece0_rank <= 2.5000
+|   |   |--- oct_llm_strength_gap_log_r1 <= -0.3466
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= -2.0127
+|   |   |   |   |--- class: 0
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  -2.0127
+|   |   |   |   |--- class: 0
+|   |   |--- oct_llm_strength_gap_log_r1 >  -0.3466
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  2.5000
+|   |   |--- oct_llm_oct_piece_strength_rank_context_r2 <= 0.0500
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= 0.3466
+|   |   |   |   |--- class: 2
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  0.3466
+|   |   |   |   |--- class: 2
+|   |   |--- oct_llm_oct_piece_strength_rank_context_r2 >  0.0500
+|   |   |   |--- oct_llm_strength_gap_log_r1 <= -2.0127
+|   |   |   |   |--- class: 2
+|   |   |   |--- oct_llm_strength_gap_log_r1 >  -2.0127
+|   |   |   |   |--- class: 0
+|--- white_piece0_rank >  5.5000
+|   |--- black_piece0_rank <= 1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 0
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 4.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  4.5000
+|   |   |   |   |--- class: 0
+|   |--- black_piece0_rank >  1.5000
+|   |   |--- white_piece0_rank <= 6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+|   |   |--- white_piece0_rank >  6.5000
+|   |   |   |--- white_piece0_file <= 0.5000
+|   |   |   |   |--- class: 2
+|   |   |   |--- white_piece0_file >  0.5000
+|   |   |   |   |--- class: 2
+
+当前 XGBoost 训练类别诊断：[{'class': 0, 'rows': 3484, 'recall': '0.8289'}, {'class': 1, 'rows': 867, 'recall': '0.3253'}, {'class': 2, 'rows': 4612, 'recall': '0.8883'}]
+LLM 候选格式校验失败，重新请求修复；剩余重试 5 次。
+LLM 候选格式校验失败，重新请求修复；剩余重试 4 次。
+LLM 候选格式校验失败，重新请求修复；剩余重试 3 次。
+  第 5 轮候选 1 [nonlinear/llm] oct_llm_oct_llm_strength_rank_discordance_r5_r5
+    依据列：white_piece0_strength, black_piece0_strength, white_piece0_rank, black_piece0_rank
+    训练集依据：white_piece0_strength: MI=0.0245, 中位数=6, 偏度=-0.6401；black_piece0_strength: MI=0.0139, 中位数=5, 偏度=-0.6217；white_piece0_rank: MI=0.1135, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0984, 中位数=4, 偏度=-0.0215
+    列间 Spearman：white_piece0_strength / black_piece0_strength=-0.015；white_piece0_strength / white_piece0_rank=-0.0065；white_piece0_strength / black_piece0_rank=0.0174；black_piece0_strength / white_piece0_rank=0.0005；black_piece0_strength / black_piece0_rank=0.0029；white_piece0_rank / black_piece0_rank=-0.0312
+    历史反馈调整：将此前的多项加减平衡改为两种差值的分歧度，并用双曲正切界定范围。
+    来自第 1 轮 oct_llm_joint_rank_strength_balance_r1：metric_regression；拒绝：accuracy 退化（0.7725 → 0.7694；改善量 -0.0032）。
+    关系假说：可检验强度差与等级差不一致程度是否提供补充信息。
+    提取方式：分别以训练尺度归一化两种双方差值，再相减表示信号分歧；双曲正切压缩差异的极端值。
+    可读公式：np.tanh((df['white_piece0_strength'] - df['black_piece0_strength']) / (scale_white_piece0_strength + 1e-06) - (df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06))
+    参数 scale_white_piece0_strength ≈ 6 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=0、x[2241]=0；线性插值 Q=(1−0.5)×0+0.5×0=0。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−0=6；均值 μ=Σx/n=37441/8963=4.1773；总体标准差 σ=√(Σ(x−μ)²/n)=√(67979.2951/8963)=2.754（ddof=0）；scale=max(IQR,σ,ε)=6。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别以训练尺度归一化两种双方差值，再相减表示信号分歧；双曲正切压缩差异的极端值。
+      u1 = df['white_piece0_strength'] - df['black_piece0_strength']
+      u2 = scale_white_piece0_strength + 1e-06
+      u3 = u1 / u2
+      u4 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u5 = scale_white_piece0_rank + 1e-06
+      u6 = u4 / u5
+      u7 = u3 - u6
+      u8 = np.tanh(u7)
+      新列 = u8；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7959', 'balanced_accuracy': '0.6612', 'f1': '0.7841', 'f1_macro': '0.6852', 'auc': '0.9348', 'log_loss': '0.4934'}
+    候选检查：拒绝：accuracy 退化（0.7985 → 0.7959；改善量 -0.0027）。；XGBoost 使用：{'oct_llm_oct_llm_strength_rank_discordance_r5_r5': {'split_count': 64, 'used_by_xgboost': True, 'gain': '26.6481', 'total_gain': '1705.4781', 'total_gain_fraction': '0.0324'}}
+  第 5 轮候选 2 [piecewise/llm] oct_llm_oct_llm_rank_band_gap_magnitude_r5_r5
+    依据列：white_piece0_rank, black_piece0_rank
+    训练集依据：white_piece0_rank: MI=0.1135, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0984, 中位数=4, 偏度=-0.0215
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312
+    历史反馈调整：替换单门槛下直接筛选强度差的设计，改用等级差幅度并令低区间权重随距离渐变。
+    来自第 2 轮 oct_llm_oct_rank_strength_threshold_context_r2：metric_regression；拒绝：accuracy 退化（0.7978 → 0.7945；改善量 -0.0033）。
+    关系假说：可检验白方等级跨过训练分界后，等级差幅度与分界下方呈现不同关系。
+    提取方式：以训练树分界划分区间；两侧均计算截断的等级差幅度，下方再乘以归一化的分界距离权重。
+    可读公式：np.where(df['white_piece0_rank'] > cart_r5_node0, np.clip(np.abs(df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06), 0, 1), np.clip(np.abs(df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06), 0, 1) * np.clip((cart_r5_node0 - df['white_piece0_rank']) / (scale_white_piece0_rank + 1e-06), 0, 1))
+    参数 cart_r5_node0 ≈ 5.5 [train]：CART 深度上限 4、最小叶样本 90，在本节点 8963 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 5 和 6。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 0 ≈ 0 [预先规定的数学或数值规则]：零基准：作为分段判断/空历史输出或非负裁剪下界；由表达式所在分支决定，不从数据拟合。 参见显示公式中的具体位置。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：以训练树分界划分区间；两侧均计算截断的等级差幅度，下方再乘以归一化的分界距离权重。
+      u1 = df['white_piece0_rank'] > cart_r5_node0
+      u2 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u3 = np.abs(u2)
+      u4 = scale_white_piece0_rank + 1e-06
+      u5 = u3 / u4
+      u6 = np.clip(u5, 0, 1)
+      u7 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u8 = np.abs(u7)
+      u9 = scale_white_piece0_rank + 1e-06
+      u10 = u8 / u9
+      u11 = np.clip(u10, 0, 1)
+      u12 = cart_r5_node0 - df['white_piece0_rank']
+      u13 = scale_white_piece0_rank + 1e-06
+      u14 = u12 / u13
+      u15 = np.clip(u14, 0, 1)
+      u16 = u11 * u15
+      u17 = np.where(u1, u6, u16)
+      新列 = u17；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7982', 'balanced_accuracy': '0.6628', 'f1': '0.7861', 'f1_macro': '0.6883', 'auc': '0.9372', 'log_loss': '0.4924'}
+    候选检查：拒绝：accuracy 退化（0.7985 → 0.7982；改善量 -0.0003）。；XGBoost 使用：{'oct_llm_oct_llm_rank_band_gap_magnitude_r5_r5': {'split_count': 32, 'used_by_xgboost': True, 'gain': '7.7511', 'total_gain': '248.035', 'total_gain_fraction': '0.0047'}}
+  第 5 轮候选 3 [piecewise/llm] oct_llm_oct_llm_black_rank_strength_regime_r5_r5
+    依据列：black_piece0_rank, oct_llm_strength_gap_log_r1, white_piece0_strength, black_piece0_strength
+    训练集依据：black_piece0_rank: MI=0.0984, 中位数=4, 偏度=-0.0215；oct_llm_strength_gap_log_r1: MI=0.0895, 中位数=0, 偏度=0.0005；white_piece0_strength: MI=0.0245, 中位数=6, 偏度=-0.6401；black_piece0_strength: MI=0.0139, 中位数=5, 偏度=-0.6217
+    列间 Spearman：black_piece0_rank / oct_llm_strength_gap_log_r1=0.0109；black_piece0_rank / white_piece0_strength=0.0174；black_piece0_rank / black_piece0_strength=0.0029；oct_llm_strength_gap_log_r1 / white_piece0_strength=0.6872；oct_llm_strength_gap_log_r1 / black_piece0_strength=-0.6846；white_piece0_strength / black_piece0_strength=-0.015
+    历史反馈调整：更换分段变量并改变区间两侧输入，分别采用对数差与截断原始差以减少同一组合重复。
+    来自第 4 轮 oct_llm_oct_llm_strength_gap_rank_band_r4_r4：metric_regression；拒绝：accuracy 退化（0.7985 → 0.7977；改善量 -0.0008）。
+    关系假说：可检验黑方等级区间是否对应不同的强度差信息表达。
+    提取方式：按训练树保存的黑方等级阈值分段；低区间采用压缩后的对数强度差，高区间采用截断归一化原始强度差。
+    可读公式：np.where(df['black_piece0_rank'] <= cart_r5_node1, np.clip(df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06), -1, 1), np.clip((df['white_piece0_strength'] - df['black_piece0_strength']) / (scale_white_piece0_strength + 1e-06), -1, 1))
+    参数 cart_r5_node1 ≈ 2.5 [train]：CART 深度上限 4、最小叶样本 90，在本节点 5550 行训练样本上按加权子节点不纯度选择分裂；边界两侧观测为 2 和 3。阈值取 CART 实际保存的中点（训练内部 float32）；完整精度保存在 value。 冻结训练得到的分段条件，不在验证或测试集重估。
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_white_piece0_strength ≈ 6 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=0、x[2241]=0；线性插值 Q=(1−0.5)×0+0.5×0=0。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−0=6；均值 μ=Σx/n=37441/8963=4.1773；总体标准差 σ=√(Σ(x−μ)²/n)=√(67979.2951/8963)=2.754（ddof=0）；scale=max(IQR,σ,ε)=6。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 1 ≈ 1 [预先规定的数学或数值规则]：固定常数：分段指示列的 1 表示条件成立；用于 1+|z| 时保证分母至少为 1。具体含义由出现位置决定，不是估计系数。 参见显示公式中的具体位置。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：按训练树保存的黑方等级阈值分段；低区间采用压缩后的对数强度差，高区间采用截断归一化原始强度差。
+      u1 = df['black_piece0_rank'] <= cart_r5_node1
+      u2 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u3 = df['oct_llm_strength_gap_log_r1'] / u2
+      u4 = -1
+      u5 = np.clip(u3, u4, 1)
+      u6 = df['white_piece0_strength'] - df['black_piece0_strength']
+      u7 = scale_white_piece0_strength + 1e-06
+      u8 = u6 / u7
+      u9 = -1
+      u10 = np.clip(u8, u9, 1)
+      u11 = np.where(u1, u5, u10)
+      新列 = u11；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.798', 'balanced_accuracy': '0.6541', 'f1': '0.7838', 'f1_macro': '0.6781', 'auc': '0.938', 'log_loss': '0.4903'}
+    候选检查：拒绝：accuracy 退化（0.7985 → 0.798；改善量 -0.0006）。；XGBoost 使用：{'oct_llm_oct_llm_black_rank_strength_regime_r5_r5': {'split_count': 72, 'used_by_xgboost': True, 'gain': '24.763', 'total_gain': '1782.9337', 'total_gain_fraction': '0.0337'}}
+  第 5 轮候选 4 [multicolumn/llm] oct_llm_oct_rank_balance_gap_blend_r5_r5
+    依据列：white_piece0_rank, black_piece0_rank, oct_llm_strength_gap_log_r1
+    训练集依据：white_piece0_rank: MI=0.1135, 中位数=4, 偏度=0.0125；black_piece0_rank: MI=0.0984, 中位数=4, 偏度=-0.0215；oct_llm_strength_gap_log_r1: MI=0.0895, 中位数=0, 偏度=0.0005
+    列间 Spearman：white_piece0_rank / black_piece0_rank=-0.0312；white_piece0_rank / oct_llm_strength_gap_log_r1=-0.0069；black_piece0_rank / oct_llm_strength_gap_log_r1=0.0109
+    历史反馈调整：针对该候选曾出现的指标退化，改用位置差与强度差的有界加和，避免乘积交互放大极值。
+    来自第 4 轮 oct_llm_oct_llm_gap_rank_soft_interaction_r4_r4：metric_regression；拒绝：auc 退化（0.9373 → 0.9327；改善量 -0.0046）。
+    关系假说：可探索相对位置差与强度差方向一致或相反时的联合信息。
+    提取方式：分别以训练尺度归一化位置差和强度差，再相加并用双曲正切压缩极值，形成有界的联合信号。
+    可读公式：np.tanh((df['white_piece0_rank'] - df['black_piece0_rank']) / (scale_white_piece0_rank + 1e-06) + df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06))
+    参数 scale_white_piece0_rank ≈ 5 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=1、x[2241]=1；线性插值 Q=(1−0.5)×1+0.5×1=1。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=6、x[6722]=6；线性插值 Q=(1−0.5)×6+0.5×6=6。 IQR=Q75−Q25=6−1=5；均值 μ=Σx/n=35635/8963=3.9758；总体标准差 σ=√(Σ(x−μ)²/n)=√(65635.7463/8963)=2.7061（ddof=0）；scale=max(IQR,σ,ε)=5。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别以训练尺度归一化位置差和强度差，再相加并用双曲正切压缩极值，形成有界的联合信号。
+      u1 = df['white_piece0_rank'] - df['black_piece0_rank']
+      u2 = scale_white_piece0_rank + 1e-06
+      u3 = u1 / u2
+      u4 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u5 = df['oct_llm_strength_gap_log_r1'] / u4
+      u6 = u3 + u5
+      u7 = np.tanh(u6)
+      新列 = u7；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.793', 'balanced_accuracy': '0.6384', 'f1': '0.7762', 'f1_macro': '0.6568', 'auc': '0.9328', 'log_loss': '0.4986'}
+    候选检查：拒绝：accuracy 退化（0.7985 → 0.793；改善量 -0.0055）。；XGBoost 使用：{'oct_llm_oct_rank_balance_gap_blend_r5_r5': {'split_count': 101, 'used_by_xgboost': True, 'gain': '44.5347', 'total_gain': '4498.0005', 'total_gain_fraction': '0.0866'}}
+  第 5 轮候选 5 [nonlinear/llm] oct_llm_oct_llm_gap_context_soft_product_r5_r5
+    依据列：oct_llm_strength_gap_log_r1, oct_llm_oct_piece_strength_rank_context_r2
+    训练集依据：oct_llm_strength_gap_log_r1: MI=0.0895, 中位数=0, 偏度=0.0005；oct_llm_oct_piece_strength_rank_context_r2: MI=0.0625, 中位数=0, 偏度=-0.0304
+    列间 Spearman：oct_llm_strength_gap_log_r1 / oct_llm_oct_piece_strength_rank_context_r2=-0.0181
+    历史反馈调整：沿用已接受的语境特征并引入已接受的强度差，但改为两个有界非线性响应的乘积，避免此前多列加和及未压缩组合造成极值和指标回退。
+    来自第 2 轮 oct_llm_oct_piece_strength_rank_context_r2：accepted；符合接受条件，待本轮候选比较：主指标 f1_macro 改善 0.0042，其余可用指标均未退化。
+    关系假说：强度差与棋子排序语境同向时可能提供互补信号，反向时则降低联合响应。
+    提取方式：分别用训练尺度归一化两列，并加微小保护项避免除零；用双曲正切压缩两端极值，再相乘保留方向一致性与联合强度。
+    可读公式：np.tanh(df['oct_llm_strength_gap_log_r1'] / (scale_oct_llm_strength_gap_log_r1 + 1e-06)) * np.tanh(df['oct_llm_oct_piece_strength_rank_context_r2'] / (scale_oct_llm_oct_piece_strength_rank_context_r2 + 1e-06))
+    参数 scale_oct_llm_strength_gap_log_r1 ≈ 2.4849 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-1.0986、x[2241]=-1.0986；线性插值 Q=(1−0.5)×-1.0986+0.5×-1.0986=-1.0986。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=1.3863、x[6722]=1.3863；线性插值 Q=(1−0.5)×1.3863+0.5×1.3863=1.3863。 IQR=Q75−Q25=1.3863−-1.0986=2.4849；均值 μ=Σx/n=66.2033/8963=0.0074；总体标准差 σ=√(Σ(x−μ)²/n)=√(16449.8677/8963)=1.3547（ddof=0）；scale=max(IQR,σ,ε)=2.4849。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 scale_oct_llm_oct_piece_strength_rank_context_r2 ≈ 0.404 [train]：Q25: 训练列升序排列，p=0.25；零基位置 h=(n−1)p=(8963−1)×0.25=2240.5；相邻值 x[2240]=-0.1667、x[2241]=-0.1667；线性插值 Q=(1−0.5)×-0.1667+0.5×-0.1667=-0.1667。 Q75: 训练列升序排列，p=0.75；零基位置 h=(n−1)p=(8963−1)×0.75=6721.5；相邻值 x[6721]=0.1667、x[6722]=0.1667；线性插值 Q=(1−0.5)×0.1667+0.5×0.1667=0.1667。 IQR=Q75−Q25=0.1667−-0.1667=0.3333；均值 μ=Σx/n=-60.6333/8963=-0.0068；总体标准差 σ=√(Σ(x−μ)²/n)=√(1463.0036/8963)=0.404（ddof=0）；scale=max(IQR,σ,ε)=0.404。选择两种离散程度中较大的值以避免放大微小波动；ε=1e-6 是固定数值下限，并非拟合结果。 无量纲化或设定衰减尺度，使用训练集冻结值；不在验证/测试重新估计。
+    参数 np.tanh ≈ 2 [数学定义]：tanh(z)=(exp(2z)−1)/(exp(2z)+1)，2 来自双曲正切恒等式，输出在 (−1,1)。 解释函数隐含常数。
+    参数 1.00e-06 ≈ 1.00e-06 [预先规定的数学或数值规则]：固定数值保护 ε=10⁻⁶=0.000001，避免零分母或 log(0)；工程设定，未通过验证/测试调参。 参见显示公式中的具体位置。
+    公式构造步骤：
+      选列依据：训练集互信息反映单列与目标的统计关联；几何/业务定义给出组合假说，不能据此保证提升。
+      构造依据：分别用训练尺度归一化两列，并加微小保护项避免除零；用双曲正切压缩两端极值，再相乘保留方向一致性与联合强度。
+      u1 = scale_oct_llm_strength_gap_log_r1 + 1e-06
+      u2 = df['oct_llm_strength_gap_log_r1'] / u1
+      u3 = np.tanh(u2)
+      u4 = scale_oct_llm_oct_piece_strength_rank_context_r2 + 1e-06
+      u5 = df['oct_llm_oct_piece_strength_rank_context_r2'] / u4
+      u6 = np.tanh(u5)
+      u7 = u3 * u6
+      新列 = u7；所有输入逐行计算，统计参数仅在训练集计算一次。
+      检验假说：保持 XGBoost 配置不变，用验证集主指标增益及其他指标不退化共同决定是否接受。
+    候选评估指标：{'accuracy': '0.7982', 'balanced_accuracy': '0.6619', 'f1': '0.7857', 'f1_macro': '0.6891', 'auc': '0.9304', 'log_loss': '0.5021'}
+    候选检查：拒绝：accuracy 退化（0.7985 → 0.7982；改善量 -0.0003）。；XGBoost 使用：{'oct_llm_oct_llm_gap_context_soft_product_r5_r5': {'split_count': 132, 'used_by_xgboost': True, 'gain': '56.3329', 'total_gain': '7435.9419', 'total_gain_fraction': '0.1442'}}
+  第 5 轮结论：未接受新特征
+
+阶段：特征与模型已冻结，开始独立测试集评估。
+独立测试基线指标：{'accuracy': '0.7716', 'balanced_accuracy': '0.5753', 'f1': '0.7374', 'f1_macro': '0.5603', 'auc': '0.9132', 'log_loss': '0.5498'}
+独立测试优化指标：{'accuracy': '0.802', 'balanced_accuracy': '0.6739', 'f1': '0.7914', 'f1_macro': '0.7022', 'auc': '0.9403', 'log_loss': '0.4845'}
+阶段：执行特征重要性与消融检查。
+  消融 oct_llm_strength_gap_log_r1: 置换 Δf1_macro=0.1424 ± 0.0031；删除重训 Δf1_macro=0.0484；贡献证据=支持
+  消融 oct_llm_oct_piece_strength_rank_context_r2: 置换 Δf1_macro=0.0766 ± 0.0014；删除重训 Δf1_macro=0.0078；贡献证据=支持
+  消融 oct_llm_oct_file_rank_geometry_strength_r3_r3: 置换 Δf1_macro=0.0002 ± 0.0003；删除重训 Δf1_macro=0.0022；贡献证据=不足
+  消融 __all_generated__: 置换 Δf1_macro=0.1684 ± 0.0015；删除重训 Δf1_macro=0.1418；贡献证据=支持
+结果已保存到：/home/asus/OPD/-OPD/tabular_data/outputs/llm/jungle_chess/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42
+{
+  "dataset": "jungle_chess",
+  "model": {
+    "backend": "xgboost",
+    "device": "cuda:0",
+    "profile": "reference",
+    "parameters": {
+      "n_estimators": 60,
+      "max_depth": 3,
+      "learning_rate": "0.08",
+      "subsample": "1",
+      "colsample_bytree": "1",
+      "random_state": 42,
+      "tree_method": "hist"
+    },
+    "xgboost_version": "3.4.1",
+    "cuda_version": "12.9"
+  },
+  "validation": {
+    "baseline": {
+      "accuracy": "0.7725",
+      "balanced_accuracy": "0.5798",
+      "f1": "0.7401",
+      "f1_macro": "0.5696",
+      "auc": "0.9109",
+      "log_loss": "0.5548"
+    },
+    "optimized": {
+      "accuracy": "0.7985",
+      "balanced_accuracy": "0.6661",
+      "f1": "0.7871",
+      "f1_macro": "0.6918",
+      "auc": "0.9373",
+      "log_loss": "0.4908"
+    },
+    "improvement": {
+      "accuracy": "0.026",
+      "balanced_accuracy": "0.0863",
+      "f1": "0.047",
+      "f1_macro": "0.1222",
+      "auc": "0.0264",
+      "log_loss": "0.064"
+    }
+  },
+  "test": {
+    "baseline": {
+      "accuracy": "0.7716",
+      "balanced_accuracy": "0.5753",
+      "f1": "0.7374",
+      "f1_macro": "0.5603",
+      "auc": "0.9132",
+      "log_loss": "0.5498"
+    },
+    "optimized": {
+      "accuracy": "0.802",
+      "balanced_accuracy": "0.6739",
+      "f1": "0.7914",
+      "f1_macro": "0.7022",
+      "auc": "0.9403",
+      "log_loss": "0.4845"
+    },
+    "improvement": {
+      "accuracy": "0.0305",
+      "balanced_accuracy": "0.0986",
+      "f1": "0.054",
+      "f1_macro": "0.1418",
+      "auc": "0.027",
+      "log_loss": "0.0654"
+    }
+  },
+  "accepted_features": [
+    "oct_llm_strength_gap_log_r1",
+    "oct_llm_oct_piece_strength_rank_context_r2",
+    "oct_llm_oct_file_rank_geometry_strength_r3_r3"
+  ],
+  "feature_generation": {
+    "client": "LLMClient",
+    "version": "cart_residual_v6",
+    "mode": "reasoned",
+    "rounds": 5,
+    "candidates_per_round": 5,
+    "feedback_learning": "prior_round_validation_only",
+    "evaluated_candidates": 25,
+    "api_calls_succeeded": 10,
+    "local_rule_calls": 0
+  },
+  "ablation_status": "completed"
+}
+
+运行状态：completed；退出码：0；结束时间：2026-10-04T13:01:27.681652+00:00
+日志已保存：/home/asus/OPD/-OPD/tabular_data/outputs/llm/jungle_chess/holdout_20_40_40/reference/clean/features_reasoned/rounds_5_candidates_5/seed_42/training.log
