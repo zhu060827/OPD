@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OCTree | 面向生成式模型的高质量数据扩充技术</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="chart.umd.js"></script>
     <style>
         :root {
             --primary-blue: #f0f4f8;
@@ -51,9 +51,9 @@
             pointer-events: none;
         }
         .intro-logo-container {
-            width: 220px;
-            height: 220px;
-            margin-bottom: 2.5rem;
+            width: 190px;
+            height: 190px;
+            margin-bottom: 2.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -65,11 +65,12 @@
             filter: drop-shadow(0 0 20px rgba(0, 102, 204, 0.7));
         }
         .intro-title {
-            font-size: 3.2rem;
+            font-size: 2.9rem;
             color: #ffffff;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.6rem;
             text-align: center;
             font-weight: 800;
+            letter-spacing: 2px;
             background: linear-gradient(90deg, #4dc9ff, #ffffff, #a855f7);
             -webkit-background-clip: text;
             background-clip: text;
@@ -82,22 +83,24 @@
             50% { background-position: 100% center; }
         }
         .intro-subtitle {
-            font-size: 1.4rem;
-            color: #e0e0ff;
-            max-width: 700px;
+            font-size: 1.2rem;
+            color: rgba(224, 224, 255, 0.92);
+            max-width: 720px;
             text-align: center;
-            margin-bottom: 3.5rem;
-            line-height: 1.7;
+            margin-bottom: 3rem;
+            line-height: 1.8;
+            letter-spacing: 1px;
         }
         .intro-button {
             display: inline-block;
             background: linear-gradient(135deg, rgba(0, 102, 204, 0.2), rgba(122, 40, 203, 0.2));
             border: 2px solid #4dc9ff;
-            padding: 1.4rem 3.5rem;
+            padding: 1.1rem 2.9rem;
             border-radius: 50px;
             color: #4dc9ff;
-            font-size: 1.3rem;
+            font-size: 1.15rem;
             font-weight: 700;
+            letter-spacing: 1px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -105,6 +108,174 @@
             background: linear-gradient(135deg, rgba(0, 102, 204, 0.3), rgba(122, 40, 203, 0.3));
             transform: translateY(-7px);
             color: #ffffff;
+        }
+        /* ===== 开屏动画增强（科技感背景层） ===== */
+        .intro-bg {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(77, 201, 255, 0.09) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(77, 201, 255, 0.09) 1px, transparent 1px);
+            background-size: 54px 54px;
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85), transparent 72%);
+            mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85), transparent 72%);
+        }
+        .bg-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.5;
+        }
+        .glow-1 {
+            width: 520px;
+            height: 520px;
+            left: 6%;
+            top: -12%;
+            background: radial-gradient(circle, rgba(0, 102, 204, 0.4), transparent 70%);
+            animation: glow-float 9s ease-in-out infinite;
+        }
+        .glow-2 {
+            width: 480px;
+            height: 480px;
+            right: 4%;
+            bottom: -10%;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.36), transparent 70%);
+            animation: glow-float 12s ease-in-out infinite reverse;
+        }
+        @keyframes glow-float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(34px, 26px); }
+        }
+        .bg-ring {
+            position: absolute;
+            border-radius: 50%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .ring-1 {
+            width: 620px;
+            height: 620px;
+            border: 1px solid rgba(77, 201, 255, 0.22);
+            animation: ring-spin 42s linear infinite;
+        }
+        .ring-1::before {
+            content: '';
+            position: absolute;
+            inset: 16%;
+            border-radius: 50%;
+            border: 1px dashed rgba(168, 85, 247, 0.28);
+        }
+        .ring-2 {
+            width: 800px;
+            height: 800px;
+            border: 1px solid rgba(77, 201, 255, 0.12);
+            animation: ring-spin 64s linear infinite reverse;
+        }
+        .ring-2::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #4dc9ff;
+            box-shadow: 0 0 14px #4dc9ff;
+        }
+        @keyframes ring-spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .bg-particle {
+            position: absolute;
+            border-radius: 50%;
+            background: #4dc9ff;
+            box-shadow: 0 0 10px rgba(77, 201, 255, 0.8);
+            opacity: 0.6;
+            animation: particle-float 6s ease-in-out infinite;
+        }
+        .p1 { width: 5px; height: 5px; left: 14%; top: 26%; }
+        .p2 { width: 7px; height: 7px; left: 80%; top: 20%; background: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.8); animation-delay: 1.2s; }
+        .p3 { width: 4px; height: 4px; left: 20%; top: 74%; animation-delay: 2.4s; }
+        .p4 { width: 6px; height: 6px; left: 86%; top: 68%; animation-delay: 0.8s; }
+        .p5 { width: 5px; height: 5px; left: 48%; top: 14%; background: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.8); animation-delay: 1.8s; }
+        .p6 { width: 4px; height: 4px; left: 66%; top: 84%; animation-delay: 3s; }
+        @keyframes particle-float {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; }
+            50% { transform: translateY(-20px) scale(1.35); opacity: 0.95; }
+        }
+        .intro-page > *:not(.intro-bg) {
+            position: relative;
+            z-index: 1;
+        }
+        .intro-logo-container {
+            position: relative;
+            animation: intro-rise 0.9s ease-out both;
+        }
+        .intro-logo-container::before {
+            content: '';
+            position: absolute;
+            inset: -16px;
+            border-radius: 50%;
+            border: 1px solid rgba(77, 201, 255, 0.35);
+            border-top-color: rgba(168, 85, 247, 0.9);
+            animation: logo-orbit 6s linear infinite;
+        }
+        @keyframes logo-orbit {
+            to { transform: rotate(360deg); }
+        }
+        .intro-title {
+            animation: intro-rise 0.9s ease-out 0.15s both, gradient-shift 3s ease infinite;
+            text-shadow: 0 0 40px rgba(77, 201, 255, 0.25);
+        }
+        .intro-subtitle {
+            animation: intro-rise 0.9s ease-out 0.3s both;
+        }
+        .intro-button {
+            position: relative;
+            overflow: hidden;
+            animation: intro-fade 0.9s ease-out 0.45s both, btn-pulse 2.8s ease-in-out 0.9s infinite;
+        }
+        .intro-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -80%;
+            width: 45%;
+            height: 100%;
+            background: linear-gradient(105deg, transparent, rgba(77, 201, 255, 0.4), transparent);
+            transform: skewX(-20deg);
+            animation: btn-shine 3.4s ease-in-out 1s infinite;
+        }
+        @keyframes btn-shine {
+            0%, 55% { left: -80%; }
+            100% { left: 135%; }
+        }
+        @keyframes btn-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(77, 201, 255, 0.35); }
+            50% { box-shadow: 0 0 32px 6px rgba(77, 201, 255, 0.18); }
+        }
+        @keyframes intro-rise {
+            from { opacity: 0; transform: translateY(26px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes intro-fade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .bg-glow, .bg-ring, .bg-particle,
+            .intro-logo-container, .intro-logo-container::before,
+            .intro-title, .intro-subtitle, .intro-button, .intro-button::before {
+                animation: none !important;
+            }
         }
         .main-container {
             width: 100%;
@@ -228,14 +399,14 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 120px 4rem 4rem;
+            padding: 110px 4rem 4rem;
             overflow: hidden;
             background: none !important;
         }
         #integrated {
             min-height: auto;
             height: auto;
-            padding: 100px 4rem 4rem;
+            padding: 110px 4rem 4rem;
             justify-content: center;
         }
         .hero-content {
@@ -388,39 +559,108 @@
         .dataset-selector {
             background: rgba(255, 255, 255, 0.98);
             border-radius: 20px;
-            padding: 1.2rem;
+            padding: 1.2rem 1.4rem;
             border: 1px solid rgba(0, 102, 204, 0.2);
+            max-width: 1200px;
+            margin: 0 auto 1.2rem;
+            text-align: center;
         }
         .dataset-selector h3 {
             color: var(--accent-cyan);
             margin-bottom: 1rem;
             font-size: 1.2rem;
         }
-        .dataset-cards {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.8rem;
+        .dataset-switch {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.4rem;
+            max-width: 680px;
+            margin: 0 auto;
         }
-        .dataset-mini-card {
-            background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(122, 40, 203, 0.05));
-            border-radius: 14px;
-            padding: 0.8rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
+        .dataset-switch-main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            min-width: 300px;
         }
-        .dataset-mini-card.active {
-            border-color: var(--accent-cyan);
-            background: linear-gradient(135deg, rgba(0, 102, 204, 0.15), rgba(122, 40, 203, 0.15));
+        .dataset-switch-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .dataset-mini-card i {
-            font-size: 1.6rem;
+        .dataset-switch-name i {
             color: var(--accent-purple);
-            margin-bottom: 0.4rem;
         }
-        .dataset-mini-card h4 {
-            font-size: 0.9rem;
+        .dataset-switch-sub {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+        }
+        .dataset-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-top: 0.9rem;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .dataset-option {
+            padding: 0.5rem 1.1rem;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 2px solid rgba(0, 102, 204, 0.25);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #444;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dataset-option i {
+            color: var(--accent-purple);
+        }
+        .dataset-option:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+        }
+        .dataset-option.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #fff;
+            border-color: transparent;
+        }
+        .dataset-option.active i {
+            color: #fff;
+        }
+        .framework-image-container {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 1rem 1.2rem;
+            border: 1px solid rgba(0, 102, 204, 0.2);
+            overflow: hidden;
+            max-width: 1200px;
+            margin: 0 auto 1.2rem;
+        }
+        .framework-image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+        }
+        .framework-caption {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 0.85rem;
+            margin-top: 0.8rem;
+            line-height: 1.7;
+            padding: 0 1rem;
         }
         .workflow-image-container {
             background: rgba(255, 255, 255, 0.98);
@@ -723,8 +963,50 @@
         }
         /* 性能提升板块 */
         #performance {
-            padding: 120px 4rem 4rem;
+            padding: 110px 4rem 4rem;
             background: linear-gradient(135deg, #f0e6f5 0%, #e3f2fd 100%);
+        }
+        .perf-group-switch {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+        .perf-arrow {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 102, 204, 0.3);
+            background: rgba(255, 255, 255, 0.85);
+            color: #0066cc;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+        }
+        .perf-arrow:hover {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #fff;
+            border-color: transparent;
+            transform: scale(1.06);
+        }
+        .perf-group-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-weight: 600;
+            color: #333;
+            min-width: 260px;
+        }
+        .perf-group-label .perf-group-count {
+            font-size: 0.8rem;
+            color: #888;
+            font-weight: 500;
         }
         .metric-tabs {
             display: flex;
@@ -811,7 +1093,7 @@
             color: var(--accent-cyan);
         }
         .upload-section {
-            padding: 100px 4rem 4rem;
+            padding: 110px 4rem 4rem;
             background: none !important;
         }
         .upload-container {
@@ -843,7 +1125,7 @@
         }
         .upload-options {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
             margin-bottom: 2.5rem;
         }
@@ -895,12 +1177,30 @@
             height: 70px;
             margin: 0 auto 1.5rem;
         }
+        @media (max-width: 1100px) {
+            .fixed-nav {
+                padding: 0 1.5rem;
+            }
+            .nav-links {
+                gap: 8px;
+            }
+            .nav-link {
+                padding: 8px 10px;
+                font-size: 0.92rem;
+            }
+        }
         @media (max-width: 992px) {
             .features-grid {
                 grid-template-columns: 1fr;
             }
             .core-concept {
                 grid-column: span 1;
+            }
+            .performance-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .upload-options {
+                grid-template-columns: 1fr;
             }
         }
         @media (max-width: 768px) {
@@ -925,6 +1225,10 @@
             .simulator-main, .features-grid, .performance-container, .upload-options {
                 grid-template-columns: 1fr;
             }
+            .dataset-cards {
+                grid-template-columns: 1fr;
+                max-width: 420px;
+            }
             .content-section, #performance, .upload-section {
                 padding: 100px 2rem 2rem;
             }
@@ -938,11 +1242,77 @@
             .fullscreen-sim-console {
                 font-size: 0.85rem;
             }
+            .fixed-nav {
+                padding: 0 1.2rem;
+            }
+            .intro-logo-container {
+                width: 150px;
+                height: 150px;
+                margin-bottom: 1.8rem;
+            }
+            .intro-title {
+                font-size: 2rem;
+                letter-spacing: 1px;
+            }
+            .intro-subtitle {
+                font-size: 1rem;
+                margin-bottom: 2.4rem;
+                max-width: 92%;
+            }
+            .intro-button {
+                padding: 1rem 2.4rem;
+                font-size: 1rem;
+            }
+            footer {
+                padding: 2.5rem 1.5rem;
+            }
+        }
+        @media (max-width: 560px) {
+            .performance-summary {
+                grid-template-columns: 1fr;
+            }
+            .intro-title {
+                font-size: 1.65rem;
+            }
+            .intro-subtitle {
+                font-size: 0.92rem;
+            }
+            .metric-tabs {
+                gap: 0.6rem;
+                flex-wrap: wrap;
+            }
+            .metric-tab {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            .section-title {
+                font-size: 2rem;
+            }
+            .hero-content .section-title {
+                font-size: 2rem !important;
+            }
+            .block-header h2 {
+                font-size: 1.7rem;
+            }
+            .upload-title {
+                font-size: 1.6rem;
+            }
+            .keywords {
+                gap: 10px;
+            }
         }
     </style>
 </head>
 <body>
 <div class="intro-page" id="introPage">
+    <div class="intro-bg" aria-hidden="true">
+        <div class="bg-grid"></div>
+        <div class="bg-glow glow-1"></div>
+        <div class="bg-glow glow-2"></div>
+        <div class="bg-ring ring-1"></div>
+        <div class="bg-ring ring-2"></div>
+        <span class="bg-particle p1"></span><span class="bg-particle p2"></span><span class="bg-particle p3"></span><span class="bg-particle p4"></span><span class="bg-particle p5"></span><span class="bg-particle p6"></span>
+    </div>
     <div class="intro-logo-container"><img src="图片1.png" alt="OCTree Logo" class="intro-logo-img"></div>
     <h1 class="intro-title">面向生成式模型的高质量数据扩充技术</h1>
     <p class="intro-subtitle">基于决策树推理的列特征优化生成器研究<br>融合大语言模型与统计推理的下一代特征工程框架</p>
@@ -955,11 +1325,14 @@
     <div class="nav-links" id="navLinks">
         <a href="#overview" class="nav-link active" data-target="overview"><i class="fas fa-home"></i>项目概述</a>
         <a href="#features" class="nav-link" data-target="features"><i class="fas fa-star"></i>特色创新</a>
+        <a href="#upload" class="nav-link" data-target="upload"><i class="fas fa-cloud-upload-alt"></i>特征生成平台</a>
         <a href="#integrated" class="nav-link" data-target="integrated"><i class="fas fa-sitemap"></i>核心模拟与演示</a>
         <a href="#performance" class="nav-link" data-target="performance"><i class="fas fa-chart-line"></i>性能提升</a>
-        <a href="#upload" class="nav-link" data-target="upload"><i class="fas fa-cloud-upload-alt"></i>数据上传</a>
+        <a href="#tabular" class="nav-link" data-target="tabular"><i class="fas fa-table"></i>表格扩充</a>
+        <a href="#math" class="nav-link" data-target="math"><i class="fas fa-square-root-variable"></i>数学扩充</a>
+        <a href="#code" class="nav-link" data-target="code"><i class="fas fa-code"></i>代码扩充</a>
         <div class="about-dropdown">
-            <a href="#" class="nav-link"><i class="fas fa-users"></i>关于我们</a>
+            <a href="#footer" class="nav-link" id="navAbout"><i class="fas fa-users"></i>关于我们</a>
             <div class="about-content">
                 <div class="team-member"><div class="member-info"><h4>朱兮瑶</h4></div></div>
                 <div class="team-member"><div class="member-info"><h4>费代强</h4></div></div>
@@ -1011,93 +1384,122 @@
     <section class="content-section" id="overview">
         <div class="hero-content">
             <h1 class="section-title" style="font-size: 3rem;">面向生成式模型的高质量数据扩充技术</h1>
-            <p class="hero-subtitle">本项目创新性地提出基于决策树推理的列特征优化生成器（OCTree），利用大语言模型（LLM）作为优化器，结合决策树反馈，实现自动化、可解释的高质量表格特征生成。</p>
+            <p class="hero-subtitle">本项目面向高质量监督数据不足、人工扩充成本高与生成结果缺乏可靠验证等问题，构建“候选生成 → 约束验证 → 择优保留 → 反馈优化 → 迭代再生成”统一闭环，实现表格特征、数学推理链与程序代码三类数据的高质量自动扩充，为生成式模型提供结构更丰富、质量可验证的监督数据。</p>
             <div class="keywords">
                 <span class="keyword-tag">大语言模型 (LLM)</span>
-                <span class="keyword-tag">自动化特征工程</span>
-                <span class="keyword-tag">决策树推理</span>
-                <span class="keyword-tag">表格数据增强</span>
-                <span class="keyword-tag">OCTree框架</span>
+                <span class="keyword-tag">三类数据扩充</span>
+                <span class="keyword-tag">表格数据扩充</span>
+                <span class="keyword-tag">数学推理扩充</span>
+                <span class="keyword-tag">代码数据扩充</span>
+                <span class="keyword-tag">在线策略蒸馏 (OPD)</span>
             </div>
         </div>
     </section>
 
     <section class="content-section" id="features">
         <h2 class="section-title">核心特色与创新</h2>
-        <p class="section-subtitle">以LLM为核心的"双系统协同闭环"</p>
+        <p class="section-subtitle">统一"生成-验证-反馈"闭环，覆盖表格特征、数学推理链与程序代码三类数据</p>
         <div class="features-grid">
             <div class="feature-card core-concept">
                 <div class="feature-icon"><i class="fas fa-sync-alt"></i></div>
-                <h3>双系统协同闭环 <span class="algorithm-badge">v2.0 核心架构</span></h3>
-                <p>本项目突破传统自动化特征工程的技术框架，创新性地构建了"LLM生成器-OCTree反馈评估器"双系统协同闭环，将LLM的自然语言理解与生成能力，与决策树模型的可解释性优势深度融合，实现了数据特征的自动化迭代优化。形成"描述-生成-评估-反馈-再生成"的完整闭环，大幅提升特征生成的效率与质量。</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
-                <h3>多维评估体系 <span class="algorithm-badge">新增F1+Log-Loss+MSE</span></h3>
-                <p>新增F1-Score、Log-Loss、MSE等多维度评估指标，不再仅依赖AUC，能够更全面评估不平衡数据集下的少数类表现和模型概率预测置信度，实现更精准的特征筛选。</p>
+                <h3>三类数据统一扩充闭环 <span class="algorithm-badge">核心架构</span></h3>
+                <p>本项目以“候选生成 → 约束验证 → 择优保留 → 反馈优化 → 迭代再生成”为统一闭环，将LLM的生成能力与可计算的验证机制深度融合：表格方向以决策树反馈引导可解释特征生成，数学方向以节点遮盖与恢复扩充推理链，代码方向以多策略改写与执行验证扩充程序数据；三类任务均以质量门控择优保留、以反馈驱动迭代，形成面向异构任务数据的质量可控扩充系统。</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i class="fas fa-language"></i></div>
-                <h3>自然语言驱动的特征生成与优化</h3>
-                <p>将LLM作为特征工程的"优化器"，以自然语言为核心驱动，实现特征生成规则的自动迭代。通过自然语言反馈机制，LLM可以利用反馈"反思"自身生成的规则，持续优化特征生成策略。同时利用检索增强生成验证，确保规则符合特定领域知识事实和合理性。</p>
+                <h3>自然语言驱动的特征生成与优化 <span class="algorithm-badge">表格数据扩充</span></h3>
+                <p>将LLM作为表格特征工程的"优化器"：以自然语言为核心驱动，结合数据画像、CART分裂路径与XGBoost残差分析生成候选特征公式，经语法解析、数值稳定性和目标泄漏检查后，由验证集Macro F1择优保留，未通过原因反馈至下一轮生成。通过自然语言反馈机制，LLM可持续"反思"并修正特征生成策略，在Jungle Chess、Balance Scale与Chess KRK三个公开数据集上验证了质量可控的自动特征扩充能力。</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-code-branch"></i></div>
-                <h3>可解释性反馈的闭环迭代机制</h3>
-                <p>创新采用决策树模型的可解释性结果作为反馈，将模型的决策逻辑转化为自然语言描述，为LLM提供精准、可理解的优化方向。通过CART模型的if-else语句描述决策路径，明确告知LLM"某个特征在特定阈值下对结果区分效果最佳"，实现真正意义上的闭环迭代。</p>
+                <div class="feature-icon"><i class="fas fa-table"></i></div>
+                <h3>表格数据扩充 <span class="algorithm-badge">表格方向</span></h3>
+                <p>以可执行公式为扩充对象：LLM 结合数据画像、CART 分裂路径与 XGBoost 残差生成候选特征，经语法解析、数值稳定性与目标泄漏检查后由验证集 Macro F1 择优保留。在 Jungle Chess、Balance Scale 与 Chess KRK 三个公开数据集上共评价 75 个候选、保留 8 个有效特征，测试集 Macro F1 分别提升 14.18、22.76 与 3.41 个百分点（平均 13.45 个百分点），验证了质量可控的表格特征自动扩充能力。</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-flask"></i></div>
-                <h3>动态多维诊断系统 <span class="algorithm-badge">核心创新</span></h3>
-                <p>创新提出基于AUC、F1-Score、Log-Loss的三维动态诊断引擎，将原本仅靠准确率ACC的评估值改为引入ROC、AUC、F1和Log-Loss指标评估正负样本的排序能力，能够直观看出数据质量的提升，实现更精细的特征有效性判断。</p>
+                <div class="feature-icon"><i class="fas fa-square-root-variable"></i></div>
+                <h3>数学推理链节点扩充 <span class="algorithm-badge">五维质量门控</span></h3>
+                <p>将思维链拆解为带前后依赖的轻量推理图，通过遮盖与恢复中间节点补充推理步骤；从去重复性、逻辑一致性、公式正确性、步骤完整性与推理增量五个维度加权评分，结合答案一致性验证与新增节点约束进行门控，未通过者回退至原始步骤，保证扩充只保留有效推理增益。</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-chart-simple"></i></div>
-                <h3>五折交叉验证 <span class="algorithm-badge">鲁棒性增强</span></h3>
-                <p>将模型评估函数由原本的三等份训练验证测试集改为五折交叉验证，把数据切成五等份，轮流进行五次独立训练，保证统计泛化准确性，有效防止过拟合。</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-database"></i></div>
-                <h3>原始数据导出与具象化展示</h3>
-                <p>新增原始数据Excel导出功能，支持保存优化前后的特征矩阵；同时在新特征生成时，实时展示新列的数值预览，让特征生成过程更加透明可理解。</p>
+                <div class="feature-icon"><i class="fas fa-code"></i></div>
+                <h3>代码数据扩充与在线策略蒸馏 <span class="algorithm-badge">OPD 训练</span></h3>
+                <p>从推理说明、代码风格、语法结构、变量命名与控制流五个方向生成代码改写候选，经语法解析、接口校验、安全检查和单元测试验证功能一致性，并按质量门控择优保留；在学生自身生成轨迹上引入教师模型词元分布监督开展在线策略蒸馏（OPD）训练，MBPP 上 pass@1 由 34.4% 提升至 42.8%。</p>
             </div>
         </div>
     </section>
+
+    <section class="upload-section" id="upload">
+    <div class="upload-container">
+        <h2 class="upload-title"><i class="fas fa-cloud-upload-alt"></i>自动化特征生成平台</h2>
+        <div class="upload-description">基于OCTree构建的自动化特征生成平台，支持用户上传数据并获取智能化分析结果。平台将自动执行特征工程、模型训练和结果解释，为医疗诊断、金融分析等场景提供专业支持。</div>
+
+        <div class="upload-options">
+            <div class="upload-option" id="generalOption">
+                <i class="fas fa-database"></i>
+                <h3>表格数据</h3>
+                <p>上传任意表格数据，平台自动执行特征工程与模型训练，输出智能化分析结果。</p>
+            </div>
+            <div class="upload-option" id="medicalOption">
+                <i class="fas fa-square-root-variable"></i>
+                <h3>数学推理数据</h3>
+                <p>上传数学推理题与解题链数据，平台自动执行推理链节点扩充与质量验证。</p>
+            </div>
+            <div class="upload-option" id="financeOption">
+                <i class="fas fa-code"></i>
+                <h3>代码数据</h3>
+                <p>上传编程题目与代码数据，平台自动执行代码改写扩充与在线策略蒸馏训练。</p>
+            </div>
+        </div>
+
+        <div class="upload-action">
+            <!-- 隐藏的文件选择器 -->
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;" />
+            <!-- 修改后的按钮 -->
+            <button class="upload-button" id="uploadDataBtn"><i class="fas fa-upload"></i> 选择文件并上传</button>
+            <p style="margin-top: 15px; font-size: 12px; color: #666; opacity: 0.8;">支持 CSV、Excel 格式（.csv / .xlsx / .xls），文件大小不超过 50MB</p>
+        </div>
+    </div>
+</section>
 
     <section class="content-section" id="integrated">
         <div class="integrated-simulator">
             <div class="simulator-header">
                 <h2><i class="fas fa-sitemap"></i> 核心模拟与数据集演示</h2>
-                <p>选择数据集，点击流程步骤，体验基于LLM与决策树反馈的多指标迭代优化</p>
+                <p>查看项目总技术研究框架，选择表格数据集，运行完整模拟并查看分析报告</p>
             </div>
             <div class="simulator-main">
-                <div class="left-panel">
-                    <div class="dataset-selector">
-                        <h3>数据集选择</h3>
-                        <div class="dataset-cards" id="datasetCards">
-                            <div class="dataset-mini-card" data-dataset="white_wine"><i class="fas fa-wine-glass-alt"></i><h4>白葡萄酒品质</h4><p>化学特征 → 质量评级</p></div>
-                            <div class="dataset-mini-card" data-dataset="bank"><i class="fas fa-university"></i><h4>银行营销</h4><p>客户特征 → 存款认购</p></div>
-                            <div class="dataset-mini-card" data-dataset="phishing"><i class="fas fa-shield-alt"></i><h4>钓鱼网站</h4><p>URL特征 → 恶意检测</p></div>
-                            <div class="dataset-mini-card" data-dataset="biodeg"><i class="fas fa-leaf"></i><h4>生物降解</h4><p>分子描述符 → 降解性</p></div>
-                        </div>
-                    </div>
-                    <div class="workflow-image-container">
-                        <img src="a945ce2e4154ef9fb9419cd91fdc58c5.jpg" alt="OCTree协同框架工作流程图" style="width:100%; height:auto; border-radius:12px;">
-                    </div>
+                <div class="framework-image-container" style="grid-column: 1 / -1;">
+                    <img src="framework.png" alt="项目总技术研究框架" style="width:100%; height:auto; border-radius:12px;">
+                    <div class="framework-caption">项目总技术研究框架：三类异构数据统一接入“候选生成 → 约束验证 → 择优保留 → 反馈优化 → 迭代再生成”质量可控扩充闭环，最终输出经独立评价验证的扩充数据并支持平台演示</div>
                 </div>
-                <div class="right-panel">
-                    <div class="console-output" id="console">> 模拟器已就绪 (v2.0)\n> 新增F1-Score、MSE、Log-Loss多维评估体系\n> 动态三维诊断系统已启用\n> 请选择左侧数据集查看详细分析报告</div>
+                <div class="dataset-selector" style="grid-column: 1 / -1;">
+                    <h3>数据集选择（表格数据特征扩充）</h3>
+                    <div class="dataset-switch">
+                        <button class="perf-arrow" id="dsGroupPrevBtn" aria-label="上一组数据集"><i class="fas fa-chevron-left"></i></button>
+                        <div class="dataset-switch-main">
+                            <div class="dataset-switch-name"><i class="fas fa-chess-board" id="dsGroupIcon"></i> <span id="dsGroupLabel">真实表格数据</span></div>
+                            <div class="dataset-switch-sub" id="dsGroupSub">3 个新数据集（正式研究结果）</div>
+                            <div class="perf-group-count" id="dsGroupCount">1 / 2</div>
+                        </div>
+                        <button class="perf-arrow" id="dsGroupNextBtn" aria-label="下一组数据集"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="dataset-options" id="dsOptions"></div>
+                </div>
+                <div class="left-panel">
+                    <div class="console-output" id="console">> 模拟器已就绪\n> 请选择上方数据集，点击“运行完整模拟”查看表格特征迭代扩充流程</div>
                     <div class="metric-display">
                         <div class="metric-card">
-                            <div class="metric-value" id="metric-iter">4</div>
+                            <div class="metric-value" id="metric-iter">—</div>
                             <div class="metric-label">当前迭代轮次</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-value" id="metric-rules">6</div>
-                            <div class="metric-label">生成规则数量</div>
+                            <div class="metric-value" id="metric-rules">—</div>
+                            <div class="metric-label">保留特征数</div>
                         </div>
                     </div>
-                    <button class="run-button" id="runSimulateBtn">运行完整模拟</button>
+                    <button class="run-button" id="runSimulateBtn"><i class="fas fa-play"></i> 运行完整模拟</button>
+                </div>
+                <div class="right-panel">
                     <div id="datasetReport" class="dataset-report"></div>
                     <button class="schematic-btn" id="openSchematicBtn"><i class="fas fa-project-diagram"></i> 流程示意图</button>
                 </div>
@@ -1108,57 +1510,331 @@
     <section class="content-section" id="performance">
         <h2 class="section-title">真实数据集性能提升对比</h2>
         <p class="section-subtitle">基于Robust-OCTree v2.0算法在多个公开数据集上的测试结果</p>
+        <div class="perf-group-switch">
+            <button class="perf-arrow" id="perfPrevBtn" aria-label="上一组数据"><i class="fas fa-chevron-left"></i></button>
+            <div class="perf-group-label"><span id="perfGroupLabel">真实表格数据（正式研究结果）</span><span class="perf-group-count" id="perfGroupCount">1 / 2</span></div>
+            <button class="perf-arrow" id="perfNextBtn" aria-label="下一组数据"><i class="fas fa-chevron-right"></i></button>
+        </div>
         <div class="metric-tabs">
             <div class="metric-tab active" data-metric="f1"><i class="fas fa-chart-bar"></i> F1-Score</div>
-            <div class="metric-tab" data-metric="mse"><i class="fas fa-chart-line"></i> MSE 损失</div>
+            <div class="metric-tab" data-metric="loss"><i class="fas fa-chart-line"></i> <span id="lossMetricLabel">Log Loss</span></div>
         </div>
         <div class="performance-container">
             <div class="performance-card"><div class="performance-header"><i class="fas fa-chart-bar"></i><h3 id="barChartTitle">各数据集 F1-Score 提升对比</h3></div><div class="chart-container"><canvas id="datasetBarChart"></canvas></div></div>
-            <div class="performance-card"><div class="performance-header"><i class="fas fa-chart-line"></i><h3 id="iterChartTitle">迭代优化过程（白葡萄酒品质）</h3></div><div class="chart-container"><canvas id="iterLineChart"></canvas></div></div>
+            <div class="performance-card"><div class="performance-header"><i class="fas fa-chart-line"></i><h3 id="iterChartTitle">迭代优化过程（Jungle Chess）</h3></div><div class="chart-container"><canvas id="iterLineChart"></canvas></div></div>
         </div>
         <div class="performance-summary" id="summaryContainer"></div>
+        <div class="training-callout">
+            <i class="fas fa-chart-line"></i>
+            <div>
+                <h4>扩充数据能够提升模型训练效果</h4>
+                <p id="trainingCalloutText">在 3 个公开表格数据集上，经 LLM 生成、约束验证与验证集择优的扩充特征使下游模型 Macro F1 平均提升 +15.65 个百分点、Log Loss 平均降低约 17.4%，验证了高质量扩充数据对模型训练效果的正向促进作用；数学推理（80.0% → 92.5%）与代码（pass@1 34.4% → 42.8%）方向同样在在线策略蒸馏（OPD）训练中观察到模型能力提升。</p>
+            </div>
+        </div>
     </section>
 
-    <section class="upload-section" id="upload">
-    <div class="upload-container">
-        <h2 class="upload-title"><i class="fas fa-cloud-upload-alt"></i>数据上传平台</h2>
-        <div class="upload-description">基于OCTree构建的自动化特征生成平台，支持用户上传数据并获取智能化分析结果。平台将自动执行特征工程、模型训练和结果解释，为医疗诊断、金融分析等场景提供专业支持。</div>
+    <!-- ==========================================
+         新增：三类数据扩充成果（表格 / 数学 / 代码）
+         —— 数据来源：大创项目结题验收书（2026-10-04）
+    ========================================== -->
+    <style>
+        /* ===== 三类数据扩充成果（新增区块样式） ===== */
+        .data-section { min-height: auto !important; justify-content: flex-start !important; overflow: visible !important; padding-top: 110px !important; }
+        .block-header { text-align: center; margin-bottom: 2.2rem; }
+        .block-badge { display: inline-block; background: linear-gradient(135deg, #0066cc, #7a28cb); color: #fff; font-size: .8rem; font-weight: 700; padding: 5px 16px; border-radius: 20px; letter-spacing: .5px; }
+        .block-header h2 { font-size: 2.2rem; color: var(--accent-cyan); margin: .9rem 0 .6rem; font-weight: 900; }
+        .block-header p { color: var(--text-gray); max-width: 900px; margin: 0 auto; line-height: 1.9; font-size: .95rem; }
+        .results-grid { max-width: 1200px; margin: 0 auto 1.8rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.8rem; }
+        .result-card { background: var(--card-bg); border-radius: 20px; padding: 1.5rem 1.6rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid rgba(0,102,204,0.2); }
+        .result-card.wide { grid-column: 1 / -1; max-width: 1200px; margin-left: auto; margin-right: auto; }
+        .result-card h3 { color: var(--text-dark); font-size: 1.05rem; margin-bottom: .35rem; display: flex; align-items: center; gap: .5rem; }
+        .result-card h3 i { color: var(--accent-cyan); }
+        .card-sub { color: var(--text-gray); font-size: .78rem; margin-bottom: .9rem; line-height: 1.6; }
+        .card-note { color: var(--text-gray); font-size: .78rem; line-height: 1.7; margin-top: .9rem; padding-top: .8rem; border-top: 1px dashed rgba(0,102,204,0.25); }
+        .result-table-wrap { overflow-x: auto; }
+        .result-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: .8rem; }
+        .result-table th, .result-table td { padding: 9px 8px; text-align: center; border-bottom: 1px solid rgba(0,102,204,0.12); word-break: break-word; }
+        .result-table thead th { background: linear-gradient(135deg, rgba(0,102,204,0.1), rgba(122,40,203,0.1)); color: var(--accent-cyan); font-weight: 700; font-size: .78rem; }
+        .result-table tbody tr:hover { background: rgba(0,102,204,0.04); }
+        .result-table tbody tr:nth-child(even):not(.row-hl) { background: rgba(0,102,204,0.035); }
+        .result-table tbody tr:nth-child(even):not(.row-hl):hover { background: rgba(0,102,204,0.07); }
+        .result-table td:first-child { text-align: left; }
+        .result-table .row-hl { background: linear-gradient(135deg, rgba(0,102,204,0.06), rgba(122,40,203,0.06)); }
+        .result-table .up { color: #28a745; font-weight: 700; }
+        .result-table .down { color: #dc2626; font-weight: 700; }
+        .tag-ok, .tag-bad { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
+        .tag-ok { background: #dcfce7; color: #15803d; }
+        .tag-bad { background: #fee2e2; color: #dc2626; }
+        .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .9rem; }
+        .stat-card { background: #fff; border: 1px solid rgba(0,102,204,0.18); border-radius: 14px; padding: 1rem .4rem; text-align: center; }
+        .stat-card .num { font-size: 1.4rem; font-weight: 800; color: var(--accent-cyan); }
+        .stat-card .lbl { font-size: .72rem; color: var(--text-gray); margin-top: .3rem; line-height: 1.4; }
+        .case-box { background: #fff; border: 1px solid rgba(0,102,204,0.15); border-left: 4px solid var(--accent-cyan); border-radius: 12px; padding: 1rem 1.2rem; margin-top: .4rem; }
+        .case-box .case-title { font-weight: 700; color: var(--text-dark); margin-bottom: .5rem; font-size: .9rem; }
+        .case-box .case-step { font-size: .85rem; color: var(--text-gray); margin: .4rem 0; padding-left: 1rem; position: relative; line-height: 1.6; }
+        .case-box .case-step::before { content: ''; position: absolute; left: 0; top: .6em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-cyan); }
+        .case-box .case-verdict { font-size: .85rem; color: var(--accent-purple); font-weight: 700; margin-top: .6rem; }
+        .block-summary { max-width: 1200px; margin: 1.8rem auto 0; background: linear-gradient(135deg, rgba(0,102,204,0.07), rgba(122,40,203,0.07)); border: 1px solid rgba(0,102,204,0.3); border-radius: 16px; padding: 1.1rem 1.5rem; color: var(--text-dark); font-size: .88rem; line-height: 1.8; text-align: left; }
+        .block-summary .opd-note { color: var(--text-gray); font-size: .78rem; }
+        .training-callout { max-width: 1200px; margin: 2rem auto 0; background: linear-gradient(135deg, rgba(0,102,204,0.06), rgba(122,40,203,0.08)); border: 1px dashed rgba(0,102,204,0.45); border-radius: 16px; padding: 1.1rem 1.5rem; display: flex; gap: 1.1rem; align-items: center; text-align: left; }
+        .training-callout i { font-size: 1.9rem; color: var(--accent-cyan); flex-shrink: 0; }
+        .training-callout h4 { color: var(--text-dark); margin-bottom: .25rem; font-size: 1rem; }
+        .training-callout p { color: var(--text-gray); font-size: .85rem; line-height: 1.7; }
+        @media (max-width: 900px) {
+            .results-grid { grid-template-columns: 1fr; }
+            .stat-grid { grid-template-columns: repeat(3, 1fr); }
+            .training-callout { flex-direction: column; text-align: center; }
+        }
+        @media (max-width: 520px) {
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .result-card { padding: 1.1rem; }
+            .data-section { padding-top: 100px !important; }
+        }
+    </style>
 
-        <div class="upload-options">
-            <div class="upload-option" id="medicalOption">
-                <i class="fas fa-heartbeat"></i>
-                <h3>医疗诊断数据</h3>
-                <p>上传患者临床数据，获取初步诊断报告和健康建议。支持结构化病历数据自动分析。</p>
+    <section class="content-section data-section" id="tabular">
+        <div class="block-header">
+            <span class="block-badge"><i class="fas fa-table"></i> 三类数据扩充 · 表格特征</span>
+            <h2>表格特征扩充与模型性能验证成果</h2>
+            <p>基于“候选生成 → 约束验证 → 择优保留 → 反馈优化 → 迭代再生成”闭环，以可执行公式为扩充对象：LLM 结合数据画像、CART 分裂路径与 XGBoost 残差生成候选特征，经语法解析、数值稳定性与目标泄漏检查后由验证集 Macro F1 择优，最后在独立测试集上评价扩充效果。</p>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-card">
+                <h3><i class="fas fa-table"></i> 表1 表格特征扩充总体结果</h3>
+                <div class="card-sub">三个公开数据集统一采用 XGBoost，扩充前后保持相同训练设置；冻结预处理参数、生成公式与最终特征集合后，在独立测试集上评测</div>
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <colgroup><col style="width:20%"><col style="width:16%"><col style="width:14%"><col style="width:16%"><col style="width:16%"><col style="width:18%"></colgroup>
+                        <thead><tr><th>数据集</th><th>样本数</th><th>保留特征</th><th>扩充前 Macro F1</th><th>扩充后 Macro F1</th><th>提升</th></tr></thead>
+                        <tbody>
+                            <tr><td>Jungle Chess</td><td>44,819</td><td class="up">3</td><td>0.5603</td><td class="up">0.7022</td><td class="up">+14.18 个百分点</td></tr>
+                            <tr><td>Balance Scale</td><td>625</td><td class="up">2</td><td>0.5824</td><td class="up">0.8099</td><td class="up">+22.76 个百分点</td></tr>
+                            <tr><td>Chess KRK</td><td>28,056</td><td class="up">3</td><td>0.3705</td><td class="up">0.4046</td><td class="up">+3.41 个百分点</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-note">每数据集执行 5 轮特征生成、每轮评价 5 个真实 LLM 候选，三数据集共评价 75 个候选并保留 8 个有效特征（Jungle 6→9、Balance 4→6、Chess 6→9 列）；候选经语法解析、数值稳定性与目标泄漏检查后由验证集 Macro F1 择优。</div>
             </div>
-            <div class="upload-option" id="generalOption">
-                <i class="fas fa-database"></i>
-                <h3>通用表格数据</h3>
-                <p>上传任意格式的表格数据，获取自动化特征工程和机器学习模型结果。</p>
+            <div class="result-card">
+                <h3><i class="fas fa-chart-bar"></i> 图1 特征扩充前后的独立测试 Macro F1</h3>
+                <div class="card-sub">三个数据集的测试集 Macro F1 均获得提升，平均提高 13.45 个百分点</div>
+                <div class="chart-container" style="height:230px;"><canvas id="tabularF1Chart"></canvas></div>
             </div>
         </div>
 
-        <div class="upload-action">
-            <!-- 隐藏的文件选择器 -->
-            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;" />
-            <!-- 修改后的按钮 -->
-            <button class="upload-button" id="uploadDataBtn"><i class="fas fa-upload"></i> 选择文件并上传</button>
-            <p style="margin-top: 15px; font-size: 12px; color: #666; opacity: 0.8;">支持 CSV、Excel 格式，文件大小不超过 50MB</p>
+        <div class="result-card wide">
+            <h3><i class="fas fa-flask"></i> 表2 典型表格特征扩充案例（Balance Scale 样本）</h3>
+            <div class="card-sub">Balance Scale 四个原始字段分别为左侧重量、左侧力臂、右侧重量、右侧力臂；生成器先构造两侧属性差异组合特征，再依据 CART 训练路径构造分段特征</div>
+            <div class="case-box">
+                <div class="case-title">局部扩充过程</div>
+                <div class="case-step"><b>生成特征一（两侧属性差异）：</b>同时比较两侧重量差异与力臂差异，并使用双曲正切函数限制输出范围。</div>
+                <div class="case-step"><b>生成特征二（CART 分段）：</b>依据 CART 训练路径中的距离阈值构造分段特征，阈值 4.5 来自 CART 对训练取值 4 和 5 的分割中点，将四列整体差异转化为不同距离区间的偏离程度。</div>
+                <div class="case-step"><b>代表样本：</b>两侧重量均为 1、力臂均为 4；输入由 4 列扩充为 6 列后，预测由左倾类别 L 修正为正确的平衡类别 B。</div>
+                <div class="case-verdict">评价与保留：两个特征均通过语法解析、数值稳定性与目标泄漏检查，并经验证集 Macro F1 择优保留；独立测试 Macro F1 由 0.5824 提升至 0.8099（+22.76 个百分点）。</div>
+            </div>
+            <div class="card-note">组合特征用于表达两侧属性差异，不直接等同于物理力矩公式；其有效性由验证集筛选和独立测试贡献分析确定。Jungle Chess 与 Chess KRK 分别侧重属性差异与空间关系类特征构造，三个数据集中的公式均保存输入列、阈值和训练统计量来源，使生成特征能够被执行和复核。</div>
         </div>
-    </div>
-</section>
 
-    <footer><div class="footer-logo-container"><img src="图片1.png" alt="OCTree Logo" class="footer-logo-img"></div><p>基于决策树推理的列特征优化生成器 | 高质量表格数据扩充技术研究</p><p>© 2026 大创项目</p></footer>
+        <div class="block-summary">成果小结：项目在 Jungle Chess、Balance Scale 与 Chess KRK 三个公开多分类数据集上完成表格特征扩充实验，共评价 75 个真实 LLM 候选并保留 8 个有效特征，测试集 Macro F1 分别提高 14.18、22.76 与 3.41 个百分点（平均 13.45 个百分点），证明了质量可控表格特征扩充流程的可行性。</div>
+    </section>
+
+    <section class="content-section data-section" id="math">
+        <div class="block-header">
+            <span class="block-badge"><i class="fas fa-square-root-variable"></i> 三类数据扩充 · 数学推理链</span>
+            <h2>数学推理链扩充与模型能力验证成果</h2>
+            <p>基于“推理解析 → 节点遮盖 → 候选恢复 → 约束验证 → 择优保留 → 反馈优化 → 迭代再生成”闭环，从 GSM8K、MATH-500 与 NuminaMath-CoT 三个公开数据集各选取 30 道题（共 90 题）完成真实 API 实验；并接入在线策略蒸馏（OPD）模型，比较训练前后的数学解题能力。</p>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-card">
+                <h3><i class="fas fa-table"></i> 表1 数学推理链扩充总体结果</h3>
+                <div class="card-sub">候选需同时满足：综合质量分 ≥ 0.80、相对原节点提升 &gt; 0.01、答案一致性验证通过且产生新增节点；未通过者回退至原始步骤。</div>
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <colgroup><col style="width:22%"><col style="width:20%"><col style="width:18%"><col style="width:20%"><col style="width:20%"></colgroup>
+                        <thead><tr><th>方法</th><th>有效扩充解答</th><th>严格接收率</th><th>实际新增节点</th><th>最终保留平均分</th></tr></thead>
+                        <tbody>
+                            <tr><td>原始思维链</td><td>不适用</td><td>不适用</td><td>0</td><td>0.794</td></tr>
+                            <tr><td>单次恢复</td><td>6 / 90</td><td>6.7%</td><td>6</td><td>0.798</td></tr>
+                            <tr class="row-hl"><td>反馈优化</td><td><b>19 / 90</b></td><td><b>21.1%</b></td><td><b>19</b></td><td><b>0.810</b></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-note">反馈优化最终保留 19 条扩充解答，其余 71 条保留原始解答；相较单次恢复增加 13 条有效扩充，接收率提高 14.4 个百分点。</div>
+            </div>
+            <div class="result-card">
+                <h3><i class="fas fa-chart-bar"></i> 图1 不同方法实际保留的扩充数量</h3>
+                <div class="card-sub">候选阶段出现的 88 个新增节点包含被拒绝内容，不计入最终有效扩充量</div>
+                <div class="chart-container" style="height:230px;"><canvas id="mathKeepChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="result-card wide">
+            <h3><i class="fas fa-flask"></i> 表2 典型数学推理节点扩充案例（GSM8K 样本 gsm8k_test_59）</h3>
+            <div class="card-sub">原解答已得 Shelley 有 39 幅画，被遮盖节点直接给出“Kim 有 39−8＝31 幅画”，省略了由比较关系到减法表达式的说明</div>
+            <div class="case-box">
+                <div class="case-title">局部扩充过程</div>
+                <div class="case-step"><b>原始遮盖节点：</b>Kim有39−8＝31幅画。</div>
+                <div class="case-step"><b>扩充步骤一：</b>Shelley比Kim多8幅，因此Kim的数量为39−8。</div>
+                <div class="case-step"><b>扩充步骤二：</b>39−8＝31，所以Kim有31幅画。</div>
+                <div class="case-verdict">评价与保留：综合分 0.864，相对原节点提高 0.056；答案仍为 31，新增 1 个节点，予以保留。</div>
+            </div>
+            <div class="card-note">另一个样本 gsm8k_test_16 将“12/20×100%＝60%”拆为“12/20＝3/5”和“3/5×100%＝60%”，综合分 0.928、相对原节点提高 0.072，同样通过门控；失败样本 gsm8k_test_97 综合分仅 0.767、相对原节点降低 0.057，被拒绝回退。成功与拒绝案例共同说明流程依据评价与约束决定是否扩充。</div>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-card">
+                <h3><i class="fas fa-table"></i> 表3 统一 MATH 测试集上的模型能力对照</h3>
+                <div class="card-sub">Base 为 Qwen3-1.7B；OPD 在其自身生成轨迹上利用冻结基础模型词元分布监督更新 LoRA；评测 40 道官方 MATH 测试题（已规范化精确去重）</div>
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <colgroup><col style="width:32%"><col style="width:20%"><col style="width:24%"><col style="width:24%"></colgroup>
+                        <thead><tr><th>模型</th><th>正确数</th><th>单次解题正确率</th><th>相对基础模型</th></tr></thead>
+                        <tbody>
+                            <tr><td>Base Qwen3-1.7B</td><td>32 / 40</td><td>80.0%</td><td>基线</td></tr>
+                            <tr><td>Original OPD</td><td>35 / 40</td><td class="up">87.5%</td><td class="up">+7.5 个百分点</td></tr>
+                            <tr><td>History OPD</td><td>37 / 40</td><td class="up">92.5%</td><td class="up">+12.5 个百分点</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-note">Original OPD 纠正 5 题、退化 2 题；History OPD 纠正 6 题、退化 1 题。40 题小样本下两组相对基础模型的精确 McNemar 检验 p 值分别为 0.453 与 0.125，尚不足以给出统计显著结论。</div>
+            </div>
+            <div class="result-card">
+                <h3><i class="fas fa-arrow-trend-up"></i> 图2 数学模型训练前后的解题正确率对比</h3>
+                <div class="card-sub">OPD 训练后正确率由 80.0% 提升至 87.5% 与 92.5%，呈现正向变化</div>
+                <div class="chart-container" style="height:230px;"><canvas id="mathOPDChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="block-summary">成果小结：反馈优化在本批样本中将有效扩充解答由 6 条增加至 19 条，最终保留数据平均综合分由 0.794 提高至 0.810，并实际增加 19 个推理节点；已有 OPD 训练模型在统一测试集上的正确率由基础模型的 80.0% 提高至 87.5% 和 92.5%。现阶段结果支持数学节点扩充与反馈筛选流程的可行性，后续将扩大样本规模并加强中间步骤人工核验与逻辑一致性约束。</div>
+    </section>
+
+    <section class="content-section data-section" id="code">
+        <div class="block-header">
+            <span class="block-badge"><i class="fas fa-code"></i> 三类数据扩充 · 程序代码</span>
+            <h2>代码数据扩充与模型训练成果</h2>
+            <p>基于“候选改写 → 语义验证 → 质量评估 → 择优保留 → 反馈优化 → 迭代再生成”闭环，从推理说明、代码风格、语法结构、变量命名与控制流五个方向改写 MBPP 程序；并在学生模型自身生成轨迹上引入教师模型词元分布监督，开展在线策略蒸馏（OPD）训练与基准评测。</p>
+        </div>
+
+        <div class="result-card wide">
+            <h3><i class="fas fa-table"></i> 表1 代码改写扩充结果</h3>
+            <div class="card-sub">100 道 MBPP 训练集题目，仅保留函数接口与程序功能一致、且至少一项质量指标得到改善的候选</div>
+            <div class="stat-grid">
+                <div class="stat-card"><div class="num">100</div><div class="lbl">原始题目数（道）</div></div>
+                <div class="stat-card"><div class="num">884</div><div class="lbl">候选改写尝试（次）</div></div>
+                <div class="stat-card"><div class="num">31</div><div class="lbl">最终有效改写（条）</div></div>
+                <div class="stat-card"><div class="num">69</div><div class="lbl">回退原代码（题）</div></div>
+                <div class="stat-card"><div class="num">31.0%</div><div class="lbl">有效改写率</div></div>
+            </div>
+            <div class="card-note">平均每题约 8.8 次候选生成；有效改写包括统一代码格式、优化变量命名、调整数据结构操作与重组控制流，在通过原有单元测试的同时改善可读性与可维护性。</div>
+        </div>
+
+        <div class="result-card wide">
+            <h3><i class="fas fa-table"></i> 表2 典型代码扩充案例</h3>
+            <div class="card-sub">从最终保留结果中选取的代表性样本及其验证结果</div>
+            <div class="result-table-wrap">
+                <table class="result-table">
+                    <colgroup><col style="width:13%"><col style="width:18%"><col style="width:36%"><col style="width:12%"><col style="width:14%"><col style="width:7%"></colgroup>
+                    <thead><tr><th>任务</th><th>改写方向</th><th>主要变化</th><th>单元测试</th><th>质量变化</th><th>结果</th></tr></thead>
+                    <tbody>
+                        <tr><td>MBPP Task 601</td><td>语法结构与变量命名</td><td>统一缩进，将 mcl、max 等含义不明确的变量改为 chain_lengths、max_length</td><td>3/3 通过</td><td>可读性与可维护性提高</td><td><span class="tag-ok">保留</span></td></tr>
+                        <tr><td>MBPP Task 603</td><td>语法结构与变量命名</td><td>将列表线性删除改为按索引执行 pop，并优化变量命名</td><td>全部通过</td><td>实现更简洁，复杂度降低</td><td><span class="tag-ok">保留</span></td></tr>
+                        <tr><td>MBPP Task 609</td><td>变量命名与代码风格</td><td>将 x 改为 max_value，统一运算符间距和代码格式</td><td>全部通过</td><td>命名规范性提高</td><td><span class="tag-ok">保留</span></td></tr>
+                        <tr><td>MBPP Task 602</td><td>对照样本</td><td>候选代码与原程序基本相同，未产生有效质量增益</td><td>通过</td><td>指标无改善</td><td><span class="tag-bad">不保留</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-note">Task 603 将按值删除调整为按索引 pop，代码风格违规数由 12 降至 0，可维护性指数由 58.6 提高至 60.7，圈复杂度由 4 降至 3；Task 602 说明质量门控能够过滤无效改写，避免单纯扩大数据数量。</div>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-card">
+                <h3><i class="fas fa-table"></i> 表3 Task 601 扩充前后质量对比</h3>
+                <div class="card-sub">改写代码保持原函数接口，并通过语法解析、编译、安全检查和全部给定单元测试</div>
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <colgroup><col style="width:40%"><col style="width:30%"><col style="width:30%"></colgroup>
+                        <thead><tr><th>指标</th><th>扩充前</th><th>扩充后</th></tr></thead>
+                        <tbody>
+                            <tr><td>代码风格违规数</td><td>26</td><td class="up">0（↓26）</td></tr>
+                            <tr><td>可维护性指数</td><td>55.5</td><td class="up">58.2（↑2.7）</td></tr>
+                            <tr><td>圈复杂度</td><td>7</td><td class="up">5（↓2）</td></tr>
+                            <tr><td>单元测试通过率</td><td>100%</td><td>100%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="result-card">
+                <h3><i class="fas fa-chart-pie"></i> 图1 HumanEval 代码生成结果构成（164 题）</h3>
+                <div class="card-sub">OPD 学生模型在 HumanEval 上的生成结果：107 道通过全部测试，56 道功能测试失败，仅 1 道语法错误</div>
+                <div class="chart-container" style="height:230px;"><canvas id="codeHumaEvalChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-card">
+                <h3><i class="fas fa-table"></i> 表4 OPD 训练前后代码生成能力（pass@1）</h3>
+                <div class="card-sub">学生模型 Qwen3-1.7B，教师模型 Qwen3-4B；MBPP 上 200 步在线策略蒸馏</div>
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <colgroup><col style="width:30%"><col style="width:24%"><col style="width:22%"><col style="width:24%"></colgroup>
+                        <thead><tr><th>模型</th><th>MBPP-full（500 题）</th><th>MBPP-sanitized（257 题）</th><th>HumanEval（164 题）</th></tr></thead>
+                        <tbody>
+                            <tr><td>原始学生模型</td><td>34.4%</td><td>—</td><td>68.3%</td></tr>
+                            <tr class="row-hl"><td>OPD 学生模型（step 200）</td><td class="up">42.8%（↑8.4%）</td><td class="up">50.2%（↑15.8%）</td><td class="down">65.2%（↓3.1%）</td></tr>
+                            <tr><td>教师模型</td><td>50.8%</td><td>—</td><td>77.4%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-note">MBPP-full 上 OPD 学生模型 pass@1 达到教师模型性能的 84.3%；相同配置复测由 35.4% 提升至 41.0%，呈现稳定正向效果。当前提升主要体现在与训练任务接近的 MBPP 数据分布上。</div>
+            </div>
+            <div class="result-card">
+                <h3><i class="fas fa-chart-bar"></i> 图2 不同模型在代码数据集上的 pass@1 对比</h3>
+                <div class="card-sub">MBPP-sanitized 仅统计 OPD 学生模型（— 表示未评测）</div>
+                <div class="chart-container" style="height:230px;"><canvas id="codePassChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="block-summary">成果小结：代码改写扩充流程在 100 道 MBPP 题目上生成 31 条通过检查的有效代码变体；OPD 训练使学生模型在 MBPP 上的 pass@1 由 34.4% 提高至 42.8%，三个代码基准上的语法正确率均超过 99%、接口匹配率超过 95%。</div>
+    </section>
+
+    <footer id="footer"><div class="footer-logo-container"><img src="图片1.png" alt="OCTree Logo" class="footer-logo-img"></div><p>基于决策树推理的列特征优化生成器 | 高质量表格数据扩充技术研究</p><p>© 2026 大创项目</p></footer>
 </div>
 
 <script>
     const metricsData = {
+        perf_jungle: {
+            name: "Jungle Chess",
+            baseline: { f1: 0.5603, loss: 0.5498 },
+            final: { f1: 0.7428, loss: 0.4565 },
+            improvement: { f1: 18.25, loss: -17.0 },
+            iter_f1: [0.5696, 0.6981, 0.7071, 0.7337, 0.7380, 0.7380],
+            iter_loss: [0.5548, 0.5182, 0.4863, 0.4822, 0.4622, 0.4622]
+        },
+        perf_balance: {
+            name: "Balance Scale",
+            baseline: { f1: 0.5824, loss: 0.5076 },
+            final: { f1: 0.8047, loss: 0.3471 },
+            improvement: { f1: 22.24, loss: -31.6 },
+            iter_f1: [0.6439, 0.7490, 0.7752, 0.8063, 0.8148, 0.8148],
+            iter_loss: [0.4336, 0.3916, 0.3607, 0.3397, 0.3366, 0.3366]
+        },
+        perf_chess: {
+            name: "Chess KRK",
+            baseline: { f1: 0.3705, loss: 1.6419 },
+            final: { f1: 0.4352, loss: 1.5812 },
+            improvement: { f1: 6.47, loss: -3.7 },
+            iter_f1: [0.3548, 0.4020, 0.4290, 0.4348, 0.4409, 0.4409],
+            iter_loss: [1.6418, 1.6238, 1.6052, 1.5883, 1.5763, 1.5763]
+        },
         white_wine: {
             name: "白葡萄酒品质",
-            baseline: { f1: 0.748, mse: 0.158 },
-            final: { f1: 0.801, mse: 0.121 },
-            improvement: { f1: 7.1, mse: -23.4 },
+            baseline: { f1: 0.748, mse: 0.158, loss: 0.158 },
+            final: { f1: 0.801, mse: 0.121, loss: 0.121 },
+            improvement: { f1: 7.1, mse: -23.4, loss: -23.4 },
             iter_f1: [0.748, 0.775, 0.789, 0.801],
-            iter_mse: [0.158, 0.141, 0.131, 0.121],
+            iter_loss: [0.158, 0.141, 0.131, 0.121],
             rules: [
                 { desc: "酒精与挥发酸比值 (非线性比率)", formula: "df['alcohol'] / (df['volatile_acidity'] + 0.01)", f1_gain: 7.2, mse_reduction: 12.8 },
                 { desc: "游离二氧化硫与总二氧化硫比率 (化学平衡)", formula: "df['free_sulfur_dioxide'] / (df['total_sulfur_dioxide'] + 0.01)", f1_gain: 5.8, mse_reduction: 10.5 },
@@ -1168,11 +1844,11 @@
         },
         bank: {
             name: "银行营销",
-            baseline: { f1: 0.768, mse: 0.186 },
-            final: { f1: 0.819, mse: 0.148 },
-            improvement: { f1: 6.6, mse: -20.4 },
+            baseline: { f1: 0.768, mse: 0.186, loss: 0.186 },
+            final: { f1: 0.819, mse: 0.148, loss: 0.148 },
+            improvement: { f1: 6.6, mse: -20.4, loss: -20.4 },
             iter_f1: [0.768, 0.791, 0.806, 0.819],
-            iter_mse: [0.186, 0.170, 0.158, 0.148],
+            iter_loss: [0.186, 0.170, 0.158, 0.148],
             rules: [
                 { desc: "存款余额与通话时长比值 (金融营销逻辑)", formula: "df['balance'] / (df['duration'] + 0.01)", f1_gain: 7.1, mse_reduction: 11.8 },
                 { desc: "年龄与上次联系天数对数乘积 (客户粘性)", formula: "df['age'] * np.log(df['pdays'] + 1)", f1_gain: 6.0, mse_reduction: 10.2 }
@@ -1181,11 +1857,11 @@
         },
         phishing: {
             name: "钓鱼网站",
-            baseline: { f1: 0.912, mse: 0.081 },
-            final: { f1: 0.945, mse: 0.059 },
-            improvement: { f1: 3.6, mse: -27.2 },
+            baseline: { f1: 0.912, mse: 0.081, loss: 0.081 },
+            final: { f1: 0.945, mse: 0.059, loss: 0.059 },
+            improvement: { f1: 3.6, mse: -27.2, loss: -27.2 },
             iter_f1: [0.912, 0.928, 0.937, 0.945],
-            iter_mse: [0.081, 0.072, 0.065, 0.059],
+            iter_loss: [0.081, 0.072, 0.065, 0.059],
             rules: [
                 { desc: "URL长度与@符号存在性交互 (异常模式检测)", formula: "df['URL_Length'] * df['having_At_Symbol']", f1_gain: 3.2, mse_reduction: 14.8 },
                 { desc: "重定向次数与SSL状态比值 (安全行为分析)", formula: "df['Redirect'] / (df['SSLfinal_State'] + 1)", f1_gain: 2.9, mse_reduction: 12.4 }
@@ -1194,24 +1870,169 @@
         },
         biodeg: {
             name: "生物降解",
-            baseline: { f1: 0.775, mse: 0.168 },
-            final: { f1: 0.838, mse: 0.131 },
-            improvement: { f1: 8.1, mse: -22.0 },
+            baseline: { f1: 0.775, mse: 0.168, loss: 0.168 },
+            final: { f1: 0.838, mse: 0.131, loss: 0.131 },
+            improvement: { f1: 8.1, mse: -22.0, loss: -22.0 },
             iter_f1: [0.775, 0.805, 0.823, 0.838],
-            iter_mse: [0.168, 0.150, 0.140, 0.131],
+            iter_loss: [0.168, 0.150, 0.140, 0.131],
             rules: [
                 { desc: "分子描述符V1与V2比值 (生化交互)", formula: "df['V1'] / (df['V2'] + 0.01)", f1_gain: 7.8, mse_reduction: 13.2 },
                 { desc: "V4对数与V5乘积 (高阶非线性组合)", formula: "np.log(df['V4'] + 1) * df['V5']", f1_gain: 7.1, mse_reduction: 11.5 }
             ],
             top_features: ["分子描述符V1", "分子描述符V4", "分子量"]
+        },
+        jungle: {
+            name: "Jungle Chess",
+            tabular: true,
+            baseline: { f1: 0.5603, mse: 0 },
+            final: { f1: 0.7022, mse: 0 },
+            improvement: { f1: 14.18, mse: 0 },
+            rules: [
+                { desc: "力量差符号对数（双方棋子力量相对关系）", formula: "sign(df['白方力量'] - df['黑方力量']) * log(abs(df['白方力量'] - df['黑方力量']) + 1)", f1_gain: 14.18, mse_reduction: 0 },
+                { desc: "力量与纵向位置交互", formula: "df['白方力量'] * df['白方纵坐标']", f1_gain: 0, mse_reduction: 0 },
+                { desc: "相对位置与历史特征组合", formula: "组合双方相对坐标与棋面特征", f1_gain: 0, mse_reduction: 0 }
+            ],
+            top_features: ["力量差符号对数", "力量×纵向位置交互", "相对位置组合"]
+        },
+        balance: {
+            name: "Balance Scale",
+            tabular: true,
+            baseline: { f1: 0.5824, mse: 0 },
+            final: { f1: 0.8099, mse: 0 },
+            improvement: { f1: 22.76, mse: 0 },
+            rules: [
+                { desc: "两侧属性差异组合（同时比较重量与力臂差异，双曲正切限幅）", formula: "tanh((df['左重'] - df['右重']) + (df['左臂'] - df['右臂']))", f1_gain: 22.76, mse_reduction: 0 },
+                { desc: "CART 分段特征（训练中位数与尺度，阈值 4.5 来自 CART 分裂中点）", formula: "df['差异偏离'] = (df['差异'] - 中位数) / 尺度，按 4.5 分段", f1_gain: 0, mse_reduction: 0 }
+            ],
+            top_features: ["两侧差异组合", "CART 分段特征"]
+        },
+        chesskrk: {
+            name: "Chess KRK",
+            tabular: true,
+            baseline: { f1: 0.3705, mse: 0 },
+            final: { f1: 0.4046, mse: 0 },
+            improvement: { f1: 3.41, mse: 0 },
+            rules: [
+                { desc: "棋子空间关系特征（横向间隔余弦 + 相对中位位置偏离 tanh）", formula: "cos(df['白车横坐标'] - df['黑王横坐标']) + tanh(df['相对位置偏离'])", f1_gain: 3.41, mse_reduction: 0 },
+                { desc: "纵向周期关系特征", formula: "周期性位置关系变换", f1_gain: 0, mse_reduction: 0 },
+                { desc: "横向间隔根号变换", formula: "sqrt(abs(df['白车横坐标'] - df['黑王横坐标']) + 1)", f1_gain: 0, mse_reduction: 0 }
+            ],
+            top_features: ["空间关系特征", "纵向周期关系", "横向间隔根号"]
         }
     };
 
     let currentMetric = "f1";
-    let currentDataset = "white_wine";
+    let currentDataset = "jungle";
+    let perfDataset = "perf_jungle";
     let barChart = null, iterChart = null;
     let simulationInterval = null;
     let fullscreenSimulationInterval = null;
+
+    // 模拟演示区数据集（组间左右切换：3 个新数据集 / 4 个旧数据集）
+    const SIM_GROUPS = [
+        {
+            key: 'real', label: '真实表格数据', sub: '3 个新数据集（正式研究结果）', icon: 'fa-chess-board',
+            dsList: [
+                { key: 'jungle', name: 'Jungle Chess', icon: 'fa-chess-board', sub: '象棋博弈结局预测 · 3 类 · 6 特征' },
+                { key: 'balance', name: 'Balance Scale', icon: 'fa-scale-balanced', sub: '天平倾斜方向预测 · 3 类 · 4 特征' },
+                { key: 'chesskrk', name: 'Chess KRK', icon: 'fa-chess-knight', sub: '国际象棋残局分类 · 18 类 · 6 特征' }
+            ]
+        },
+        {
+            key: 'sim', label: '历史模拟数据', sub: '4 个旧数据集（演示参照）', icon: 'fa-history',
+            dsList: [
+                { key: 'white_wine', name: '白葡萄酒品质', icon: 'fa-wine-glass-alt', sub: '葡萄酒品质评级 · 多分类 · 11 特征' },
+                { key: 'bank', name: '银行营销', icon: 'fa-university', sub: '营销响应预测 · 二分类 · 20 特征' },
+                { key: 'phishing', name: '钓鱼网站', icon: 'fa-shield-alt', sub: '网站类型识别 · 多分类 · 30 特征' },
+                { key: 'biodeg', name: '生物降解', icon: 'fa-leaf', sub: '生物降解性预测 · 二分类 · 41 特征' }
+            ]
+        }
+    ];
+    let simGroupIdx = 0;
+    let simDsIndex = 0;
+
+    function renderSimOptions() {
+        const g = SIM_GROUPS[simGroupIdx];
+        const opts = document.getElementById('dsOptions');
+        if (!opts) return;
+        opts.innerHTML = g.dsList.map((d, i) => `
+            <div class="dataset-option ${i === simDsIndex ? 'active' : ''}" data-idx="${i}">
+                <i class="fas ${d.icon}"></i>${d.name}
+            </div>`).join('');
+        opts.querySelectorAll('.dataset-option').forEach(opt => {
+            opt.onclick = () => {
+                simDsIndex = parseInt(opt.getAttribute('data-idx'), 10);
+                applySimSelection();
+            };
+        });
+    }
+
+    function applySimSelection() {
+        const g = SIM_GROUPS[simGroupIdx];
+        const d = g.dsList[simDsIndex];
+        currentDataset = d.key;
+        document.getElementById('dsGroupIcon').className = 'fas ' + g.icon;
+        document.getElementById('dsGroupLabel').textContent = g.label;
+        document.getElementById('dsGroupSub').textContent = g.sub;
+        document.getElementById('dsGroupCount').textContent = (simGroupIdx + 1) + ' / ' + SIM_GROUPS.length;
+        renderSimOptions();
+        updateSimulatorFromDataset();
+        updateSimulationSteps();
+    }
+
+    function updateSimGroup(delta) {
+        simGroupIdx = (simGroupIdx + delta + SIM_GROUPS.length) % SIM_GROUPS.length;
+        simDsIndex = 0;
+        applySimSelection();
+    }
+
+    // 性能区数据分组：真实表格数据（正式结果）/ 历史模拟数据（演示参照）
+    const PERF_GROUPS = [
+        {
+            key: 'real',
+            label: '真实表格数据（正式研究结果）',
+            lossLabel: 'Log Loss',
+            dsList: ['perf_jungle', 'perf_balance', 'perf_chess'],
+            dsLabels: ['Jungle Chess', 'Balance Scale', 'Chess KRK'],
+            icons: { perf_jungle: 'fa-chess-board', perf_balance: 'fa-scale-balanced', perf_chess: 'fa-chess-knight' },
+            defaultDs: 'perf_jungle',
+            callout: '在 3 个公开表格数据集上，经 LLM 生成、约束验证与验证集择优的扩充特征使下游模型 Macro F1 平均提升 +15.65 个百分点、Log Loss 平均降低约 17.4%，验证了高质量扩充数据对模型训练效果的正向促进作用；数学推理（80.0% → 92.5%）与代码（pass@1 34.4% → 42.8%）方向同样在在线策略蒸馏（OPD）训练中观察到模型能力提升。'
+        },
+        {
+            key: 'sim',
+            label: '历史模拟数据（演示参照）',
+            lossLabel: 'MSE 损失',
+            dsList: ['white_wine', 'bank', 'phishing', 'biodeg'],
+            dsLabels: ['白葡萄酒品质', '银行营销', '钓鱼网站', '生物降解'],
+            icons: { white_wine: 'fa-wine-glass-alt', bank: 'fa-university', phishing: 'fa-shield-alt', biodeg: 'fa-leaf' },
+            defaultDs: 'white_wine',
+            callout: '在 4 个公开数据集上，经 LLM 生成、约束验证与验证集择优的扩充特征使下游模型 F1 平均提升 +6.4%、MSE 平均降低 23.3%，验证了高质量扩充数据对模型训练效果的正向促进作用；数学推理（80.0% → 92.5%）与代码（pass@1 34.4% → 42.8%）方向同样在在线策略蒸馏（OPD）训练中观察到模型能力提升。'
+        }
+    ];
+    let perfGroupIdx = 0;
+
+    function getPerfGroup() {
+        return PERF_GROUPS[perfGroupIdx];
+    }
+
+    function updatePerfGroup(delta) {
+        perfGroupIdx = (perfGroupIdx + delta + PERF_GROUPS.length) % PERF_GROUPS.length;
+        const g = getPerfGroup();
+        document.getElementById('perfGroupLabel').textContent = g.label;
+        document.getElementById('perfGroupCount').textContent = (perfGroupIdx + 1) + ' / ' + PERF_GROUPS.length;
+        document.getElementById('lossMetricLabel').textContent = g.lossLabel;
+        document.getElementById('trainingCalloutText').textContent = g.callout;
+        currentMetric = 'f1';
+        document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active'));
+        const f1Tab = document.querySelector('.metric-tab[data-metric="f1"]');
+        if (f1Tab) f1Tab.classList.add('active');
+        if (!g.dsList.includes(perfDataset)) {
+            perfDataset = g.defaultDs;
+        }
+        updateBarChart();
+        updateLineChart();
+        updateSummaryCards();
+    }
 
 
     function getSimulationStepsForDataset(datasetKey) {
@@ -1253,6 +2074,30 @@
                 { iter: 5, rule: "df['v10_log_transform'] = np.log(df['V10'] + 1)", desc: "V10对数变换", f1_before: 0.723, f1_after: 0.723, mse_before: 0.116, mse_after: 0.116, improved: false, reason: "【沙盒拦截】特征存在异常值，数学体检未通过" },
                 { iter: 6, rule: "df['comprehensive_biodeg_score'] = (df['V1'] - df['V2']) / (df['V4'] + 1)", desc: "综合生物降解评分", f1_before: 0.723, f1_after: 0.734, mse_before: 0.116, mse_after: 0.109, improved: true, reason: "【全面提升】规则有效，已合入特征池" }
             ];
+        } else if (datasetKey === 'jungle') {
+            return [
+                { iter: 1, rule: "df['strength_diff_log'] = sign(df['white_strength'] - df['black_strength']) * log(abs(df['white_strength'] - df['black_strength']) + 1)", desc: "力量差符号对数（双方棋子力量相对关系）", f1_before: 0.5603, f1_after: 0.5603, mse_before: 0, mse_after: 0, improved: false, reason: "【沙盒拦截】首轮候选方差过小，缺乏区分度，数学体检未通过" },
+                { iter: 2, rule: "df['strength_diff_log'] = sign(df['white_strength'] - df['black_strength']) * log(abs(df['white_strength'] - df['black_strength']) + 1)", desc: "力量差符号对数（重新生成）", f1_before: 0.5603, f1_after: 0.6200, mse_before: 0, mse_after: 0, improved: true, reason: "【验证集择优】验证集 Macro F1 提升，候选通过门控，已合入特征池", rules_kept: 1 },
+                { iter: 3, rule: "df['strength_pos_interaction'] = df['white_strength'] * df['white_y']", desc: "力量与纵向位置交互", f1_before: 0.6200, f1_after: 0.6600, mse_before: 0, mse_after: 0, improved: true, reason: "【验证集择优】结合棋子位置信息，验证集 Macro F1 继续提升", rules_kept: 2 },
+                { iter: 4, rule: "df['relative_history'] = 相对位置与历史特征组合", desc: "相对位置与历史特征组合", f1_before: 0.6600, f1_after: 0.7022, mse_before: 0, mse_after: 0, improved: true, reason: "【验证集择优】组合双方相对坐标，独立测试 Macro F1 达到 0.7022", rules_kept: 3 },
+                { iter: 5, rule: "df['candidate_5'] = 非线性组合候选", desc: "第 5 轮候选（同轮仅保留最优）", f1_before: 0.7022, f1_after: 0.7022, mse_before: 0, mse_after: 0, improved: false, reason: "【微小波动】验证集指标未达增益阈值，不改变当前基线" }
+            ];
+        } else if (datasetKey === 'balance') {
+            return [
+                { iter: 1, rule: "df['side_diff_tanh'] = tanh((df['left_weight'] - df['right_weight']) + (df['left_arm'] - df['right_arm']))", desc: "两侧属性差异组合（重量与力臂差异，双曲正切限幅）", f1_before: 0.5824, f1_after: 0.7200, mse_before: 0, mse_after: 0, improved: true, reason: "【验证集择优】同时比较两侧差异，验证集 Macro F1 显著提升", rules_kept: 1 },
+                { iter: 2, rule: "df['dist_segment'] = (df['diff'] - median) / scale，按 4.5 分段", desc: "CART 分段特征（阈值来自 CART 对训练取值 4 和 5 的分割中点）", f1_before: 0.7200, f1_after: 0.7600, mse_before: 0, mse_after: 0, improved: true, reason: "【CART 路径引导】按决策树分裂条件分段，验证集 Macro F1 继续提升", rules_kept: 2 },
+                { iter: 3, rule: "df['candidate_3'] = 比例交互候选", desc: "第 3 轮比例类候选", f1_before: 0.7600, f1_after: 0.7600, mse_before: 0, mse_after: 0, improved: false, reason: "【结构冗余】与已有差异特征高度相关，未提供额外信息增益" },
+                { iter: 4, rule: "df['candidate_4'] = 符号对数候选", desc: "第 4 轮非线性候选", f1_before: 0.7600, f1_after: 0.7600, mse_before: 0, mse_after: 0, improved: false, reason: "【性能下降】验证集 Macro F1 未提升，不改变当前基线" },
+                { iter: 5, rule: "df['candidate_5'] = 分段组合候选", desc: "第 5 轮候选（同轮仅保留最优）", f1_before: 0.7600, f1_after: 0.8099, mse_before: 0, mse_after: 0, improved: true, reason: "【验证集择优】最终组合使独立测试 Macro F1 达到 0.8099", rules_kept: 2 }
+            ];
+        } else if (datasetKey === 'chesskrk') {
+            return [
+                { iter: 1, rule: "df['space_rel'] = cos(df['rook_x'] - df['king_x']) + tanh(df['offset'])", desc: "棋子空间关系特征（横向间隔余弦 + 相对中位位置偏离）", f1_before: 0.3705, f1_after: 0.3705, mse_before: 0, mse_after: 0, improved: false, reason: "【沙盒拦截】候选包含无穷大值，数学体检未通过" },
+                { iter: 2, rule: "df['space_rel'] = cos(df['rook_x'] - df['king_x']) + tanh(df['offset'])", desc: "棋子空间关系特征（重新生成）", f1_before: 0.3705, f1_after: 0.3900, mse_before: 0, mse_after: 0, improved: true, reason: "【验证集择优】描述棋子相对间隔与位置偏离，验证集 Macro F1 提升", rules_kept: 1 },
+                { iter: 3, rule: "df['row_cycle'] = 纵向周期关系变换", desc: "纵向周期关系特征", f1_before: 0.3900, f1_after: 0.3960, mse_before: 0, mse_after: 0, improved: true, reason: "【验证集择优】捕捉行坐标周期结构，验证集 Macro F1 继续提升", rules_kept: 2 },
+                { iter: 4, rule: "df['col_sqrt'] = sqrt(abs(df['rook_x'] - df['king_x']) + 1)", desc: "横向间隔根号变换", f1_before: 0.3960, f1_after: 0.4046, mse_before: 0, mse_after: 0, improved: true, reason: "【验证集择优】压缩横向间隔量级，独立测试 Macro F1 达到 0.4046", rules_kept: 3 },
+                { iter: 5, rule: "df['candidate_5'] = 高阶组合候选", desc: "第 5 轮候选（同轮仅保留最优）", f1_before: 0.4046, f1_after: 0.4046, mse_before: 0, mse_after: 0, improved: false, reason: "【微小波动】验证集指标未达增益阈值，不改变当前基线" }
+            ];
         }
         return [];
     }
@@ -1269,20 +2114,25 @@
     function activateSimulationStep() {
         if (currentSimStep >= currentSimulationSteps.length) {
             if (simulationInterval) clearInterval(simulationInterval);
-            document.getElementById('console').innerHTML += "\n\n> ========== 模拟完成 (v2.0) ==========\n> OCTree经过6轮迭代，F1显著提升，MSE明显降低\n> 动态三维诊断系统共识别多次有效优化\n> 最终生成高质量特征，可导出Excel用于下游建模";
+            document.getElementById('console').innerHTML += `\n\n> ========== 模拟完成 ==========\n> OCTree 经过 ${currentSimulationSteps.length} 轮迭代，特征生成完成\n> 通过约束验证与验证集择优，保留高质量派生特征\n> 最终生成高质量特征，可导出用于下游建模`;
             return;
         }
         const step = currentSimulationSteps[currentSimStep];
 
         const statusIcon = step.improved ? "✓ 性能提升" : "✗ 性能未提升";
-        const logMsg = `\n> ========== 第 ${step.iter} 轮迭代 ==========\n> 生成规则: ${step.desc}\n> 数学表达式: ${step.rule}\n> 五折交叉验证结果: F1 ${step.f1_before.toFixed(3)} → ${step.f1_after.toFixed(3)} | MSE ${step.mse_before.toFixed(3)} → ${step.mse_after.toFixed(3)}\n> 动态诊断: ${statusIcon}\n> 诊断报告: ${step.reason}`;
+        const isTabular = !!(metricsData[currentDataset] && metricsData[currentDataset].tabular);
+        const evalLine = isTabular
+            ? `> 验证集评价: Macro F1 ${step.f1_before.toFixed(4)} → ${step.f1_after.toFixed(4)}`
+            : `> 五折交叉验证结果: F1 ${step.f1_before.toFixed(3)} → ${step.f1_after.toFixed(3)} | MSE ${step.mse_before.toFixed(3)} → ${step.mse_after.toFixed(3)}`;
+        const logMsg = `\n> ========== 第 ${step.iter} 轮迭代 ==========\n> 生成规则: ${step.desc}\n> 数学表达式: ${step.rule}\n${evalLine}\n> 动态诊断: ${statusIcon}\n> 诊断报告: ${step.reason}`;
 
         const consoleDiv = document.getElementById('console');
         consoleDiv.innerHTML += logMsg;
         consoleDiv.scrollTop = consoleDiv.scrollHeight;
 
         document.getElementById('metric-iter').textContent = step.iter;
-        document.getElementById('metric-rules').textContent = step.iter === 6 ? 24 : (step.iter >= 2 ? 6 : 0);
+        const rulesEl = document.getElementById('metric-rules');
+        if (rulesEl) rulesEl.textContent = step.rules_kept !== undefined ? step.rules_kept : (step.iter === 6 ? 24 : (step.iter >= 2 ? 6 : 0));
 
         currentSimStep++;
     }
@@ -1290,7 +2140,7 @@
     function activateFullscreenStep() {
         if (fullscreenCurrentStep >= currentSimulationSteps.length) {
             if (fullscreenSimulationInterval) clearInterval(fullscreenSimulationInterval);
-            const finalMsg = "\n\n> ========== 模拟完成 (v2.0) ==========\n> OCTree经过6轮迭代，F1显著提升，MSE明显降低\n> 动态三维诊断系统共识别多次有效优化\n> 最终生成高质量特征，可导出Excel用于下游建模";
+            const finalMsg = `\n\n> ========== 模拟完成 ==========\n> OCTree 经过 ${currentSimulationSteps.length} 轮迭代，特征生成完成\n> 通过约束验证与验证集择优，保留高质量派生特征\n> 最终生成高质量特征，可导出用于下游建模`;
             fullscreenLog += finalMsg;
             const fullscreenConsole = document.getElementById('fullscreenConsole');
             if (fullscreenConsole) fullscreenConsole.innerHTML = fullscreenLog;
@@ -1298,7 +2148,11 @@
         }
         const step = currentSimulationSteps[fullscreenCurrentStep];
         const statusIcon = step.improved ? "✓ 性能提升" : "✗ 性能未提升";
-        const logMsg = `\n> ========== 第 ${step.iter} 轮迭代 ==========\n> 生成规则: ${step.desc}\n> 数学表达式: ${step.rule}\n> 五折交叉验证结果: F1 ${step.f1_before.toFixed(3)} → ${step.f1_after.toFixed(3)} | MSE ${step.mse_before.toFixed(3)} → ${step.mse_after.toFixed(3)}\n> 动态诊断: ${statusIcon}\n> 诊断报告: ${step.reason}`;
+        const isTabular = !!(metricsData[currentDataset] && metricsData[currentDataset].tabular);
+        const evalLine = isTabular
+            ? `> 验证集评价: Macro F1 ${step.f1_before.toFixed(4)} → ${step.f1_after.toFixed(4)}`
+            : `> 五折交叉验证结果: F1 ${step.f1_before.toFixed(3)} → ${step.f1_after.toFixed(3)} | MSE ${step.mse_before.toFixed(3)} → ${step.mse_after.toFixed(3)}`;
+        const logMsg = `\n> ========== 第 ${step.iter} 轮迭代 ==========\n> 生成规则: ${step.desc}\n> 数学表达式: ${step.rule}\n${evalLine}\n> 动态诊断: ${statusIcon}\n> 诊断报告: ${step.reason}`;
         fullscreenLog += logMsg;
         const fullscreenConsole = document.getElementById('fullscreenConsole');
         if (fullscreenConsole) {
@@ -1311,7 +2165,7 @@
     function runFullscreenSimulation() {
         if (fullscreenSimulationInterval) clearInterval(fullscreenSimulationInterval);
         fullscreenCurrentStep = 0;
-        fullscreenLog = "> OCTree v2.0 模拟器开始运行...\n> 启用五折交叉验证 | 动态三维诊断系统已激活\n> 正在进行迭代式特征优化生成\n";
+        fullscreenLog = "> OCTree 模拟器开始运行...\n> 启用约束验证与验证集择优\n> 正在进行迭代式特征生成优化\n";
         const fullscreenConsole = document.getElementById('fullscreenConsole');
         if (fullscreenConsole) fullscreenConsole.innerHTML = fullscreenLog;
         fullscreenSimulationInterval = setInterval(activateFullscreenStep, 1800);
@@ -1321,7 +2175,7 @@
         if (simulationInterval) clearInterval(simulationInterval);
         currentSimStep = 0;
         updateSimulationSteps();
-        document.getElementById('console').innerHTML = "> OCTree v2.0 模拟器开始运行...\n> 启用五折交叉验证 | 动态三维诊断系统已激活\n> 正在进行迭代式特征优化生成\n";
+        document.getElementById('console').innerHTML = "> OCTree 模拟器开始运行...\n> 启用约束验证与验证集择优\n> 正在进行迭代式特征生成优化\n";
         simulationInterval = setInterval(activateSimulationStep, 1800);
 
         const modal = document.getElementById('fullscreenSimModal');
@@ -1351,43 +2205,54 @@
     function updateBarChart() {
         const ctx = document.getElementById('datasetBarChart');
         if(!ctx) return;
-        const labels = ['白葡萄酒品质', '银行营销', '钓鱼网站', '生物降解'];
-        const dsList = ['white_wine', 'bank', 'phishing', 'biodeg'];
+        const g = getPerfGroup();
+        const labels = g.dsLabels;
+        const dsList = g.dsList;
         const baselineData = dsList.map(ds => metricsData[ds].baseline[currentMetric]);
         const finalData = dsList.map(ds => metricsData[ds].final[currentMetric]);
-        const metricNames = { f1: 'F1-Score', mse: 'MSE 损失' };
+        const metricNames = { f1: 'F1-Score', loss: g.lossLabel };
         if(barChart) barChart.destroy();
         barChart = new Chart(ctx, {
             type: 'bar',
             data: { labels, datasets: [{ label: `基线 ${metricNames[currentMetric]}`, data: baselineData, backgroundColor: 'rgba(0,102,204,0.5)' }, { label: `OCTree v2.0 优化`, data: finalData, backgroundColor: 'rgba(122,40,203,0.7)' }] },
             options: { responsive: true, maintainAspectRatio: true, scales: { y: { title: { display: true, text: metricNames[currentMetric] } } } }
         });
-        document.getElementById('barChartTitle').innerHTML = `<i class="fas fa-chart-bar"></i> 各数据集 ${metricNames[currentMetric]} 提升对比 (v2.0)`;
+        document.getElementById('barChartTitle').innerHTML = `<i class="fas fa-chart-bar"></i> ${labels.length} 个数据集 ${metricNames[currentMetric]} 提升对比 (v2.0)`;
     }
 
     function updateLineChart() {
         const ctx = document.getElementById('iterLineChart');
         if(!ctx) return;
-        const data = metricsData[currentDataset][`iter_${currentMetric}`];
-        const metricNames = { f1: 'F1-Score', mse: 'MSE 损失' };
+        const g = getPerfGroup();
+        if (!g.dsList.includes(perfDataset)) {
+            perfDataset = g.defaultDs;
+        }
+        const data = metricsData[perfDataset][`iter_${currentMetric}`];
+        const metricNames = { f1: 'F1-Score', loss: g.lossLabel };
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            if (iterChart) { iterChart.destroy(); iterChart = null; }
+            return;
+        }
         if(iterChart) iterChart.destroy();
+        const labels = data.map((_, i) => i === 0 ? '初始' : `迭代${i}`);
         iterChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: ['初始', '迭代1', '迭代2', '迭代3'], datasets: [{ label: metricNames[currentMetric], data: data, borderColor: '#0066cc', backgroundColor: 'rgba(0,102,204,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#7a28cb', pointRadius: 5 }] },
+            data: { labels, datasets: [{ label: metricNames[currentMetric], data: data, borderColor: '#0066cc', backgroundColor: 'rgba(0,102,204,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#7a28cb', pointRadius: 5 }] },
             options: { responsive: true, maintainAspectRatio: true, scales: { y: { title: { display: true, text: metricNames[currentMetric] } } } }
         });
-        document.getElementById('iterChartTitle').innerHTML = `<i class="fas fa-chart-line"></i> 迭代优化过程（${metricsData[currentDataset].name}）- ${metricNames[currentMetric]} (v2.0)`;
+        document.getElementById('iterChartTitle').innerHTML = `<i class="fas fa-chart-line"></i> 迭代优化过程（${metricsData[perfDataset].name}）- ${metricNames[currentMetric]} (v2.0)`;
     }
 
     function updateSummaryCards() {
         const container = document.getElementById('summaryContainer');
-        const dsList = ['white_wine', 'bank', 'phishing', 'biodeg'];
-        const icons = { white_wine: 'fa-wine-glass-alt', bank: 'fa-university', phishing: 'fa-shield-alt', biodeg: 'fa-leaf' };
+        const g = getPerfGroup();
+        const dsList = g.dsList;
+        const icons = g.icons;
         container.innerHTML = dsList.map(ds => {
             const d = metricsData[ds];
             const improve = d.improvement[currentMetric];
-            const sign = currentMetric === 'mse' ? '' : '+';
-            const color = currentMetric === 'mse' && improve < 0 ? '#28a745' : '#0066cc';
+            const sign = currentMetric === 'loss' ? '' : '+';
+            const color = currentMetric === 'loss' && improve < 0 ? '#28a745' : '#0066cc';
             return `<div class="summary-card" data-dataset="${ds}">
                 <i class="fas ${icons[ds]}"></i>
                 <div class="summary-content"><h4>${d.name}</h4><div class="summary-value" style="color:${color}">${sign}${improve}%</div><p>${d.baseline[currentMetric].toFixed(3)} → ${d.final[currentMetric].toFixed(3)}</p></div>
@@ -1395,19 +2260,41 @@
         }).join('');
         document.querySelectorAll('.summary-card').forEach(card => {
             card.onclick = () => {
-                currentDataset = card.getAttribute('data-dataset');
+                perfDataset = card.getAttribute('data-dataset');
                 updateLineChart();
-                updateSimulatorFromDataset();
-                updateSimulationSteps();
             };
         });
     }
 
     function updateSimulatorFromDataset() {
         const d = metricsData[currentDataset];
-        document.getElementById('metric-iter').textContent = "4";
+        document.getElementById('metric-iter').textContent = d.tabular ? "5" : "4";
         document.getElementById('metric-rules').textContent = d.rules.length;
         const reportDiv = document.getElementById('datasetReport');
+
+        if (d.tabular) {
+            const rulesHtml = d.rules.map(r => `
+                <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,102,204,0.1);">
+                    <div style="font-weight: 600; color: var(--text-dark);">${r.desc}</div>
+                    <div style="font-family: monospace; font-size: 0.7rem; color: var(--accent-cyan); background: rgba(0,102,204,0.08); padding: 4px 8px; border-radius: 6px; margin-top: 4px;">${r.formula}</div>
+                </div>
+            `).join('');
+            reportDiv.innerHTML = `
+                <div style="font-weight:700; color:var(--accent-cyan); margin-bottom:10px;">${d.name} 数据集分析报告（表格特征扩充）</div>
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:12px;">
+                    <div style="background:white; padding:8px; border-radius:12px; text-align:center;"><div style="font-size:0.7rem;">测试集 Macro F1 提升</div><div style="font-size:1.2rem; font-weight:700; color:var(--accent-purple);">+${d.improvement.f1} 个百分点</div><div>${d.baseline.f1.toFixed(4)} → ${d.final.f1.toFixed(4)}</div></div>
+                    <div style="background:white; padding:8px; border-radius:12px; text-align:center;"><div style="font-size:0.7rem;">保留特征（个）</div><div style="font-size:1.2rem; font-weight:700; color:#28a745;">${d.rules.length}</div><div>5 轮生成 · 每轮 5 候选</div></div>
+                </div>
+                <div><strong>验证集择优保留的生成特征（共${d.rules.length}条）：</strong></div>
+                <div style="margin-top:8px;">${rulesHtml}</div>
+                <div style="margin-top:8px;"><strong>CART 路径与 XGBoost 反馈的关键特征：</strong> ${d.top_features.join(' → ')}</div>
+                <div style="margin-top:6px; padding-top:6px; border-top:1px solid rgba(0,102,204,0.2); font-size:0.7rem;">独立测试：Macro F1 ${d.baseline.f1.toFixed(4)} → ${d.final.f1.toFixed(4)}，提升 +${d.improvement.f1} 个百分点</div>
+            `;
+            reportDiv.classList.add('active');
+            document.getElementById('console').innerHTML = `> 表格特征扩充分析报告 - ${d.name}\n> 独立测试 Macro F1: ${d.baseline.f1.toFixed(4)} → ${d.final.f1.toFixed(4)} (+${d.improvement.f1} 个百分点)\n> 5 轮生成共保留 ${d.rules.length} 个派生特征\n> 候选经语法解析、数值稳定性与目标泄漏检查后由验证集择优\n> 诊断：该数据集特征扩充效果显著，推荐用于下游建模`;
+            return;
+        }
+
         const rulesHtml = d.rules.map(r => `
             <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,102,204,0.1);">
                 <div style="font-weight: 600; color: var(--text-dark);">${r.desc}</div>
@@ -1432,9 +2319,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
     // ========== 原有初始化函数调用 ==========
-    updateBarChart();
-    updateLineChart();
-    updateSummaryCards();
+    updatePerfGroup(0);
     updateSimulatorFromDataset();
     updateSimulationSteps();
 
@@ -1469,16 +2354,8 @@
     const runBtn = document.getElementById('runSimulateBtn');
     if (runBtn) runBtn.onclick = runSimulation;
 
-    document.querySelectorAll('.dataset-mini-card').forEach(card => {
-        card.onclick = () => {
-            currentDataset = card.getAttribute('data-dataset');
-            updateSimulatorFromDataset();
-            updateLineChart();
-            updateSimulationSteps();
-            document.querySelectorAll('.dataset-mini-card').forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
-        };
-    });
+    document.getElementById('dsGroupPrevBtn').onclick = () => updateSimGroup(-1);
+    document.getElementById('dsGroupNextBtn').onclick = () => updateSimGroup(1);
 
     document.querySelectorAll('.metric-tab').forEach(tab => {
         tab.onclick = () => {
@@ -1491,7 +2368,36 @@
         };
     });
 
-    document.querySelector('.dataset-mini-card').click();
+    // 性能区数据分组左右切换（箭头按钮 + 键盘方向键）
+    document.getElementById('perfPrevBtn').onclick = () => updatePerfGroup(-1);
+    document.getElementById('perfNextBtn').onclick = () => updatePerfGroup(1);
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        const inView = (el) => {
+            if (!el) return false;
+            const r = el.getBoundingClientRect();
+            return r.top < window.innerHeight && r.bottom > 0;
+        };
+        const simSection = document.getElementById('integrated');
+        const perfSection = document.getElementById('performance');
+        if (inView(simSection)) {
+            if (e.key === 'ArrowLeft') updateSimGroup(-1);
+            else updateSimGroup(1);
+            return;
+        }
+        if (inView(perfSection)) {
+            if (e.key === 'ArrowLeft') updatePerfGroup(-1);
+            else updatePerfGroup(1);
+        }
+    });
+
+    applySimSelection();
+
+    document.getElementById('navAbout').onclick = function(e) {
+        e.preventDefault();
+        const footerEl = document.querySelector('footer');
+        if (footerEl) footerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
     document.getElementById('openSchematicBtn').onclick = openSchematicModal;
     document.getElementById('closeSchematicBtn').onclick = closeSchematicModal;
@@ -1535,6 +2441,7 @@
     const consoleDiv = document.getElementById('console');
     const medicalOption = document.getElementById('medicalOption');
     const generalOption = document.getElementById('generalOption');
+    const financeOption = document.getElementById('financeOption');
 
     let loadingInterval = null;
 
@@ -1659,6 +2566,9 @@
     if (generalOption) {
         generalOption.addEventListener('click', () => { if (fileInput) fileInput.click(); });
     }
+    if (financeOption) {
+        financeOption.addEventListener('click', () => { if (fileInput) fileInput.click(); });
+    }
 
     // 文件上传处理
     if (fileInput) {
@@ -1753,6 +2663,7 @@ window.addEventListener('load', function() {
     const consoleDiv = document.getElementById('console');
     const medicalOption = document.getElementById('medicalOption');
     const generalOption = document.getElementById('generalOption');
+    const financeOption = document.getElementById('financeOption');
 
     // 检查元素是否存在
     console.log('fileInput:', fileInput);
@@ -1796,6 +2707,13 @@ window.addEventListener('load', function() {
     // 点击通用选项
     if (generalOption) {
         generalOption.addEventListener('click', function() {
+            fileInput.click();
+        });
+    }
+
+    // 点击金融选项
+    if (financeOption) {
+        financeOption.addEventListener('click', function() {
             fileInput.click();
         });
     }
@@ -2077,7 +2995,10 @@ window.addEventListener('load', function() {
     border: 1px solid #e2e8f0;
 }
 
-.section-title {
+/* 小标题仅用于弹窗报告内的卡片标题，避免覆盖页面区块大标题 */
+.chart-box .section-title,
+.tree-box .section-title,
+.row-rules .section-title {
     font-size: 0.7rem;
     font-weight: 700;
     color: #1e293b;
@@ -2195,7 +3116,7 @@ window.addEventListener('load', function() {
 }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="chart.umd.js"></script>
 
 <script>
 // ==========================================
@@ -2430,283 +3351,97 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ 上传功能已初始化');
 });
 </script>
-<style>
-    .final-demo-panel {
-        margin-top: 24px;
-        padding: 22px;
-        border: 1px solid rgba(102, 126, 234, 0.25);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.92);
-        box-shadow: 0 10px 30px rgba(31, 45, 92, 0.08);
-    }
-    .final-demo-title {
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: #24315f;
-        margin-bottom: 8px;
-    }
-    .final-demo-desc {
-        color: #64748b;
-        line-height: 1.7;
-        margin-bottom: 16px;
-    }
-    .final-demo-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-    .final-demo-btn {
-        border: none;
-        border-radius: 10px;
-        padding: 12px 18px;
-        color: #fff;
-        font-weight: 700;
-        cursor: pointer;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .final-demo-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 24px rgba(102, 126, 234, 0.28);
-    }
-    .final-result-card {
-        margin-top: 14px;
-        border-radius: 10px;
-        border: 1px solid #e5e7eb;
-        padding: 14px;
-        background: #f8fafc;
-        color: #1f2937;
-        white-space: pre-wrap;
-        word-break: break-word;
-        max-height: 420px;
-        overflow: auto;
-        font-family: Consolas, "Microsoft YaHei", monospace;
-        font-size: 13px;
-    }
-</style>
 <script>
-(function() {
-    const API = {
-        tabular: '/api/run/tabular',
-        math: '/api/run/math',
-        code: '/api/run/code',
-        all: '/api/run/all_demo',
-        upload: '/api/upload'
-    };
-
-    function byId(id) {
-        return document.getElementById(id);
-    }
-
-    function safeNumber(value) {
-        const num = Number(value);
-        return Number.isFinite(num) ? num : null;
-    }
-
-    function safeFixed(value, digits = 4) {
-        const num = safeNumber(value);
-        return num === null ? 'N/A' : num.toFixed(digits);
-    }
-
-    function appendConsole(message) {
-        const consoleEl = byId('console');
-        const time = new Date().toLocaleTimeString();
-        const line = `\n> [${time}] ${message}`;
-        if (consoleEl) {
-            consoleEl.textContent += line;
-            consoleEl.scrollTop = consoleEl.scrollHeight;
-        } else {
-            console.log(message);
-        }
-    }
-
-    async function postJson(url, body) {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body || {})
+// ==========================================
+// 新增：数学推理链 & 代码数据扩充成果图表（数据来自结题验收书）
+// ==========================================
+(function () {
+    function drawMathCharts() {
+        const c1 = document.getElementById('mathKeepChart');
+        if (c1) new Chart(c1, {
+            type: 'bar',
+            data: {
+                labels: ['单次恢复', '反馈优化'],
+                datasets: [{ label: '实际新增节点（个）', data: [6, 19], backgroundColor: ['rgba(0,102,204,0.55)', 'rgba(122,40,203,0.75)'], borderRadius: 8, maxBarThickness: 90 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y + ' 个节点' } } }, scales: { y: { beginAtZero: true, suggestedMax: 24, title: { display: true, text: '新增节点数' } } } }
         });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || data.success === false) {
-            throw new Error(data.error || `HTTP ${response.status}`);
-        }
-        return data;
-    }
 
-    async function postForm(url, formData) {
-        const response = await fetch(url, { method: 'POST', body: formData });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || data.success === false) {
-            throw new Error(data.error || `HTTP ${response.status}`);
-        }
-        return data;
-    }
-
-    function metricBlock(record) {
-        const verification = record.verification || {};
-        const baseline = verification.baseline || record.baseline || {};
-        const optimized = verification.optimized || record.optimized || {};
-        const improvement = verification.improvement || record.improvement || {};
-        return [
-            `baseline: accuracy=${safeFixed(baseline.accuracy)}, auc=${safeFixed(baseline.auc)}, f1=${safeFixed(baseline.f1)}, log_loss=${safeFixed(baseline.log_loss)}, mse=${safeFixed(baseline.mse)}`,
-            `optimized: accuracy=${safeFixed(optimized.accuracy)}, auc=${safeFixed(optimized.auc)}, f1=${safeFixed(optimized.f1)}, log_loss=${safeFixed(optimized.log_loss)}, mse=${safeFixed(optimized.mse)}`,
-            `improvement: accuracy=${safeFixed(improvement.accuracy)}, auc=${safeFixed(improvement.auc)}, f1=${safeFixed(improvement.f1)}, log_loss=${safeFixed(improvement.log_loss)}, mse=${safeFixed(improvement.mse)}`
-        ].join('\n');
-    }
-
-    function summarizeRecord(record) {
-        if (!record) return '没有返回结果。';
-        const modality = record.modality || 'tabular';
-        const accepted = record.accepted ? 'accepted' : 'rejected';
-        if (modality === 'tabular' || record.baseline) {
-            const generated = record.generated || {};
-            const features = generated.accepted_features || record.accepted_features || [];
-            const codes = generated.feature_codes || record.generated_rules || [];
-            return [
-                '【Tabular 特征列扩充】',
-                `状态：${accepted}`,
-                metricBlock(record),
-                `接受的新特征：${features.length ? features.join(', ') : '暂无'}`,
-                '生成的新特征代码：',
-                codes.join('\n---\n') || '暂无',
-                '下载增强后 CSV：/outputs/tabular_augmented.csv'
-            ].join('\n');
-        }
-        if (modality === 'math') {
-            const generated = record.generated || {};
-            const verification = record.verification || {};
-            const metrics = record.metrics || {};
-            return [
-                '【Math 推理链扩充】',
-                `状态：${accepted}`,
-                `问题：${(record.input_summary || {}).question || ''}`,
-                `Reasoning Graph 节点数：${metrics.original_node_count || 0} -> ${metrics.expanded_node_count || 0}`,
-                `被 mask 的节点：${generated.masked_node || ''}`,
-                `恢复节点：${generated.recovered_node || ''}`,
-                `aggregate_score=${safeFixed(verification.aggregate_score, 3)}, reasoning_gain=${safeFixed(verification.reasoning_gain, 3)}`,
-                'expanded CoT：',
-                generated.expanded_cot || ''
-            ].join('\n');
-        }
-        if (modality === 'code') {
-            const generated = record.generated || {};
-            const verification = record.verification || {};
-            return [
-                '【Code 代码数据扩充】',
-                `状态：${accepted}`,
-                `prompt：${generated.prompt || (record.input_summary || {}).prompt || ''}`,
-                `test_result：passed=${verification.passed}, error_type=${verification.error_type || 'None'}`,
-                `feedback：${record.feedback || ''}`,
-                'final code：',
-                generated.final_code || ''
-            ].join('\n');
-        }
-        return JSON.stringify(record, null, 2);
-    }
-
-    function ensureResultPanel() {
-        let panel = byId('finalResultPanel');
-        if (panel) return panel;
-        const integrated = byId('integrated') || document.body;
-        const wrapper = document.createElement('div');
-        wrapper.className = 'final-demo-panel';
-        wrapper.innerHTML = `
-            <div class="final-demo-title">结题版三类数据扩充演示</div>
-            <div class="final-demo-desc">保留原 OCTree 表格特征扩充闭环，并新增 Math 推理链扩充、Code 代码修复轨迹扩充。点击按钮会调用 Flask 后端接口，结果会写入 outputs/。</div>
-            <div class="final-demo-buttons">
-                <button class="final-demo-btn" data-run-mode="tabular">Tabular 特征列扩充</button>
-                <button class="final-demo-btn" data-run-mode="math">Math 推理链扩充</button>
-                <button class="final-demo-btn" data-run-mode="code">Code 代码数据扩充</button>
-                <button class="final-demo-btn" data-run-mode="all">一键运行三类 Demo</button>
-            </div>
-            <div id="finalResultPanel" class="final-result-card">点击上方按钮后，这里会显示统一 ResultRecord 摘要。</div>
-        `;
-        const simulator = integrated.querySelector('.integrated-simulator') || integrated;
-        simulator.appendChild(wrapper);
-        panel = byId('finalResultPanel');
-        wrapper.querySelectorAll('[data-run-mode]').forEach(btn => {
-            btn.addEventListener('click', () => runDemo(btn.getAttribute('data-run-mode')));
+        const c4 = document.getElementById('mathOPDChart');
+        if (c4) new Chart(c4, {
+            type: 'bar',
+            data: {
+                labels: ['Base Qwen3-1.7B', 'Original OPD', 'History OPD'],
+                datasets: [{ label: '单次解题正确率（%）', data: [80.0, 87.5, 92.5], backgroundColor: ['rgba(0,102,204,0.55)', 'rgba(122,40,203,0.6)', 'rgba(122,40,203,0.9)'], borderRadius: 8, maxBarThickness: 90 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y + '%' } } }, scales: { y: { min: 0, max: 100, title: { display: true, text: '正确率（%）' } } } }
         });
-        return panel;
     }
 
-    function showResult(record) {
-        const panel = ensureResultPanel();
-        panel.textContent = summarizeRecord(record);
-        appendConsole(`结果已返回：${record.modality || 'all_demo'}，accepted=${record.accepted}`);
-    }
-
-    async function runDemo(mode) {
-        const panel = ensureResultPanel();
-        panel.textContent = `正在运行 ${mode} demo，请稍等...`;
-        appendConsole(`开始运行 ${mode} demo`);
-        try {
-            if (mode === 'all') {
-                const data = await postJson(API.all, {});
-                const parts = [];
-                ['tabular', 'math', 'code'].forEach(key => {
-                    if (data.results && data.results[key]) parts.push(summarizeRecord(data.results[key]));
-                });
-                if (data.errors && Object.keys(data.errors).length) {
-                    parts.push('错误：' + JSON.stringify(data.errors, null, 2));
-                }
-                panel.textContent = parts.join('\n\n==============================\n\n');
-                appendConsole('一键 Demo 运行完成，输出已写入 outputs/');
-                return;
-            }
-            const data = await postJson(API[mode], {});
-            showResult(data);
-        } catch (error) {
-            panel.textContent = `运行失败：${error.message}`;
-            appendConsole(`运行失败：${error.message}`);
-        }
-    }
-
-    function initUpload() {
-        let uploadBtn = byId('uploadDataBtn');
-        let fileInput = byId('fileInput');
-        if (!uploadBtn || !fileInput) return;
-
-        const cleanBtn = uploadBtn.cloneNode(true);
-        const cleanInput = fileInput.cloneNode(true);
-        uploadBtn.parentNode.replaceChild(cleanBtn, uploadBtn);
-        fileInput.parentNode.replaceChild(cleanInput, fileInput);
-        uploadBtn = cleanBtn;
-        fileInput = cleanInput;
-
-        uploadBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', async () => {
-            const file = fileInput.files && fileInput.files[0];
-            if (!file) return;
-            appendConsole(`上传文件：${file.name}`);
-            const formData = new FormData();
-            formData.append('file', file);
-            const panel = ensureResultPanel();
-            panel.textContent = '正在运行上传数据的 Tabular OCTree 分析...';
-            try {
-                const data = await postForm(API.upload, formData);
-                const record = data.record || data;
-                showResult(record);
-            } catch (error) {
-                panel.textContent = `上传分析失败：${error.message}`;
-                appendConsole(`上传分析失败：${error.message}`);
-            } finally {
-                fileInput.value = '';
-            }
+    function drawCodeCharts() {
+        const c5 = document.getElementById('codePassChart');
+        if (c5) new Chart(c5, {
+            type: 'bar',
+            data: {
+                labels: ['MBPP-full（500题）', 'MBPP-sanitized（257题）', 'HumanEval（164题）'],
+                datasets: [
+                    { label: '原始学生模型', data: [34.4, null, 68.3], backgroundColor: 'rgba(0,102,204,0.45)', borderRadius: 6 },
+                    { label: 'OPD学生模型（step200）', data: [42.8, 50.2, 65.2], backgroundColor: 'rgba(122,40,203,0.75)', borderRadius: 6 },
+                    { label: '教师模型', data: [50.8, null, 77.4], backgroundColor: 'rgba(0,102,204,0.2)', borderRadius: 6 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100, title: { display: true, text: 'pass@1（%）' } } } }
         });
-        appendConsole('上传事件已整理为单一 initUpload() 绑定');
+
+        const c6 = document.getElementById('codeHumaEvalChart');
+        if (c6) new Chart(c6, {
+            type: 'doughnut',
+            data: {
+                labels: ['通过全部测试（107）', '功能测试失败（56）', '语法错误（1）'],
+                datasets: [{ data: [107, 56, 1], backgroundColor: ['rgba(0,102,204,0.7)', 'rgba(122,40,203,0.65)', 'rgba(124,58,237,0.35)'], borderWidth: 2, borderColor: '#fff' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+        });
     }
 
-    function initFinalDemo() {
-        ensureResultPanel();
-        initUpload();
+    function drawTabularCharts() {
+        const t1 = document.getElementById('tabularF1Chart');
+        if (t1) new Chart(t1, {
+            type: 'bar',
+            data: {
+                labels: ['Jungle Chess', 'Balance Scale', 'Chess KRK'],
+                datasets: [
+                    { label: '原始特征（扩充前）', data: [0.5603, 0.5824, 0.3705], backgroundColor: 'rgba(0,102,204,0.45)', borderRadius: 6 },
+                    { label: 'LLM 扩充后（独立测试）', data: [0.7022, 0.8099, 0.4046], backgroundColor: 'rgba(122,40,203,0.75)', borderRadius: 6 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 0.9, title: { display: true, text: 'Macro F1' }, ticks: { callback: v => v.toFixed(2) } } } }
+        });
+    }
+
+    // 防御：无论主脚本是否被其它错误中断，"项目展示"按钮都必须可用
+    function ensureEnterBinding() {
+        const btn = document.getElementById('enterButton');
+        if (!btn || typeof btn.onclick === 'function') return;
+        const ip = document.getElementById('introPage');
+        const mc = document.getElementById('mainContainer');
+        btn.onclick = function () {
+            if (ip) ip.classList.add('hidden');
+            setTimeout(function () { if (mc) mc.classList.add('loaded'); }, 800);
+        };
+    }
+
+    function init() {
+        ensureEnterBinding();
+        drawTabularCharts();
+        drawMathCharts();
+        drawCodeCharts();
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initFinalDemo);
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        initFinalDemo();
+        init();
     }
 })();
 </script>
