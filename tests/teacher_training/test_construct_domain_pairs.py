@@ -122,11 +122,23 @@ class ConstructDomainPairsTests(unittest.TestCase):
         target = "def total(values):\n    result = sum(values)  # explanation\n    return result\n"
         self.assertIsNone(construct_local_structure({"problem_id": "comment"}, target))
 
-    def test_local_structure_supports_single_use_inside_return_expression(self):
+    def test_local_structure_does_not_inline_into_larger_return_expression(self):
         target = "def scaled(value):\n    doubled = value * 2\n    return doubled + 1\n"
         pair = construct_local_structure({"problem_id": "return-expression"}, target)
         self.assertIsNotNone(pair)
-        self.assertEqual("def scaled(value):\n    return (value * 2) + 1\n", pair["source_code"])
+        self.assertEqual("fowler_extract_return_expression", pair["construction_method"])
+        self.assertEqual(target, pair["source_code"])
+
+    def test_local_structure_preserves_evaluation_order(self):
+        target = (
+            "def f(values):\n"
+            "    temp = values[0]\n"
+            "    return values.pop() + temp\n"
+        )
+        pair = construct_local_structure({"problem_id": "evaluation-order"}, target)
+        self.assertIsNotNone(pair)
+        self.assertEqual(target, pair["source_code"])
+        self.assertNotIn("values.pop() + (values[0])", pair["source_code"])
 
     def test_local_structure_rejects_side_effecting_rhs(self):
         target = "def load():\n    value = fetch()\n    return normalize(value)\n"
@@ -152,11 +164,31 @@ class ConstructDomainPairsTests(unittest.TestCase):
             "    return computed_value\n",
             pair["target_code"],
         )
-        self.assertEqual("teacher-local-structure-constructor-v7", pair["constructor_version"])
+        self.assertEqual("teacher-local-structure-constructor-v9", pair["constructor_version"])
+        self.assertIn("仅对函数", pair["task"])
+        self.assertIn("除这一处外", pair["task"])
+        self.assertEqual(1, pair["transformation_evidence"]["expected_edit_count"])
 
     def test_local_structure_rejects_weak_tuple_packaging(self):
         source = "def pair(left, right):\n    return left, right\n"
         self.assertIsNone(construct_local_structure({"problem_id": "weak-tuple"}, source))
+
+    def test_local_structure_marks_multi_path_repeated_expression_as_hard(self):
+        source = (
+            "def managed(items, direct):\n"
+            "    if direct:\n"
+            "        for item in items:\n"
+            "            if item.ready():\n"
+            "                return item.ready()\n"
+            "    return item.ready()\n"
+        )
+        pair = construct_local_structure({"problem_id": "hard-local"}, source)
+        self.assertEqual("hard", pair["difficulty"])
+        reasons = pair["transformation_evidence"]["hard_case_reasons"]
+        self.assertIn("multiple_returns", reasons)
+        self.assertIn("loop_state", reasons)
+        self.assertIn("multiple_paths", reasons)
+        self.assertIn("repeated_target_expression", reasons)
 
     def test_local_structure_source_ids_disambiguate_different_pairs(self):
         first = "def f(value):\n    return value + 1\n"

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="920" viewBox="0 0 1800 920">
+  <defs>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#17324D" flood-opacity="0.10"/>
+    </filter>
+    <style>
+      .cn { font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
+      .title { font-size: 50px; font-weight: 700; fill: #172B3A; letter-spacing: 1px; }
+      .subtitle { font-size: 23px; font-weight: 400; fill: #607180; }
+      .card-title { font-size: 31px; font-weight: 700; fill: white; }
+      .label { font-size: 22px; font-weight: 600; fill: #647482; letter-spacing: 1px; }
+      .main { font-size: 27px; font-weight: 600; fill: #203442; }
+      .detail { font-size: 22px; font-weight: 400; fill: #415766; }
+      .principle { font-size: 28px; font-weight: 650; fill: #18364C; }
+      .principle2 { font-size: 22px; font-weight: 400; fill: #526B7C; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="920" fill="#F7F9FC"/>
+  <text x="900" y="80" text-anchor="middle" class="cn title">三类数据扩充任务及其质量约束</text>
+  <text x="900" y="123" text-anchor="middle" class="cn subtitle">从候选生成到任务验证，以可计算证据保障扩充质量</text>
+
+  <!-- Tabular card -->
+  <g filter="url(#shadow)">
+    <rect x="90" y="175" width="510" height="520" rx="24" fill="#FFFFFF"/>
+    <path d="M114 175H576A24 24 0 0 1 600 199V280H90V199A24 24 0 0 1 114 175Z" fill="#356FC2"/>
+  </g>
+  <circle cx="153" cy="228" r="25" fill="#FFFFFF" fill-opacity="0.19"/>
+  <path d="M138 216h30M138 228h30M138 240h30M148 211v34M159 211v34" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <text x="195" y="239" class="cn card-title">表格数据</text>
+  <text x="130" y="330" class="cn label">扩充对象</text>
+  <text x="130" y="374" class="cn main">具有预测价值的派生特征列</text>
+  <line x1="130" y1="411" x2="560" y2="411" stroke="#E4EAF1" stroke-width="2"/>
+  <text x="130" y="457" class="cn label">主要风险</text>
+  <text x="130" y="499" class="cn detail">无效组合 · 目标泄漏 · 过拟合</text>
+  <line x1="130" y1="536" x2="560" y2="536" stroke="#E4EAF1" stroke-width="2"/>
+  <text x="130" y="582" class="cn label">验证机制</text>
+  <text x="130" y="624" class="cn detail">语法与数值检查 · 验证集 Macro F1</text>
+  <text x="130" y="659" class="cn detail">特征消融</text>
+
+  <!-- Math card -->
+  <g filter="url(#shadow)">
+    <rect x="645" y="175" width="510" height="520" rx="24" fill="#FFFFFF"/>
+    <path d="M669 175H1131A24 24 0 0 1 1155 199V280H645V199A24 24 0 0 1 669 175Z" fill="#B67824"/>
+  </g>
+  <circle cx="708" cy="228" r="25" fill="#FFFFFF" fill-opacity="0.19"/>
+  <text x="708" y="237" text-anchor="middle" class="cn" font-size="29" font-weight="700" fill="#FFFFFF">∑</text>
+  <text x="750" y="239" class="cn card-title">数学推理数据</text>
+  <text x="685" y="330" class="cn label">扩充对象</text>
+  <text x="685" y="374" class="cn main">细粒度中间推理节点</text>
+  <line x1="685" y1="411" x2="1115" y2="411" stroke="#E4EAF1" stroke-width="2"/>
+  <text x="685" y="457" class="cn label">主要风险</text>
+  <text x="685" y="499" class="cn detail">逻辑断裂 · 公式错误 · 答案改变</text>
+  <line x1="685" y1="536" x2="1115" y2="536" stroke="#E4EAF1" stroke-width="2"/>
+  <text x="685" y="582" class="cn label">验证机制</text>
+  <text x="685" y="624" class="cn detail">答案一致性 · 步骤质量</text>
+  <text x="685" y="659" class="cn detail">节点增量</text>
+
+  <!-- Code card -->
+  <g filter="url(#shadow)">
+    <rect x="1200" y="175" width="510" height="520" rx="24" fill="#FFFFFF"/>
+    <path d="M1224 175H1686A24 24 0 0 1 1710 199V280H1200V199A24 24 0 0 1 1224 175Z" fill="#267D78"/>
+  </g>
+  <circle cx="1263" cy="228" r="25" fill="#FFFFFF" fill-opacity="0.19"/>
+  <path d="M1255 216l-11 12 11 12M1271 216l11 12-11 12" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1305" y="239" class="cn card-title">代码数据</text>
+  <text x="1240" y="330" class="cn label">扩充对象</text>
+  <text x="1240" y="374" class="cn main">改写代码与求解轨迹</text>
+  <line x1="1240" y1="411" x2="1670" y2="411" stroke="#E4EAF1" stroke-width="2"/>
+  <text x="1240" y="457" class="cn label">主要风险</text>
+  <text x="1240" y="499" class="cn detail">语法错误 · 接口变化 · 功能不一致</text>
+  <line x1="1240" y1="536" x2="1670" y2="536" stroke="#E4EAF1" stroke-width="2"/>
+  <text x="1240" y="582" class="cn label">验证机制</text>
+  <text x="1240" y="624" class="cn detail">语法与接口检查 · 单元测试</text>
+  <text x="1240" y="659" class="cn detail">实际执行</text>
+
+  <!-- Shared principle -->
+  <rect x="190" y="752" width="1420" height="112" rx="56" fill="#EAF1F7" stroke="#CAD8E5" stroke-width="2"/>
+  <circle cx="260" cy="808" r="27" fill="#173E5B"/>
+  <path d="M248 808l8 8 17-19" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="310" y="800" class="cn principle">共同原则：任务约束 + 可执行／可计算验证 + 反馈驱动筛选</text>
+  <text x="310" y="836" class="cn principle2">仅保留满足正确性要求且能够提供有效监督的扩充结果</text>
+</svg>

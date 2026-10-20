@@ -1,0 +1,10 @@
+{
+  "schema_version": "base-lora-generation-v3",
+  "base_model": "/backup01/tangyafeng/zhuxiyao/teacher/models/Qwen3-4B",
+  "adapter": "/backup01/tangyafeng/zhuxiyao/teacher/teacher-runs/teacher-local-structure-smoke-v8",
+  "test_file": "/home/tangyafeng/zhuxiyao/teacher-specialization/teacher_training/data/processed/local_structure_v8/test.jsonl",
+  "test_file_sha256": "cb64ae47216e3da7f729287a04633c5191a3ed26ae45acdee50ff237c38e466f",
+  "limit": 20,
+  "max_new_tokens": 2048,
+  "thinking": false
+}

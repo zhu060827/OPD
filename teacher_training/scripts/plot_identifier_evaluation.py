@@ -50,16 +50,30 @@ def main() -> None:
         plt.close(figure)
         return paths
 
+    def add_percent_label(axis, bar, value: float) -> None:
+        """在柱上直接标出数值；零值放在基线上方以保持可见。"""
+        if value >= 10:
+            offset, vertical, color = -7, "top", "white"
+        else:
+            offset, vertical, color = 5, "bottom", "#333333"
+        axis.annotate(
+            f"{value:.1f}%",
+            (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+            xytext=(0, offset), textcoords="offset points",
+            ha="center", va=vertical, color=color, fontweight="bold", fontsize=9,
+            zorder=5,
+        )
+
     # 主指标单独成图：DOBF identifier recovery exact match。
     figure, axis = plt.subplots(figsize=(3.8, 3.25))
     width = 0.34
     for x, (name, rows, color, hatch) in zip((-width / 2, width / 2), methods):
         values = numeric(rows, "primary_identifier_exact_match")
         low, high = wilson_ci(values); mean = float(values.mean())
+        yerr = np.array([[max(0.0, (mean-low)*100)], [max(0.0, (high-mean)*100)]])
         bar = axis.bar(x, mean * 100, width, color=color, hatch=hatch, edgecolor="white", linewidth=1.2,
-                       yerr=np.array([[(mean-low)*100], [(high-mean)*100]]), capsize=3, zorder=3)[0]
-        axis.text(bar.get_x() + bar.get_width()/2, max(2, mean*100-6), f"{mean*100:.1f}%",
-                  ha="center", va="center", color="white" if mean else "#333333", fontweight="bold", fontsize=9)
+                       yerr=yerr, capsize=3, zorder=3)[0]
+        add_percent_label(axis, bar, mean * 100)
         exported.append({"panel": "primary", "metric": "Identifier exact match", "method": name,
                          "mean": mean*100, "ci95_low": low*100, "ci95_high": high*100,
                          "ci_method": "Wilson score 95% CI", "n": len(values)})
@@ -84,8 +98,10 @@ def main() -> None:
             values = numeric(rows, field)
             low, high = wilson_ci(values) if binary else bootstrap_ci(values)
             mean = float(values.mean())
-            axis.bar(x, mean*100, width, color=color, hatch=hatch, edgecolor="white", linewidth=1.2,
-                     yerr=np.array([[(mean-low)*100], [(high-mean)*100]]), capsize=3, zorder=3)
+            yerr = np.array([[max(0.0, (mean-low)*100)], [max(0.0, (high-mean)*100)]])
+            bar = axis.bar(x, mean*100, width, color=color, hatch=hatch, edgecolor="white", linewidth=1.2,
+                           yerr=yerr, capsize=3, zorder=3)[0]
+            add_percent_label(axis, bar, mean * 100)
             exported.append({"panel": f"auxiliary-{panel+1}", "metric": label, "method": name,
                              "mean": mean*100, "ci95_low": low*100, "ci95_high": high*100,
                              "ci_method": "Wilson score 95% CI" if binary else "bootstrap 95% CI (10,000; seed=42)",

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960">
+  <rect width="1600" height="960" fill="#ffffff"/>
+  <style>
+    .cn { font-family: "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif; }
+    .title { font-size: 48px; font-weight: 700; fill: #143b73; }
+    .axis { font-size: 28px; fill: #324a5f; }
+    .tick { font-size: 24px; fill: #52677a; }
+    .label { font-size: 28px; font-weight: 600; fill: #243746; }
+    .value { font-size: 34px; font-weight: 700; fill: #1c2d3c; }
+    .note { font-size: 25px; fill: #536779; }
+  </style>
+  <text x="800" y="76" text-anchor="middle" class="cn title">OPD训练前后MBPP代码生成性能</text>
+
+  <!-- plot grid -->
+  <g stroke="#dbe3eb" stroke-width="2">
+    <line x1="170" y1="750" x2="1500" y2="750"/>
+    <line x1="170" y1="640" x2="1500" y2="640"/>
+    <line x1="170" y1="530" x2="1500" y2="530"/>
+    <line x1="170" y1="420" x2="1500" y2="420"/>
+    <line x1="170" y1="310" x2="1500" y2="310"/>
+    <line x1="170" y1="200" x2="1500" y2="200"/>
+    <line x1="170" y1="90" x2="1500" y2="90"/>
+  </g>
+  <g class="cn tick" text-anchor="end">
+    <text x="145" y="758">0</text><text x="145" y="648">10</text>
+    <text x="145" y="538">20</text><text x="145" y="428">30</text>
+    <text x="145" y="318">40</text><text x="145" y="208">50</text>
+    <text x="145" y="98">60</text>
+  </g>
+  <line x1="170" y1="90" x2="170" y2="750" stroke="#9dabb8" stroke-width="3"/>
+  <line x1="170" y1="750" x2="1500" y2="750" stroke="#9dabb8" stroke-width="3"/>
+  <text x="55" y="420" transform="rotate(-90 55 420)" text-anchor="middle" class="cn axis">pass@1（%）</text>
+
+  <!-- bars: scale 11px per point -->
+  <rect x="310" y="371.6" width="260" height="378.4" rx="5" fill="#e995ae" stroke="#d56d8c" stroke-width="3"/>
+  <rect x="670" y="279.2" width="260" height="470.8" rx="5" fill="#4e73b8" stroke="#315d9d" stroke-width="3"/>
+  <rect x="1030" y="191.2" width="260" height="558.8" rx="5" fill="#8eb5d8" stroke="#568ab9" stroke-width="3"/>
+  <g class="cn value" text-anchor="middle">
+    <text x="440" y="350">34.4%</text>
+    <text x="800" y="258">42.8%</text>
+    <text x="1160" y="170">50.8%</text>
+  </g>
+
+  <!-- gain arrow -->
+  <line x1="620" y1="365" x2="620" y2="286" stroke="#c73535" stroke-width="5"/>
+  <path d="M620 365 l-12 -20 h24 z" fill="#c73535"/>
+  <path d="M620 286 l-12 20 h24 z" fill="#c73535"/>
+  <rect x="515" y="205" width="205" height="48" rx="20" fill="#fff1f1"/>
+  <text x="617" y="238" text-anchor="middle" class="cn" font-size="27" font-weight="700" fill="#c73535">+8.4个百分点</text>
+
+  <g class="cn label" text-anchor="middle">
+    <text x="440" y="800">Student Base</text><text x="440" y="836" font-size="23" font-weight="400">Qwen3-1.7B</text>
+    <text x="800" y="800">Student + OPD</text><text x="800" y="836" font-size="23" font-weight="400">step 200</text>
+    <text x="1160" y="800">Teacher</text><text x="1160" y="836" font-size="23" font-weight="400">Qwen3-4B</text>
+  </g>
+  <rect x="235" y="875" width="1200" height="55" rx="20" fill="#eef5fb"/>
+  <text x="835" y="912" text-anchor="middle" class="cn note">学生模型生成代码轨迹，教师模型在相同轨迹上提供词元分布监督。</text>
+</svg>

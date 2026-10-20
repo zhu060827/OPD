@@ -9,10 +9,28 @@ from teacher_training.domains import (
     PUBLIC_DOMAIN_NAMES,
     SYSTEM_PROMPT_VERSION,
 )
-from teacher_training.train_lora import build_dry_run_report
+from teacher_training.train_lora import (
+    _non_thinking_training_template,
+    audit_assistant_mask,
+    build_dry_run_report,
+)
 
 
 class TrainLoraDryRunTests(unittest.TestCase):
+    def test_training_template_disables_thinking_and_keeps_mask_markers(self):
+        template = "{% generation %}{{ content }}{% endgeneration %}"
+        patched = _non_thinking_training_template(template)
+        self.assertTrue(patched.startswith("{% set enable_thinking = false %}"))
+        self.assertIn("{% generation %}", patched)
+
+    def test_assistant_mask_audit_rejects_missing_target_mask(self):
+        class Tokenizer:
+            def apply_chat_template(self, *args, **kwargs):
+                return {"input_ids": [1, 2, 3], "assistant_masks": [0, 0, 0]}
+
+        with self.assertRaisesRegex(ValueError, "assistant token mask"):
+            audit_assistant_mask(Tokenizer(), [{"role": "assistant", "content": "x"}])
+
     def test_dry_run_validates_data_without_loading_a_model(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

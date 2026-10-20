@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1260" viewBox="0 0 2200 1260">
+  <defs>
+    <marker id="arr" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0,0 L11,5.5 L0,11 Z" fill="#35434c"/></marker>
+    <marker id="arrP" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0,0 L11,5.5 L0,11 Z" fill="#7363b5"/></marker>
+    <marker id="arrG" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0,0 L11,5.5 L0,11 Z" fill="#4c9662"/></marker>
+    <style>
+      .cn{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif}.title{font-size:37px;font-weight:750;fill:#172633}.panel{fill:#fff;stroke:#35434c;stroke-width:2.4;stroke-dasharray:10 7}.head{fill:#dce7ef;stroke:#35434c;stroke-width:2.4}.hn{font-size:25px;font-weight:750;font-style:italic;fill:#172633}.ht{font-size:27px;font-weight:750;fill:#172633}.bt{font-size:22px;font-weight:700;fill:#21343e}.body{font-size:18px;fill:#405762}.small{font-size:16px;fill:#5a6f79}.num{font-size:18px;font-weight:750;fill:#fff}.arrow{fill:none;stroke:#35434c;stroke-width:3.3;marker-end:url(#arr)}.loop{fill:none;stroke:#7363b5;stroke-width:3.3;stroke-dasharray:9 7;marker-end:url(#arrP)}.good{fill:none;stroke:#4c9662;stroke-width:3.3;stroke-dasharray:9 7;marker-end:url(#arrG)}
+    </style>
+  </defs>
+  <rect width="2200" height="1260" fill="#fff"/>
+  <text x="1100" y="55" text-anchor="middle" class="cn title">基于节点遮盖与反馈优化的数学推理链扩充流程</text>
+
+  <!-- 1 input -->
+  <rect x="35" y="85" width="560" height="330" class="panel"/>
+  <rect x="35" y="85" width="560" height="64" class="head"/>
+  <text x="67" y="127" class="cn hn">1</text><text x="108" y="127" class="cn ht">数学数据输入与审计</text>
+  <rect x="75" y="178" width="480" height="72" rx="11" fill="#eaf3ff" stroke="#7298ce" stroke-width="2"/>
+  <text x="315" y="208" text-anchor="middle" class="cn bt">题目、参考答案与原始CoT</text><text x="315" y="234" text-anchor="middle" class="cn small">GSM8K · MATH-500 · NuminaMath-CoT</text>
+  <path d="M315 250V276" class="arrow"/>
+  <rect x="75" y="290" width="145" height="72" rx="10" fill="#edf5ec" stroke="#72a07a" stroke-width="2"/>
+  <rect x="243" y="290" width="145" height="72" rx="10" fill="#fff4df" stroke="#c69a3c" stroke-width="2"/>
+  <rect x="410" y="290" width="145" height="72" rx="10" fill="#f2f3f4" stroke="#87949c" stroke-width="2"/>
+  <text x="147" y="321" text-anchor="middle" class="cn bt">字段检查</text><text x="147" y="347" text-anchor="middle" class="cn small">内容完整</text>
+  <text x="315" y="321" text-anchor="middle" class="cn bt">答案验证</text><text x="315" y="347" text-anchor="middle" class="cn small">原解正确</text>
+  <text x="482" y="321" text-anchor="middle" class="cn bt">长度筛选</text><text x="482" y="347" text-anchor="middle" class="cn small">至少3个节点</text>
+  <text x="315" y="394" text-anchor="middle" class="cn small">仅保留可验证且具备安全中间节点的样本</text>
+
+  <!-- 2 parse and mask -->
+  <rect x="630" y="85" width="910" height="330" class="panel"/>
+  <rect x="630" y="85" width="910" height="64" class="head"/>
+  <text x="662" y="127" class="cn hn">2</text><text x="703" y="127" class="cn ht">推理结构解析与节点遮盖</text>
+  <rect x="675" y="178" width="230" height="124" rx="11" fill="#eaf3ff" stroke="#7298ce" stroke-width="2"/>
+  <text x="790" y="212" text-anchor="middle" class="cn bt">推理步骤切分</text><text x="790" y="247" text-anchor="middle" class="cn small">编号、换行与语义边界</text><text x="790" y="275" text-anchor="middle" class="cn small">构建顺序推理图</text>
+  <path d="M905 240H950" class="arrow"/>
+  <rect x="965" y="178" width="230" height="124" rx="11" fill="#edf5ec" stroke="#72a07a" stroke-width="2"/>
+  <text x="1080" y="212" text-anchor="middle" class="cn bt">节点识别</text><text x="1080" y="247" text-anchor="middle" class="cn small">公式变换、推断、解释</text><text x="1080" y="275" text-anchor="middle" class="cn small">定义与结论</text>
+  <path d="M1195 240H1240" class="arrow"/>
+  <rect x="1255" y="178" width="240" height="124" rx="11" fill="#fff4df" stroke="#c69a3c" stroke-width="2"/>
+  <text x="1375" y="212" text-anchor="middle" class="cn bt">安全中间节点遮盖</text><text x="1375" y="247" text-anchor="middle" class="cn small">优先变换、推断与解释</text><text x="1375" y="275" text-anchor="middle" class="cn small">保留前后上下文</text>
+  <rect x="820" y="330" width="530" height="48" rx="9" fill="#f5f7f8" stroke="#87949c" stroke-width="1.8"/>
+  <text x="1085" y="361" text-anchor="middle" class="cn body">形成：题目 + 前缀步骤 + [MASK] + 后缀步骤 + 节点类型</text>
+
+  <!-- 4 outputs -->
+  <rect x="1575" y="85" width="590" height="330" class="panel"/>
+  <rect x="1575" y="85" width="590" height="64" class="head"/>
+  <text x="1607" y="127" class="cn hn">4</text><text x="1648" y="127" class="cn ht">扩充输出与统一评价</text>
+  <rect x="1620" y="177" width="500" height="64" rx="10" fill="#eaf6ed" stroke="#72a07a" stroke-width="2"/>
+  <text x="1870" y="216" text-anchor="middle" class="cn bt">保留原始答案并输出扩充推理链</text>
+  <rect x="1620" y="274" width="235" height="88" rx="10" fill="#f4f5f5" stroke="#87949c" stroke-width="2"/>
+  <text x="1737" y="307" text-anchor="middle" class="cn bt">方法对比</text><text x="1737" y="337" text-anchor="middle" class="cn small">原始 · 单次 · 反馈优化</text>
+  <rect x="1885" y="274" width="235" height="88" rx="10" fill="#fff5e4" stroke="#c69a3c" stroke-width="2"/>
+  <text x="2002" y="307" text-anchor="middle" class="cn bt">质量指标</text><text x="2002" y="337" text-anchor="middle" class="cn small">质量、接收率、答案一致性</text>
+  <text x="1870" y="394" text-anchor="middle" class="cn small">Base / Original OPSD / History OPSD 可接入同一恢复接口</text>
+
+  <!-- connections top -->
+  <path d="M595 245H618" class="arrow"/>
+  <path d="M1085 415V451" class="arrow"/>
+
+  <!-- 3 main loop -->
+  <rect x="35" y="455" width="2130" height="750" class="panel"/>
+  <rect x="35" y="455" width="2130" height="68" class="head"/>
+  <text x="67" y="500" class="cn hn">3</text><text x="108" y="500" class="cn ht">节点恢复—多维验证—严格门控—反馈优化—推理链更新</text>
+
+  <rect x="80" y="580" width="290" height="150" rx="13" fill="#eaf3ff" stroke="#6793d0" stroke-width="2.2"/>
+  <circle cx="121" cy="619" r="22" fill="#397bd0"/><text x="121" y="626" text-anchor="middle" class="cn num">1</text>
+  <text x="225" y="628" text-anchor="middle" class="cn bt">候选节点恢复</text>
+  <text x="225" y="668" text-anchor="middle" class="cn body">依据题目和前后文补全</text><text x="225" y="698" text-anchor="middle" class="cn small">生成一个或多个中间步骤</text>
+
+  <path d="M370 655H430" class="arrow"/>
+  <rect x="445" y="580" width="335" height="150" rx="13" fill="#fff0e7" stroke="#d48450" stroke-width="2.2"/>
+  <circle cx="486" cy="619" r="22" fill="#db7937"/><text x="486" y="626" text-anchor="middle" class="cn num">2</text>
+  <text x="612" y="628" text-anchor="middle" class="cn bt">五维质量评价</text>
+  <text x="612" y="665" text-anchor="middle" class="cn body">低重复 · 逻辑一致 · 公式正确</text><text x="612" y="696" text-anchor="middle" class="cn small">步骤完整 · 具有推理增量</text>
+
+  <path d="M780 655H840" class="arrow"/>
+  <rect x="855" y="580" width="330" height="150" rx="13" fill="#fff8df" stroke="#c69a3c" stroke-width="2.2"/>
+  <circle cx="896" cy="619" r="22" fill="#c39128"/><text x="896" y="626" text-anchor="middle" class="cn num">3</text>
+  <text x="1020" y="628" text-anchor="middle" class="cn bt">答案与增量检查</text>
+  <text x="1020" y="665" text-anchor="middle" class="cn body">最终答案保持一致</text><text x="1020" y="696" text-anchor="middle" class="cn small">新增推理节点数大于0</text>
+
+  <path d="M1185 655H1242" class="arrow"/>
+  <polygon points="1380,565 1518,655 1380,745 1242,655" fill="#fff8df" stroke="#c69a3c" stroke-width="2.5"/>
+  <circle cx="1380" cy="609" r="21" fill="#c39128"/><text x="1380" y="616" text-anchor="middle" class="cn num">4</text>
+  <text x="1380" y="651" text-anchor="middle" class="cn bt">严格接收门控</text><text x="1380" y="682" text-anchor="middle" class="cn small">质量达标且相对原节点提升？</text>
+
+  <path d="M1518 655H1578" class="arrow"/><text x="1535" y="637" class="cn small" fill="#41815c">通过</text>
+  <rect x="1593" y="580" width="300" height="150" rx="13" fill="#eaf6ed" stroke="#6d9e78" stroke-width="2.2"/>
+  <circle cx="1634" cy="619" r="22" fill="#4c9662"/><text x="1634" y="626" text-anchor="middle" class="cn num">5</text>
+  <text x="1743" y="628" text-anchor="middle" class="cn bt">推理链更新</text>
+  <text x="1743" y="668" text-anchor="middle" class="cn body">候选步骤替换原节点</text><text x="1743" y="698" text-anchor="middle" class="cn small">重新解析更新后的推理结构</text>
+
+  <path d="M1893 655H1950" class="arrow"/>
+  <rect x="1965" y="580" width="155" height="150" rx="13" fill="#edf7f0" stroke="#6d9e78" stroke-width="2.2"/>
+  <text x="2042" y="628" text-anchor="middle" class="cn bt">扩充结果</text><text x="2042" y="668" text-anchor="middle" class="cn body">保留新步骤</text><text x="2042" y="698" text-anchor="middle" class="cn small">记录节点增量</text>
+
+  <!-- feedback -->
+  <path d="M1380 745V812H1115" class="arrow"/><text x="1395" y="793" class="cn small" fill="#a2524b">未通过</text>
+  <rect x="790" y="827" width="310" height="140" rx="13" fill="#f1eefb" stroke="#8d7bc6" stroke-width="2.2"/>
+  <circle cx="831" cy="865" r="22" fill="#7363b5"/><text x="831" y="872" text-anchor="middle" class="cn num">6</text>
+  <text x="945" y="874" text-anchor="middle" class="cn bt">反馈优化</text>
+  <text x="945" y="912" text-anchor="middle" class="cn body">定位逻辑、公式与增量弱项</text><text x="945" y="942" text-anchor="middle" class="cn small">生成自然语言修正建议</text>
+
+  <path d="M790 897H720" class="arrow"/>
+  <rect x="395" y="827" width="310" height="140" rx="13" fill="#f1eefb" stroke="#8d7bc6" stroke-width="2.2"/>
+  <circle cx="436" cy="865" r="22" fill="#7363b5"/><text x="436" y="872" text-anchor="middle" class="cn num">7</text>
+  <text x="550" y="874" text-anchor="middle" class="cn bt">反馈再生成</text>
+  <text x="550" y="912" text-anchor="middle" class="cn body">在同一遮盖位置修正</text><text x="550" y="942" text-anchor="middle" class="cn small">达到次数或耐心条件后停止</text>
+  <path d="M550 827V785H225V742" class="loop"/><text x="385" y="778" text-anchor="middle" class="cn small" fill="#6856a5">进入下一次恢复</text>
+
+  <path d="M1743 730V785H945V815" class="good"/>
+  <text x="1350" y="777" text-anchor="middle" class="cn small" fill="#41815c">正向记录：保存有效节点类型、质量增益与扩充轨迹</text>
+
+  <rect x="1170" y="852" width="900" height="115" rx="12" fill="#f5f7f8" stroke="#89989f" stroke-width="1.8"/>
+  <text x="1620" y="894" text-anchor="middle" class="cn bt">质量下限原则</text>
+  <text x="1620" y="930" text-anchor="middle" class="cn body">通过门控才替换原节点；未通过时保留原始推理，不因扩充降低答案质量</text>
+
+  <rect x="120" y="1045" width="1940" height="100" rx="12" fill="#fffaf0" stroke="#c9a25a" stroke-width="1.8"/>
+  <text x="1090" y="1085" text-anchor="middle" class="cn bt">扩充完成后统一比较原始CoT、单次恢复与反馈优化结果</text>
+  <text x="1090" y="1119" text-anchor="middle" class="cn body">OPSD模型使用相同题目、遮盖位置、提示和门控条件接入，直接解题与节点扩充指标分别报告</text>
+  <path d="M2042 730V1030" class="arrow"/>
+  <path d="M2042 580V442H1870V427" class="arrow"/>
+</svg>

@@ -1,0 +1,33 @@
+{
+  "artifact_type": "local_structure_teacher_evaluation",
+  "sample_count": 20,
+  "font_family": "Liberation Sans",
+  "primary": [
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/primary/local_structure_codebleu.png",
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/primary/local_structure_codebleu.svg",
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/primary/local_structure_codebleu.pdf"
+  ],
+  "auxiliary": [
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/auxiliary/local_structure_auxiliary.png",
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/auxiliary/local_structure_auxiliary.svg",
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/auxiliary/local_structure_auxiliary.pdf"
+  ],
+  "gates": [
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/gates/local_structure_hard_gates.png",
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/gates/local_structure_hard_gates.svg",
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/gates/local_structure_hard_gates.pdf"
+  ],
+  "data": [
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/data/plot_data.csv",
+    "/backup01/tangyafeng/zhuxiyao/teacher/results/local_structure_smoke_v8/figures/data/hard_gates.csv"
+  ],
+  "palette": {
+    "base_light": "#E6F0FF",
+    "base_mid": "#A7C7E7",
+    "base": "#4E79B7",
+    "lora_light": "#FAD7B1",
+    "lora_mid": "#F4A261",
+    "lora": "#E76F51"
+  },
+  "png_dpi": 600
+}

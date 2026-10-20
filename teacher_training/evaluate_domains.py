@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import ast
 import csv
+import difflib
 import json
 import re
 import tempfile
@@ -41,6 +42,26 @@ def normalized_code(code: str) -> str:
         return ast.unparse(ast.parse(code)).strip()
     except SyntaxError:
         return code.strip()
+
+
+def edit_scope_pass(source: str, prediction: str, source_span: dict[str, Any]) -> bool:
+    """检查所有文本编辑是否局限于构造器声明的源代码行范围。"""
+    start = int(source_span["start_line"])
+    end = int(source_span["end_line"])
+    source_lines = source.splitlines()
+    prediction_lines = prediction.splitlines()
+    for tag, source_start, source_end, _, _ in difflib.SequenceMatcher(
+        None, source_lines, prediction_lines, autojunk=False
+    ).get_opcodes():
+        if tag == "equal":
+            continue
+        if source_start == source_end:
+            # 插入发生在两个源代码行之间；允许紧邻目标范围的边界插入。
+            if not start - 1 <= source_start <= end:
+                return False
+        elif source_start + 1 < start or source_end > end:
+            return False
+    return True
 
 
 def subtokens(name: str) -> list[str]:
@@ -248,6 +269,7 @@ def evaluate_row(reference: dict[str, Any], prediction: dict[str, Any], timeout:
     result: dict[str, Any] = {
         "source_id": str(reference["source_id"]),
         "domain": domain,
+        "difficulty": str(reference.get("difficulty") or "unclassified"),
         "parse_pass": False,
         "signature_pass": False,
         "compile_pass": False,
@@ -293,6 +315,21 @@ def evaluate_row(reference: dict[str, Any], prediction: dict[str, Any], timeout:
         result["per_sample_codebleu"] = codebleu_score(predicted, target, language)
         result["sentence_bleu"] = bleu_score(predicted, target)
         result["exact_match"] = float(normalized_code(predicted) == normalized_code(target))
+        evidence = reference.get("transformation_evidence") or {}
+        source_span = evidence.get("source_span")
+        result["edit_scope_pass"] = (
+            float(edit_scope_pass(source, predicted, source_span))
+            if isinstance(source_span, dict) else None
+        )
+        structural_checks = (
+            result["parse_pass"], result["compile_pass"], result["signature_pass"],
+            result["edit_scope_pass"] == 1.0,
+        )
+        result["structural_hard_gate_pass"] = float(all(structural_checks))
+        result["semantic_gate_pass"] = (
+            float(all(structural_checks) and result["test_pass"])
+            if result["test_pass"] is not None else None
+        )
     elif domain == "control_flow":
         result["primary_pass_at_1"] = float(
             result["test_pass"]
@@ -309,7 +346,7 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
         by_domain.setdefault(row["domain"], []).append(row)
     summary: dict[str, Any] = {}
     for domain, items in sorted(by_domain.items()):
-        keys = sorted(set().union(*(item.keys() for item in items)) - {"source_id", "domain"})
+        keys = sorted(set().union(*(item.keys() for item in items)) - {"source_id", "domain", "difficulty"})
         metrics = {}
         for key in keys:
             values = [float(item[key]) for item in items if isinstance(item.get(key), (int, float))]
@@ -343,6 +380,11 @@ def main() -> None:
     output = Path(args.output_dir)
     output.mkdir(parents=True, exist_ok=True)
     domains = summarize(rows)
+    subset_summaries = {
+        difficulty: summarize([row for row in rows if row.get("difficulty") == difficulty])
+        for difficulty in ("standard", "hard")
+        if any(row.get("difficulty") == difficulty for row in rows)
+    }
     registered_corpus_metrics = corpus_metrics(references, predictions, args.prediction_field)
     if registered_corpus_metrics:
         domains["local_structure"]["corpus_metrics"] = registered_corpus_metrics
@@ -351,6 +393,7 @@ def main() -> None:
             "protocol": "teacher-metrics-v5",
             "prediction_field": args.prediction_field or "auto",
             "domains": domains,
+            "subsets": subset_summaries,
         }, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )

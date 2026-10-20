@@ -8,6 +8,7 @@ from teacher_training.compare_base_lora import (
     _append_jsonl_durable,
     _code_contract,
     _extract_code,
+    _generation_limit,
     _prepare_resume,
     _result_row,
     _run_spec,
@@ -15,6 +16,11 @@ from teacher_training.compare_base_lora import (
 
 
 class CompareBaseLoraTests(unittest.TestCase):
+    def test_generation_limit_is_fixed_without_reference_length(self):
+        self.assertEqual(2048, _generation_limit(2048))
+        with self.assertRaisesRegex(ValueError, "max_new_tokens"):
+            _generation_limit(0)
+
     def test_plain_python_is_parsed_without_protocol_compliance(self):
         protocol, parse_pass, code, method = _code_contract("x = 1\n", "python")
         self.assertFalse(protocol)

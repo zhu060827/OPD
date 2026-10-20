@@ -5,13 +5,19 @@ from dataclasses import dataclass
 
 DOMAINS = ("formatting", "identifier", "local_structure", "control_flow")
 OUTPUT_SCHEMA_VERSION = "teacher-code-only-v1"
-SYSTEM_PROMPT_VERSION = "teacher-specialization-v4"
+SYSTEM_PROMPT_VERSION = "teacher-specialization-v5"
+SYSTEM_PROMPT_VERSIONS = {
+    "formatting": SYSTEM_PROMPT_VERSION,
+    "identifier": SYSTEM_PROMPT_VERSION,
+    "local_structure": SYSTEM_PROMPT_VERSION,
+    "control_flow": "teacher-control-flow-v1",
+}
 
 PUBLIC_DOMAIN_NAMES = {
     "formatting": "Style/Formatting",
     "identifier": "Identifier Deobfuscation/Rename",
-    "local_structure": "Local Structural Transformation",
-    "control_flow": "Control-flow Transformation",
+    "local_structure": "Extract Variable Transformation",
+    "control_flow": "Conditional Rewrite Transformation",
 }
 
 
@@ -47,17 +53,17 @@ DOMAIN_SPECS = {
     ),
     "local_structure": DomainSpec(
         "local_structure",
-        "局部结构变换专家",
-        "你是局部结构变换专家。只执行语义保持的局部表达式拆分或合并、临时变量引入或消除、局部语句重组和等价语法自然化；不得进行纯格式、纯重命名、主要控制流或算法变换。只输出完整改写代码。",
-        "按 NatGen 范式对自然代码应用可逆、语义保持的局部结构变换后形成的代码对",
+        "Extract Variable 局部重构专家",
+        "你是 Extract Variable 局部重构专家。按照用户指定的唯一目标位置，将 return 表达式提取为一个局部变量并返回该变量。每次只执行一次指定变换；不得修改其他语句、标识符、格式、控制流、函数签名或可观察行为。只输出完整改写代码，并使用 <code>...</code> 包裹。",
+        "按 NatGen/Fowler 范式对指定的单个 return 表达式应用语义保持的 Extract Variable 变换后形成的代码对",
         ("Chakraborty et al. (2022), NatGen: Generative Pre-training by Naturalizing Source Code", "Ren et al. (2020), CodeBLEU"),
         "CodeBLEU",
         "Ren et al. (2020), CodeBLEU: a Method for Automatic Evaluation of Code Synthesis",
     ),
     "control_flow": DomainSpec(
         "control_flow",
-        "控制流变换专家",
-        "你是控制流变换专家。只执行语义保持的条件、循环、提前返回、guard clause、break/continue 和路径结构变换；不得进行纯格式、纯重命名或算法替换，不得改变函数签名和可观察行为。只输出完整改写代码。",
+        "Conditional Rewrite 条件分支重写专家",
+        "你是 Conditional Rewrite 条件分支重写专家。只执行一次用户指定的条件分支重写：将目标 if-else 条件取反，并交换其两个分支。不得修改其他语句、标识符、格式、循环、函数签名或可观察行为。不得执行 guard clause、early return、loop rewrite 或 break/continue 变换。只输出完整改写代码，并使用 <code>...</code> 包裹。",
         "按 NatGen/ContraCode 范式构造并经测试验证的语义保持控制流变换对",
         ("Chakraborty et al. (2022), NatGen: Generative Pre-training by Naturalizing Source Code", "Jain et al. (2021), ContraCode: Learning Contrastive Representations for Code"),
         "Pass@1",

@@ -57,14 +57,37 @@ def main() -> None:
             figure.savefig(path, bbox_inches="tight", facecolor="white", **kwargs); paths.append(str(path.resolve()))
         plt.close(figure); return paths
 
+    def add_value_label(axis, bar, value: float) -> None:
+        """将百分制指标直接写到柱上，零值放在基线上方。"""
+        if value >= 10:
+            offset, vertical, color = -7, "top", "white"
+        else:
+            offset, vertical, color = 5, "bottom", "#333333"
+        axis.annotate(
+            f"{value:.1f}%",
+            (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+            xytext=(0, offset), textcoords="offset points",
+            ha="center", va=vertical, color=color, fontweight="bold", fontsize=9,
+            zorder=5,
+        )
+
     def plot_metric(axis, label: str, field: str, scale: float, binary: bool, panel: str) -> None:
         width = .34
         for x, (method, rows, color, hatch) in zip((-width/2, width/2), methods):
             values = numeric(rows, field)
             low, high = wilson_ci(values) if binary else bootstrap_ci(values)
             mean = float(values.mean())
-            axis.bar(x, mean*scale, width, color=color, hatch=hatch, edgecolor="white", linewidth=1.2,
-                     yerr=np.array([[(mean-low)*scale], [(high-mean)*scale]]), capsize=3, zorder=3)
+            # Wilson intervals at the exact 0/1 boundaries can differ from the
+            # sample mean by machine epsilon.  Matplotlib rejects even a tiny
+            # negative error-bar magnitude, so clamp the plotted distances.
+            yerr = np.array([
+                [max(0.0, (mean - low) * scale)],
+                [max(0.0, (high - mean) * scale)],
+            ])
+            value = mean * scale
+            bar = axis.bar(x, value, width, color=color, hatch=hatch, edgecolor="white", linewidth=1.2,
+                           yerr=yerr, capsize=3, zorder=3)[0]
+            add_value_label(axis, bar, value)
             exported.append({"panel": panel, "metric": label, "method": method, "mean": mean*scale,
                              "ci95_low": low*scale, "ci95_high": high*scale,
                              "ci_method": "Wilson score 95% CI" if binary else "bootstrap 95% CI (10,000; seed=42)",
@@ -77,7 +100,8 @@ def main() -> None:
         for x, (method, _, color, hatch) in zip((-width/2, width/2), methods):
             entry = corpus[method][field]
             value = float(entry["value"]) * scale
-            axis.bar(x, value, width, color=color, hatch=hatch, edgecolor="white", linewidth=1.2, zorder=3)
+            bar = axis.bar(x, value, width, color=color, hatch=hatch, edgecolor="white", linewidth=1.2, zorder=3)[0]
+            add_value_label(axis, bar, value)
             exported.append({"panel": panel, "metric": label, "method": method, "mean": value,
                              "ci95_low": "", "ci95_high": "", "ci_method": entry["aggregation"],
                              "n": entry["n"]})
@@ -89,9 +113,10 @@ def main() -> None:
     axis.legend(handles=legend, frameon=False, ncol=2, loc="upper center", bbox_to_anchor=(.5, 1.16))
     figure.tight_layout(); primary = save(figure, "primary", "local_structure_codebleu")
 
-    figure, axes = plt.subplots(1, 2, figsize=(6.8, 3.2))
+    figure, axes = plt.subplots(1, 3, figsize=(9.8, 3.2))
     plot_corpus_metric(axes[0], "Corpus BLEU", "corpus_bleu", 1, "auxiliary-1")
     plot_metric(axes[1], "Exact match", "exact_match", 100, True, "auxiliary-2")
+    plot_metric(axes[2], "Edit scope pass", "edit_scope_pass", 100, True, "auxiliary-3")
     for index, axis in enumerate(axes):
         axis.text(.02, .98, f"({chr(97+index)})", transform=axis.transAxes, va="top", fontweight="bold")
     figure.legend(handles=legend, frameon=False, ncol=2, loc="upper center")

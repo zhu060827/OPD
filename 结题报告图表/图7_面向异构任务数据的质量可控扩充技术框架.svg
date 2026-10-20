@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1420" viewBox="0 0 2200 1420">
+  <defs>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#153044" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#536979"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#7664B5"/>
+    </marker>
+    <style>
+      .cn { font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
+      .title { font-size: 50px; font-weight: 700; fill: #172B3A; }
+      .subtitle { font-size: 23px; fill: #687B89; }
+      .stage { font-size: 23px; font-weight: 650; fill: #FFFFFF; }
+      .lane { font-size: 29px; font-weight: 700; fill: #FFFFFF; }
+      .boxTitle { font-size: 25px; font-weight: 700; fill: #203442; }
+      .body { font-size: 20px; fill: #455C6B; }
+      .small { font-size: 18px; fill: #536A78; }
+      .gate { font-size: 23px; font-weight: 700; fill: #203442; }
+      .resultTitle { font-size: 25px; font-weight: 700; fill: #174633; }
+      .resultBody { font-size: 20px; fill: #38594A; }
+      .arrow { fill: none; stroke: #536979; stroke-width: 4; marker-end: url(#arrow); }
+      .feedback { fill: none; stroke: #7664B5; stroke-width: 4; stroke-dasharray: 12 9; marker-end: url(#arrowPurple); }
+    </style>
+  </defs>
+
+  <rect width="2200" height="1420" fill="#F6F8FB"/>
+  <text x="1100" y="74" text-anchor="middle" class="cn title">面向异构任务数据的质量可控扩充技术框架</text>
+  <text x="1100" y="114" text-anchor="middle" class="cn subtitle">统一闭环组织生成与验证，任务专用约束保障扩充结果有效性</text>
+
+  <!-- Stage headers -->
+  <g>
+    <rect x="180" y="150" width="325" height="52" rx="26" fill="#355A7A"/>
+    <rect x="555" y="150" width="325" height="52" rx="26" fill="#355A7A"/>
+    <rect x="930" y="150" width="325" height="52" rx="26" fill="#355A7A"/>
+    <rect x="1305" y="150" width="325" height="52" rx="26" fill="#355A7A"/>
+    <rect x="1680" y="150" width="340" height="52" rx="26" fill="#355A7A"/>
+    <text x="342" y="184" text-anchor="middle" class="cn stage">① 原始数据输入</text>
+    <text x="717" y="184" text-anchor="middle" class="cn stage">② 结构化表示</text>
+    <text x="1092" y="184" text-anchor="middle" class="cn stage">③ 候选生成</text>
+    <text x="1467" y="184" text-anchor="middle" class="cn stage">④ 任务约束验证</text>
+    <text x="1850" y="184" text-anchor="middle" class="cn stage">⑤ 增益判定</text>
+  </g>
+
+  <!-- Table lane -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="238" width="2080" height="270" rx="26" fill="#FFFFFF"/>
+    <rect x="60" y="238" width="105" height="270" rx="26" fill="#3978C5"/>
+    <rect x="138" y="238" width="27" height="270" fill="#3978C5"/>
+  </g>
+  <text x="112" y="338" text-anchor="middle" class="cn lane" transform="rotate(-90 112 338)">表格数据</text>
+
+  <rect x="205" y="295" width="280" height="150" rx="18" fill="#EDF4FC" stroke="#9CBCE4" stroke-width="2"/>
+  <text x="345" y="337" text-anchor="middle" class="cn boxTitle">原始表格与标签</text>
+  <text x="345" y="377" text-anchor="middle" class="cn body">分层划分训练集、验证集</text>
+  <text x="345" y="411" text-anchor="middle" class="cn body">和独立测试集</text>
+
+  <rect x="580" y="275" width="300" height="190" rx="18" fill="#EDF4FC" stroke="#9CBCE4" stroke-width="2"/>
+  <text x="730" y="317" text-anchor="middle" class="cn boxTitle">训练画像</text>
+  <text x="730" y="357" text-anchor="middle" class="cn body">列统计与浅层CART路径</text>
+  <text x="730" y="391" text-anchor="middle" class="cn body">XGBoost训练残差</text>
+  <text x="730" y="425" text-anchor="middle" class="cn small">历史接受／拒绝反馈</text>
+
+  <rect x="955" y="275" width="300" height="190" rx="18" fill="#EDF4FC" stroke="#9CBCE4" stroke-width="2"/>
+  <text x="1105" y="317" text-anchor="middle" class="cn boxTitle">特征候选生成</text>
+  <text x="1105" y="357" text-anchor="middle" class="cn body">大语言模型生成公式</text>
+  <text x="1105" y="391" text-anchor="middle" class="cn body">交互、分段与路径特征</text>
+  <text x="1105" y="425" text-anchor="middle" class="cn small">候选预筛与多样性控制</text>
+
+  <rect x="1330" y="265" width="315" height="210" rx="18" fill="#FFF4EA" stroke="#E8B281" stroke-width="2"/>
+  <text x="1487" y="307" text-anchor="middle" class="cn boxTitle">特征有效性验证</text>
+  <text x="1487" y="347" text-anchor="middle" class="cn body">语法与数值稳定性</text>
+  <text x="1487" y="381" text-anchor="middle" class="cn body">目标泄漏与冗余检查</text>
+  <text x="1487" y="415" text-anchor="middle" class="cn body">验证集 Macro F1 增益</text>
+  <text x="1487" y="449" text-anchor="middle" class="cn small">测试集仅用于最终评价</text>
+
+  <polygon points="1815,285 1945,370 1815,455 1685,370" fill="#FFF8E1" stroke="#D2A437" stroke-width="3"/>
+  <text x="1815" y="359" text-anchor="middle" class="cn gate">通过约束且</text>
+  <text x="1815" y="393" text-anchor="middle" class="cn gate">指标提升？</text>
+
+  <!-- Math lane -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="540" width="2080" height="270" rx="26" fill="#FFFFFF"/>
+    <rect x="60" y="540" width="105" height="270" rx="26" fill="#B77A25"/>
+    <rect x="138" y="540" width="27" height="270" fill="#B77A25"/>
+  </g>
+  <text x="112" y="676" text-anchor="middle" class="cn lane" transform="rotate(-90 112 676)">数学推理</text>
+
+  <rect x="205" y="597" width="280" height="150" rx="18" fill="#FFF7E9" stroke="#E4C48C" stroke-width="2"/>
+  <text x="345" y="639" text-anchor="middle" class="cn boxTitle">题目与原始CoT</text>
+  <text x="345" y="679" text-anchor="middle" class="cn body">保留参考答案</text>
+  <text x="345" y="713" text-anchor="middle" class="cn body">建立一致性基线</text>
+
+  <rect x="580" y="577" width="300" height="190" rx="18" fill="#FFF7E9" stroke="#E4C48C" stroke-width="2"/>
+  <text x="730" y="619" text-anchor="middle" class="cn boxTitle">轻量推理图</text>
+  <text x="730" y="659" text-anchor="middle" class="cn body">步骤切分与节点分类</text>
+  <text x="730" y="693" text-anchor="middle" class="cn body">识别公式与顺序关系</text>
+  <text x="730" y="727" text-anchor="middle" class="cn small">选择安全的中间节点</text>
+
+  <rect x="955" y="577" width="300" height="190" rx="18" fill="#FFF7E9" stroke="#E4C48C" stroke-width="2"/>
+  <text x="1105" y="619" text-anchor="middle" class="cn boxTitle">节点恢复与扩充</text>
+  <text x="1105" y="659" text-anchor="middle" class="cn body">结合前缀与后缀生成</text>
+  <text x="1105" y="693" text-anchor="middle" class="cn body">更细粒度的过渡步骤</text>
+  <text x="1105" y="727" text-anchor="middle" class="cn small">支持反馈后的再次生成</text>
+
+  <rect x="1330" y="567" width="315" height="210" rx="18" fill="#FFF4EA" stroke="#E8B281" stroke-width="2"/>
+  <text x="1487" y="609" text-anchor="middle" class="cn boxTitle">推理质量验证</text>
+  <text x="1487" y="649" text-anchor="middle" class="cn body">逻辑、公式与完整性</text>
+  <text x="1487" y="683" text-anchor="middle" class="cn body">最终答案一致性</text>
+  <text x="1487" y="717" text-anchor="middle" class="cn body">质量增益与节点增量</text>
+  <text x="1487" y="751" text-anchor="middle" class="cn small">综合质量门控</text>
+
+  <polygon points="1815,587 1945,672 1815,757 1685,672" fill="#FFF8E1" stroke="#D2A437" stroke-width="3"/>
+  <text x="1815" y="644" text-anchor="middle" class="cn gate">答案一致且</text>
+  <text x="1815" y="678" text-anchor="middle" class="cn gate">质量与节点</text>
+  <text x="1815" y="712" text-anchor="middle" class="cn gate">均有增益？</text>
+
+  <!-- Code lane -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="842" width="2080" height="270" rx="26" fill="#FFFFFF"/>
+    <rect x="60" y="842" width="105" height="270" rx="26" fill="#27817B"/>
+    <rect x="138" y="842" width="27" height="270" fill="#27817B"/>
+  </g>
+  <text x="112" y="976" text-anchor="middle" class="cn lane" transform="rotate(-90 112 976)">代码数据</text>
+
+  <rect x="205" y="899" width="280" height="150" rx="18" fill="#ECF7F5" stroke="#94CFC8" stroke-width="2"/>
+  <text x="345" y="941" text-anchor="middle" class="cn boxTitle">代码任务样本</text>
+  <text x="345" y="981" text-anchor="middle" class="cn body">题目、推理、程序</text>
+  <text x="345" y="1015" text-anchor="middle" class="cn body">接口约束与测试用例</text>
+
+  <rect x="580" y="879" width="300" height="190" rx="18" fill="#ECF7F5" stroke="#94CFC8" stroke-width="2"/>
+  <text x="730" y="921" text-anchor="middle" class="cn boxTitle">任务结构化</text>
+  <text x="730" y="961" text-anchor="middle" class="cn body">提取函数／类接口</text>
+  <text x="730" y="995" text-anchor="middle" class="cn body">构造可执行评价载荷</text>
+  <text x="730" y="1029" text-anchor="middle" class="cn small">形成OPD训练格式</text>
+
+  <rect x="955" y="869" width="300" height="210" rx="18" fill="#ECF7F5" stroke="#94CFC8" stroke-width="2"/>
+  <text x="1105" y="911" text-anchor="middle" class="cn boxTitle">两类候选轨迹</text>
+  <text x="1105" y="951" text-anchor="middle" class="cn body">代码与推理同步改写</text>
+  <text x="1105" y="985" text-anchor="middle" class="cn body">学生模型在线生成轨迹</text>
+  <text x="1105" y="1019" text-anchor="middle" class="cn small">教师Top-k分布提供监督</text>
+  <text x="1105" y="1051" text-anchor="middle" class="cn small">反馈选择后续优化方向</text>
+
+  <rect x="1330" y="869" width="315" height="210" rx="18" fill="#FFF4EA" stroke="#E8B281" stroke-width="2"/>
+  <text x="1487" y="911" text-anchor="middle" class="cn boxTitle">执行与质量验证</text>
+  <text x="1487" y="951" text-anchor="middle" class="cn body">语法、接口与安全检查</text>
+  <text x="1487" y="985" text-anchor="middle" class="cn body">编译、单元测试与执行</text>
+  <text x="1487" y="1019" text-anchor="middle" class="cn body">可维护性与复杂度评价</text>
+  <text x="1487" y="1053" text-anchor="middle" class="cn small">师生分布差异分析</text>
+
+  <polygon points="1815,889 1945,974 1815,1059 1685,974" fill="#FFF8E1" stroke="#D2A437" stroke-width="3"/>
+  <text x="1815" y="946" text-anchor="middle" class="cn gate">执行通过且</text>
+  <text x="1815" y="980" text-anchor="middle" class="cn gate">目标质量</text>
+  <text x="1815" y="1014" text-anchor="middle" class="cn gate">得到改善？</text>
+
+  <!-- Main arrows -->
+  <path d="M485 370H565" class="arrow"/>
+  <path d="M880 370H940" class="arrow"/>
+  <path d="M1255 370H1315" class="arrow"/>
+  <path d="M1645 370H1675" class="arrow"/>
+  <path d="M485 672H565" class="arrow"/>
+  <path d="M880 672H940" class="arrow"/>
+  <path d="M1255 672H1315" class="arrow"/>
+  <path d="M1645 672H1675" class="arrow"/>
+  <path d="M485 974H565" class="arrow"/>
+  <path d="M880 974H940" class="arrow"/>
+  <path d="M1255 974H1315" class="arrow"/>
+  <path d="M1645 974H1675" class="arrow"/>
+
+  <!-- Shared feedback loop -->
+  <rect x="185" y="1160" width="1270" height="166" rx="28" fill="#F1EEFA" stroke="#B8ACE0" stroke-width="2" filter="url(#shadow)"/>
+  <text x="820" y="1204" text-anchor="middle" class="cn boxTitle" fill="#4E3F88">统一反馈优化</text>
+  <text x="820" y="1245" text-anchor="middle" class="cn body">汇总候选的通过／拒绝原因与指标变化，形成结构化反馈</text>
+  <text x="820" y="1281" text-anchor="middle" class="cn body">调整下一轮生成方向；达到上限或连续无增益时停止迭代</text>
+
+  <rect x="1510" y="1160" width="510" height="166" rx="28" fill="#EAF6EE" stroke="#83BE98" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1765" y="1204" text-anchor="middle" class="cn resultTitle">扩充结果与能力验证</text>
+  <text x="1765" y="1245" text-anchor="middle" class="cn resultBody">保留有效特征、推理节点与代码轨迹</text>
+  <text x="1765" y="1281" text-anchor="middle" class="cn resultBody">开展独立测试与训练前后能力比较</text>
+
+  <!-- Gate outcomes -->
+  <text x="1990" y="344" class="cn small" fill="#258154">通过</text>
+  <text x="1990" y="646" class="cn small" fill="#258154">通过</text>
+  <text x="1990" y="948" class="cn small" fill="#258154">通过</text>
+  <path d="M1945 370H2055V1135H1900V1150" class="arrow"/>
+  <path d="M1945 672H2055" class="arrow"/>
+  <path d="M1945 974H2055" class="arrow"/>
+
+  <text x="1690" y="507" class="cn small" fill="#8B5E38">未通过</text>
+  <text x="1690" y="809" class="cn small" fill="#8B5E38">未通过</text>
+  <text x="1690" y="1111" class="cn small" fill="#8B5E38">未通过</text>
+  <path d="M1775 455V515H820V1145" class="feedback"/>
+  <path d="M1775 757V817H820" class="feedback"/>
+  <path d="M1775 1059V1120H820" class="feedback"/>
+
+  <!-- Feedback return to generation -->
+  <path d="M470 1160V1128H36V225H1105V260" class="feedback"/>
+  <text x="500" y="1390" class="cn small">注：未通过门控的候选被舍弃并保留当前基线；虚线表示验证反馈驱动下一轮生成。</text>
+</svg>

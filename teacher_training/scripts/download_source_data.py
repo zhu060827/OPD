@@ -31,17 +31,32 @@ def main() -> None:
     if not args.revision and not args.limit:
         parser.error("正式下载必须通过 --revision 固定数据版本；冒烟测试可使用 --limit")
     try:
-        from datasets import load_dataset
+        from datasets import Dataset, load_dataset
     except ImportError as exc:
         raise SystemExit("请先安装 teacher_training/requirements.txt") from exc
     name = DATASETS[args.dataset]
     kwargs = {"revision": args.revision} if args.revision else {}
     configuration = args.language if args.dataset == "codesearchnet" else None
-    dataset = load_dataset(name, configuration, split=args.split, **kwargs)
-    if args.language and "language" in dataset.column_names:
-        dataset = dataset.filter(lambda row: str(row.get("language", "")).lower() == args.language.lower())
     if args.limit:
-        dataset = dataset.select(range(min(args.limit, len(dataset))))
+        # Smoke runs must not materialize the complete remote dataset before
+        # applying the limit.  Stream rows and persist only the requested
+        # sample so large corpora such as CodeContests fit on shared servers.
+        streamed = load_dataset(name, configuration, split=args.split, streaming=True, **kwargs)
+        rows = []
+        for row in streamed:
+            if args.language and "language" in row:
+                if str(row.get("language", "")).lower() != args.language.lower():
+                    continue
+            rows.append(dict(row))
+            if len(rows) >= args.limit:
+                break
+        dataset = Dataset.from_list(rows)
+        download_mode = "streaming_smoke_limit"
+    else:
+        dataset = load_dataset(name, configuration, split=args.split, **kwargs)
+        if args.language and "language" in dataset.column_names:
+            dataset = dataset.filter(lambda row: str(row.get("language", "")).lower() == args.language.lower())
+        download_mode = "full_snapshot"
     output = Path(args.output_dir) / args.dataset / args.language / args.split
     output.mkdir(parents=True, exist_ok=True)
     dataset.save_to_disk(str(output / "dataset"))
@@ -52,6 +67,7 @@ def main() -> None:
         "language": args.language,
         "revision": args.revision,
         "samples": len(dataset),
+        "download_mode": download_mode,
         "downloaded_at_utc": datetime.now(timezone.utc).isoformat(),
         "purpose": "raw_source_only_requires_domain_construction",
     }

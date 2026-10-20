@@ -15,7 +15,7 @@ from .domains import (
     DOMAIN_SPECS,
     OUTPUT_SCHEMA_VERSION,
     PUBLIC_DOMAIN_NAMES,
-    SYSTEM_PROMPT_VERSION,
+    SYSTEM_PROMPT_VERSIONS,
     require_domain,
 )
 from .source_policy import validate_source_for_domain
@@ -36,7 +36,7 @@ def load_config(path: str) -> dict[str, Any]:
     config["training_objective"] = "assistant-only causal language modeling loss"
     config["domain_name"] = PUBLIC_DOMAIN_NAMES[config["domain"]]
     config["output_schema_version"] = OUTPUT_SCHEMA_VERSION
-    config["system_prompt_version"] = SYSTEM_PROMPT_VERSION
+    config["system_prompt_version"] = SYSTEM_PROMPT_VERSIONS[config["domain"]]
     return config
 
 
@@ -46,6 +46,44 @@ def _file_sha256(path: str) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _non_thinking_training_template(template: str) -> str:
+    """Disable Qwen3 thinking while preserving TRL generation-mask markers."""
+    if not template or "{% generation %}" not in template or "{% endgeneration %}" not in template:
+        raise ValueError("assistant-only 训练模板缺少 generation/endgeneration 标记")
+    directive = "{% set enable_thinking = false %}"
+    return template if template.lstrip().startswith(directive) else directive + "\n" + template
+
+
+def audit_assistant_mask(tokenizer: Any, messages: list[dict[str, str]]) -> dict[str, int]:
+    """Fail before training unless the chat template exposes a non-empty assistant mask."""
+    try:
+        rendered = tokenizer.apply_chat_template(
+            messages,
+            tokenize=True,
+            add_generation_prompt=False,
+            return_dict=True,
+            return_assistant_tokens_mask=True,
+        )
+    except (TypeError, ValueError) as exc:
+        raise ValueError("tokenizer 无法产生 assistant token mask；不能保证 assistant-only loss") from exc
+    mask = rendered.get("assistant_masks") or rendered.get("assistant_mask")
+    input_ids = rendered.get("input_ids") or []
+    if mask and isinstance(mask[0], list):
+        mask = mask[0]
+    if input_ids and isinstance(input_ids[0], list):
+        input_ids = input_ids[0]
+    if not mask or len(mask) != len(input_ids):
+        raise ValueError("assistant token mask 为空或与 input_ids 长度不一致")
+    assistant_tokens = sum(int(value) for value in mask)
+    if assistant_tokens <= 0 or assistant_tokens >= len(mask):
+        raise ValueError("assistant token mask 必须只覆盖非空 assistant 目标")
+    return {
+        "total_tokens": len(mask),
+        "assistant_tokens": assistant_tokens,
+        "masked_prompt_tokens": len(mask) - assistant_tokens,
+    }
 
 
 def validate_dataset_contract(config: dict[str, Any]) -> dict[str, Any]:
@@ -66,7 +104,7 @@ def validate_dataset_contract(config: dict[str, Any]) -> dict[str, Any]:
                 expected = {
                     "domain_name": PUBLIC_DOMAIN_NAMES[config["domain"]],
                     "output_schema_version": OUTPUT_SCHEMA_VERSION,
-                    "system_prompt_version": SYSTEM_PROMPT_VERSION,
+                    "system_prompt_version": SYSTEM_PROMPT_VERSIONS[config["domain"]],
                 }
                 for key, value in expected.items():
                     if row.get(key) != value:
@@ -175,6 +213,7 @@ def main() -> None:
         from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainerCallback
         from transformers.trainer_utils import get_last_checkpoint
         from trl import SFTConfig, SFTTrainer
+        from trl.chat_template_utils import get_training_chat_template
     except ImportError as exc:
         raise SystemExit("训练前请在 GPU 环境安装 teacher_training/requirements.txt") from exc
 
@@ -184,6 +223,12 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(cfg["model_name_or_path"], trust_remote_code=cfg.get("trust_remote_code", True))
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    training_template = get_training_chat_template(processing_class=tokenizer)
+    if training_template is not None:
+        tokenizer.chat_template = training_template
+    tokenizer.chat_template = _non_thinking_training_template(tokenizer.chat_template or "")
+    data = load_dataset("json", data_files={"train": cfg["train_file"], "validation": cfg["validation_file"]})
+    cfg["assistant_mask_audit"] = audit_assistant_mask(tokenizer, data["train"][0]["messages"])
     model = AutoModelForCausalLM.from_pretrained(
         cfg["model_name_or_path"],
         quantization_config=quantization,
@@ -198,8 +243,6 @@ def main() -> None:
     model.generation_config.pad_token_id = tokenizer.pad_token_id
     model.config.eos_token_id = tokenizer.eos_token_id
     model.generation_config.eos_token_id = tokenizer.eos_token_id
-    data = load_dataset("json", data_files={"train": cfg["train_file"], "validation": cfg["validation_file"]})
-
     output_dir = Path(cfg["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -283,7 +326,15 @@ def main() -> None:
         resume_setting = get_last_checkpoint(str(output_dir))
     if not resume_setting:
         progress_path.write_text("", encoding="utf-8")
-    trainer = SFTTrainer(model=model, args=training, train_dataset=data["train"], eval_dataset=data["validation"], peft_config=lora, callbacks=[ProgressCallback(progress_path)])
+    trainer = SFTTrainer(
+        model=model,
+        args=training,
+        train_dataset=data["train"],
+        eval_dataset=data["validation"],
+        processing_class=tokenizer,
+        peft_config=lora,
+        callbacks=[ProgressCallback(progress_path)],
+    )
     trainer.train(resume_from_checkpoint=resume_setting or None)
     trainer.save_model(cfg["output_dir"])
     tokenizer.save_pretrained(cfg["output_dir"])

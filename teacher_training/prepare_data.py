@@ -13,7 +13,7 @@ from .domains import (
     DOMAIN_SPECS,
     OUTPUT_SCHEMA_VERSION,
     PUBLIC_DOMAIN_NAMES,
-    SYSTEM_PROMPT_VERSION,
+    SYSTEM_PROMPT_VERSIONS,
     require_domain,
 )
 from .dataset_contracts import missing_required_fields
@@ -76,7 +76,7 @@ def normalize_row(row: dict[str, Any], domain_override: str | None = None, langu
         "domain": domain,
         "domain_name": PUBLIC_DOMAIN_NAMES[domain],
         "output_schema_version": OUTPUT_SCHEMA_VERSION,
-        "system_prompt_version": SYSTEM_PROMPT_VERSION,
+        "system_prompt_version": SYSTEM_PROMPT_VERSIONS[domain],
         "language": language,
         "task": task,
         "messages": [
@@ -104,6 +104,7 @@ def normalize_row(row: dict[str, Any], domain_override: str | None = None, langu
         "change_type", "source_commit", "refactoring_type", "transformation_type",
         "construction_method", "old_identifier", "target_identifier", "scope",
         "definition_use_locations", "control_flow_type",
+        "difficulty",
         "formatting_perturbation", "constructor_version", "transformation_evidence",
         "commit", "file_path", "license", "repos", "source_task",
     ):
@@ -191,7 +192,7 @@ def prepare(input_path: str, output_dir: str, domain: str | None, seed: int, tra
         "rejected": len(rejected),
         "domains": dict(Counter(item["domain"] for item in normalized)),
         "output_schema_version": OUTPUT_SCHEMA_VERSION,
-        "system_prompt_version": SYSTEM_PROMPT_VERSION,
+        "system_prompt_version": SYSTEM_PROMPT_VERSIONS[domain],
         "formal_data_contract_required": formal,
         "formal_data_contract_passed": sum(item["formal_data_contract_pass"] for item in normalized),
         "token_length_policy": {

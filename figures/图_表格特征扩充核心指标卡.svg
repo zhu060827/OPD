@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="920" viewBox="0 0 1100 920">
+  <rect width="1100" height="920" fill="#fff"/>
+  <style>.cn{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif}.title{font-size:44px;font-weight:700;fill:#143b73}.metric{font-size:55px;font-weight:700;fill:#143b73}.label{font-size:28px;font-weight:600;fill:#42596d}.small{font-size:24px;fill:#536779}.ds{font-size:26px;font-weight:600;fill:#27445f}.green{fill:#27804a}</style>
+  <text x="550" y="68" text-anchor="middle" class="cn title">特征扩充核心结果</text>
+  <g>
+    <rect x="55" y="115" width="475" height="235" rx="28" fill="#eef5fb" stroke="#70a6d8" stroke-width="3"/>
+    <text x="292" y="225" text-anchor="middle" class="cn metric">+13.45pp</text><text x="292" y="290" text-anchor="middle" class="cn label">三个数据集平均提升</text>
+    <rect x="570" y="115" width="475" height="235" rx="28" fill="#eef5fb" stroke="#70a6d8" stroke-width="3"/>
+    <text x="807" y="225" text-anchor="middle" class="cn metric">3 / 3</text><text x="807" y="290" text-anchor="middle" class="cn label">数据集Macro F1均提升</text>
+    <rect x="55" y="390" width="475" height="235" rx="28" fill="#eef5fb" stroke="#70a6d8" stroke-width="3"/>
+    <text x="292" y="500" text-anchor="middle" class="cn metric">75个</text><text x="292" y="565" text-anchor="middle" class="cn label">LLM候选特征</text>
+    <rect x="570" y="390" width="475" height="235" rx="28" fill="#e9f7ee" stroke="#66ad7d" stroke-width="3"/>
+    <text x="807" y="500" text-anchor="middle" class="cn metric green">8个</text><text x="807" y="565" text-anchor="middle" class="cn label">最终保留有效特征</text>
+  </g>
+  <rect x="55" y="680" width="990" height="170" rx="25" fill="#f5f8fb" stroke="#cbd8e5" stroke-width="2"/>
+  <text x="100" y="735" class="cn small">各数据集成功扩充特征列</text>
+  <text x="110" y="803" class="cn ds">Jungle Chess</text><text x="335" y="803" class="cn" font-size="34" font-weight="700" fill="#27804a">3列</text>
+  <text x="445" y="803" class="cn ds">Balance Scale</text><text x="690" y="803" class="cn" font-size="34" font-weight="700" fill="#27804a">2列</text>
+  <text x="790" y="803" class="cn ds">Chess KRK</text><text x="970" y="803" class="cn" font-size="34" font-weight="700" fill="#27804a">3列</text>
+</svg>

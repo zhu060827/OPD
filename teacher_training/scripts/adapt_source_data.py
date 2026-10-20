@@ -91,27 +91,32 @@ def _is_python_language(value: Any) -> bool:
     return value == 3 or "python" in text
 
 
-def _contest_tests(row: dict[str, Any]) -> list[dict[str, str]]:
+def _contest_tests(row: dict[str, Any], max_tests: int | None = None) -> list[dict[str, str]]:
     cases: list[dict[str, str]] = []
     for field in ("public_tests", "private_tests", "generated_tests"):
         block = row.get(field) or {}
         inputs, outputs = _parallel_values(block, "input"), _parallel_values(block, "output")
         cases.extend({"input": str(given), "output": str(expected)} for given, expected in zip(inputs, outputs))
-    return cases
+    return cases[:max_tests] if max_tests else cases
 
 
 def adapt_code_contests(
-    row: dict[str, Any], min_chars: int, max_chars: int, timeout: int, verify_tests: bool
+    row: dict[str, Any], min_chars: int, max_chars: int, timeout: int,
+    verify_tests: bool, max_tests_per_sample: int | None = None,
+    max_solutions_per_problem: int | None = None,
 ) -> list[dict[str, Any]]:
     solutions = row.get("solutions") or {}
     languages = _parallel_values(solutions, "language")
     codes = _parallel_values(solutions, "solution")
-    tests = _contest_tests(row)
+    tests = _contest_tests(row, max_tests_per_sample)
     if not tests:
         return []
     problem_id = _stable_id(_first(row, "name", "problem_id", "id"))
     output = []
+    accepted_for_problem = 0
     for index, (language, code_value) in enumerate(zip(languages, codes)):
+        if max_solutions_per_problem and accepted_for_problem >= max_solutions_per_problem:
+            break
         code = str(code_value)
         if not _is_python_language(language) or not _valid_python(code, min_chars, max_chars):
             continue
@@ -125,12 +130,15 @@ def adapt_code_contests(
             "source_paper": SOURCES["code_contests"][1],
             "metadata": {"solution_index": index, "original_language": language},
         })
+        accepted_for_problem += 1
     return output
 
 
 def adapt_rows(
     rows: Iterable[dict[str, Any]], dataset: str, min_chars: int = 40, max_chars: int = 20000,
     limit: int | None = None, timeout: int = 5, verify_tests: bool = True,
+    max_tests_per_sample: int | None = None,
+    max_solutions_per_problem: int | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     accepted, seen, scanned = [], set(), 0
     for row in rows:
@@ -140,7 +148,10 @@ def adapt_rows(
         elif dataset == "codesearchnet":
             candidates = adapt_codesearchnet(row, min_chars, max_chars)
         else:
-            candidates = adapt_code_contests(row, min_chars, max_chars, timeout, verify_tests)
+            candidates = adapt_code_contests(
+                row, min_chars, max_chars, timeout, verify_tests,
+                max_tests_per_sample, max_solutions_per_problem,
+            )
         for candidate in candidates:
             digest = hashlib.sha256(candidate["code"].encode()).hexdigest()
             if digest in seen:
@@ -162,6 +173,14 @@ def main() -> None:
     parser.add_argument("--min-chars", type=int, default=40)
     parser.add_argument("--max-chars", type=int, default=20000)
     parser.add_argument("--timeout", type=int, default=5)
+    parser.add_argument(
+        "--max-tests-per-sample", type=int,
+        help="仅用于 smoke：每道 CodeContests 题最多保留并验证多少个测试；正式实验不要设置",
+    )
+    parser.add_argument(
+        "--max-solutions-per-problem", type=int,
+        help="CodeContests 每个 problem_id 最多保留的通过测试 solution 数量",
+    )
     parser.add_argument("--skip-test-verification", action="store_true", help="仅用于调试；正式 CodeContests 适配不得使用")
     args = parser.parse_args()
     try:
@@ -171,10 +190,16 @@ def main() -> None:
     rows, manifest = adapt_rows(
         load_from_disk(args.input), args.dataset, args.min_chars, args.max_chars,
         args.limit, args.timeout, not args.skip_test_verification,
+        args.max_tests_per_sample, args.max_solutions_per_problem,
     )
     write_jsonl(args.output, rows)
-    manifest.update({"input": str(Path(args.input).resolve()), "output": str(Path(args.output).resolve()),
-                     "test_verification": not args.skip_test_verification})
+    manifest.update({
+        "input": str(Path(args.input).resolve()),
+        "output": str(Path(args.output).resolve()),
+        "test_verification": not args.skip_test_verification,
+        "max_tests_per_sample": args.max_tests_per_sample,
+        "max_solutions_per_problem": args.max_solutions_per_problem,
+    })
     manifest_path = Path(args.manifest) if args.manifest else Path(args.output).with_suffix(".manifest.json")
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(manifest, ensure_ascii=False, indent=2))

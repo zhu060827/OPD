@@ -1,0 +1,31 @@
+{
+  "input": "/backup01/tangyafeng/zhuxiyao/teacher/constructed/local_structure_smoke_v9_hard_audit.jsonl",
+  "domain_override": "local_structure",
+  "language_override": "python",
+  "seed": 42,
+  "split_by": "problem_id",
+  "ratios": {
+    "train": 0.8,
+    "validation": 0.1,
+    "test": 0.09999999999999995
+  },
+  "counts": {
+    "train": 136,
+    "validation": 16,
+    "test": 20
+  },
+  "rejected": 0,
+  "domains": {
+    "local_structure": 172
+  },
+  "output_schema_version": "teacher-code-only-v1",
+  "system_prompt_version": "teacher-specialization-v5",
+  "formal_data_contract_required": false,
+  "formal_data_contract_passed": 0,
+  "token_length_policy": {
+    "enabled": true,
+    "tokenizer": "/backup01/tangyafeng/zhuxiyao/teacher/models/Qwen3-4B",
+    "max_length": 2048,
+    "max_generation_tokens": 2048
+  }
+}

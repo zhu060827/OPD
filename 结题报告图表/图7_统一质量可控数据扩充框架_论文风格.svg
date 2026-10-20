@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1260" viewBox="0 0 2200 1260">
+  <defs>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto">
+      <path d="M0,0 L11,5.5 L0,11 Z" fill="#31383D"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto">
+      <path d="M0,0 L11,5.5 L0,11 Z" fill="#B85D58"/>
+    </marker>
+    <style>
+      .cn { font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
+      .panel { fill: #FFFFFF; stroke: #343C42; stroke-width: 2.5; stroke-dasharray: 11 8; }
+      .head { fill: #D8E3EC; stroke: #343C42; stroke-width: 2.5; }
+      .headNo { font-size: 25px; font-weight: 700; font-style: italic; fill: #17242C; }
+      .headTitle { font-size: 27px; font-weight: 700; fill: #17242C; }
+      .boxTitle { font-size: 24px; font-weight: 700; fill: #1E2D36; }
+      .body { font-size: 20px; fill: #344954; }
+      .small { font-size: 18px; fill: #526772; }
+      .tag { font-size: 18px; font-weight: 650; fill: #263943; }
+      .arrow { fill: none; stroke: #31383D; stroke-width: 3.5; marker-end: url(#arrow); }
+      .feedback { fill: none; stroke: #B85D58; stroke-width: 3.5; stroke-dasharray: 9 7; marker-end: url(#arrowRed); }
+    </style>
+  </defs>
+
+  <rect width="2200" height="1260" fill="#FFFFFF"/>
+
+  <!-- 1 Dataset input -->
+  <rect x="35" y="40" width="560" height="360" class="panel"/>
+  <rect x="35" y="40" width="560" height="66" class="head"/>
+  <text x="68" y="83" class="cn headNo">1</text>
+  <text x="112" y="83" class="cn headTitle">异构任务数据输入</text>
+
+  <text x="65" y="150" class="cn tag">数据类型</text>
+  <rect x="185" y="122" width="365" height="54" rx="8" fill="#EAF2FB" stroke="#66829A" stroke-width="2"/>
+  <text x="367" y="157" text-anchor="middle" class="cn body">表格数据　数学推理数据　代码数据</text>
+
+  <text x="65" y="225" class="cn tag">原始内容</text>
+  <rect x="185" y="197" width="365" height="54" rx="8" fill="#F7F7F4" stroke="#7A858B" stroke-width="2"/>
+  <text x="367" y="232" text-anchor="middle" class="cn body">样本、标签、答案、程序与测试约束</text>
+
+  <text x="65" y="300" class="cn tag">任务描述</text>
+  <rect x="185" y="272" width="365" height="54" rx="8" fill="#FFF4D8" stroke="#A98437" stroke-width="2"/>
+  <text x="367" y="307" text-anchor="middle" class="cn body">数据含义、扩充目标与质量要求</text>
+
+  <text x="65" y="367" class="cn small">统一入口接收三类数据及其任务相关信息</text>
+
+  <!-- 2 Preprocessing -->
+  <rect x="625" y="40" width="780" height="360" class="panel"/>
+  <rect x="625" y="40" width="780" height="66" class="head"/>
+  <text x="658" y="83" class="cn headNo">2</text>
+  <text x="702" y="83" class="cn headTitle">统一数据预处理</text>
+
+  <rect x="670" y="137" width="210" height="126" rx="10" fill="#EAF2FB" stroke="#66829A" stroke-width="2"/>
+  <text x="775" y="176" text-anchor="middle" class="cn boxTitle">数据清洗</text>
+  <text x="775" y="215" text-anchor="middle" class="cn body">缺失与异常检查</text>
+  <text x="775" y="246" text-anchor="middle" class="cn small">格式规范化</text>
+
+  <rect x="910" y="137" width="210" height="126" rx="10" fill="#EDF5EC" stroke="#6E9370" stroke-width="2"/>
+  <text x="1015" y="176" text-anchor="middle" class="cn boxTitle">结构化解析</text>
+  <text x="1015" y="215" text-anchor="middle" class="cn body">组织输入与目标</text>
+  <text x="1015" y="246" text-anchor="middle" class="cn small">提取上下文信息</text>
+
+  <rect x="1150" y="137" width="210" height="126" rx="10" fill="#FFF4D8" stroke="#A98437" stroke-width="2"/>
+  <text x="1255" y="176" text-anchor="middle" class="cn boxTitle">约束提取</text>
+  <text x="1255" y="215" text-anchor="middle" class="cn body">确定正确性边界</text>
+  <text x="1255" y="246" text-anchor="middle" class="cn small">建立评价依据</text>
+
+  <path d="M880 200H898" class="arrow"/>
+  <path d="M1120 200H1138" class="arrow"/>
+  <rect x="780" y="302" width="470" height="55" rx="8" fill="#F2F4F5" stroke="#7A858B" stroke-width="2"/>
+  <text x="1015" y="338" text-anchor="middle" class="cn body">输出：面向不同任务的标准化数据表示</text>
+  <path d="M1015 263V290" class="arrow"/>
+
+  <!-- 4 Outputs -->
+  <rect x="1435" y="40" width="730" height="1160" class="panel"/>
+  <rect x="1435" y="40" width="730" height="66" class="head"/>
+  <text x="1468" y="83" class="cn headNo">4</text>
+  <text x="1512" y="83" class="cn headTitle">扩充结果与应用</text>
+
+  <rect x="1490" y="145" width="620" height="142" rx="12" fill="#EDF5EC" stroke="#6E9370" stroke-width="2"/>
+  <text x="1800" y="190" text-anchor="middle" class="cn boxTitle">质量可控的扩充数据</text>
+  <text x="1800" y="231" text-anchor="middle" class="cn body">仅保留通过任务约束且具有有效增益的结果</text>
+  <text x="1800" y="263" text-anchor="middle" class="cn small">未通过候选不改变当前数据基线</text>
+
+  <path d="M1800 287V335" class="arrow"/>
+  <rect x="1490" y="350" width="620" height="180" rx="12" fill="#F7F7F4" stroke="#7A858B" stroke-width="2"/>
+  <text x="1800" y="395" text-anchor="middle" class="cn boxTitle">独立效果评价</text>
+  <rect x="1530" y="430" width="170" height="62" rx="8" fill="#FFFFFF" stroke="#929DA3" stroke-width="1.8"/>
+  <rect x="1715" y="430" width="170" height="62" rx="8" fill="#FFFFFF" stroke="#929DA3" stroke-width="1.8"/>
+  <rect x="1900" y="430" width="170" height="62" rx="8" fill="#FFFFFF" stroke="#929DA3" stroke-width="1.8"/>
+  <text x="1615" y="468" text-anchor="middle" class="cn small">扩充质量</text>
+  <text x="1800" y="468" text-anchor="middle" class="cn small">模型能力</text>
+  <text x="1985" y="468" text-anchor="middle" class="cn small">稳定性</text>
+
+  <path d="M1800 530V578" class="arrow"/>
+  <rect x="1490" y="593" width="620" height="205" rx="12" fill="#EAF2FB" stroke="#66829A" stroke-width="2"/>
+  <text x="1800" y="638" text-anchor="middle" class="cn boxTitle">系统展示</text>
+  <rect x="1530" y="672" width="160" height="78" rx="8" fill="#FFFFFF" stroke="#8299AA" stroke-width="1.8"/>
+  <rect x="1720" y="672" width="160" height="78" rx="8" fill="#FFFFFF" stroke="#8299AA" stroke-width="1.8"/>
+  <rect x="1910" y="672" width="160" height="78" rx="8" fill="#FFFFFF" stroke="#8299AA" stroke-width="1.8"/>
+  <text x="1610" y="704" text-anchor="middle" class="cn small">生成过程</text>
+  <text x="1610" y="732" text-anchor="middle" class="cn small">展示</text>
+  <text x="1800" y="704" text-anchor="middle" class="cn small">验证反馈</text>
+  <text x="1800" y="732" text-anchor="middle" class="cn small">展示</text>
+  <text x="1990" y="704" text-anchor="middle" class="cn small">筛选结果</text>
+  <text x="1990" y="732" text-anchor="middle" class="cn small">展示</text>
+
+  <path d="M1800 798V846" class="arrow"/>
+  <rect x="1490" y="861" width="620" height="260" rx="12" fill="#FFF8E8" stroke="#B28C43" stroke-width="2"/>
+  <text x="1800" y="906" text-anchor="middle" class="cn boxTitle">后续应用</text>
+  <text x="1540" y="958" class="cn body">● 构建高质量训练数据</text>
+  <text x="1540" y="1003" class="cn body">● 开展模型训练与能力比较</text>
+  <text x="1540" y="1048" class="cn body">● 支持不同任务的数据扩充实验</text>
+  <text x="1540" y="1093" class="cn body">● 为扩展数据类型与模型提供接口</text>
+
+  <!-- 3 Main closed loop -->
+  <rect x="35" y="430" width="1370" height="770" class="panel"/>
+  <rect x="35" y="430" width="1370" height="66" class="head"/>
+  <text x="68" y="473" class="cn headNo">3</text>
+  <text x="112" y="473" class="cn headTitle">生成—验证—反馈统一扩充闭环</text>
+
+  <!-- horizontal process -->
+  <rect x="85" y="555" width="230" height="126" rx="10" fill="#EAF2FB" stroke="#66829A" stroke-width="2"/>
+  <circle cx="122" cy="590" r="21" fill="#3978C5"/>
+  <text x="122" y="597" text-anchor="middle" class="cn" font-size="19" font-weight="700" fill="#FFFFFF">1</text>
+  <text x="200" y="600" text-anchor="middle" class="cn boxTitle">候选生成</text>
+  <text x="200" y="638" text-anchor="middle" class="cn small">提出潜在扩充内容</text>
+  <text x="200" y="666" text-anchor="middle" class="cn small">兼顾多样性与任务目标</text>
+
+  <rect x="375" y="555" width="230" height="126" rx="10" fill="#FFF0E5" stroke="#D4864E" stroke-width="2"/>
+  <circle cx="412" cy="590" r="21" fill="#D97932"/>
+  <text x="412" y="597" text-anchor="middle" class="cn" font-size="19" font-weight="700" fill="#FFFFFF">2</text>
+  <text x="490" y="600" text-anchor="middle" class="cn boxTitle">约束验证</text>
+  <text x="490" y="638" text-anchor="middle" class="cn small">执行可计算任务检查</text>
+  <text x="490" y="666" text-anchor="middle" class="cn small">评价正确性与潜在增益</text>
+
+  <rect x="665" y="555" width="230" height="126" rx="10" fill="#F0EDFA" stroke="#9180C7" stroke-width="2"/>
+  <circle cx="702" cy="590" r="21" fill="#7363B5"/>
+  <text x="702" y="597" text-anchor="middle" class="cn" font-size="19" font-weight="700" fill="#FFFFFF">3</text>
+  <text x="780" y="600" text-anchor="middle" class="cn boxTitle">反馈优化</text>
+  <text x="780" y="638" text-anchor="middle" class="cn small">归纳通过与拒绝原因</text>
+  <text x="780" y="666" text-anchor="middle" class="cn small">修正后续生成方向</text>
+
+  <rect x="955" y="555" width="230" height="126" rx="10" fill="#F0EDFA" stroke="#9180C7" stroke-width="2"/>
+  <circle cx="992" cy="590" r="21" fill="#7363B5"/>
+  <text x="992" y="597" text-anchor="middle" class="cn" font-size="19" font-weight="700" fill="#FFFFFF">4</text>
+  <text x="1070" y="600" text-anchor="middle" class="cn boxTitle">迭代再生成</text>
+  <text x="1070" y="638" text-anchor="middle" class="cn small">依据反馈修正候选</text>
+  <text x="1070" y="666" text-anchor="middle" class="cn small">无有效增益时停止</text>
+
+  <path d="M315 618H363" class="arrow"/>
+  <path d="M605 618H653" class="arrow"/>
+  <path d="M895 618H943" class="arrow"/>
+
+  <!-- feedback loop -->
+  <path d="M1070 681V738H200V694" class="feedback"/>
+  <text x="635" y="727" text-anchor="middle" class="cn small" fill="#A34E4A">反馈驱动下一轮候选生成</text>
+
+  <!-- selection gate -->
+  <path d="M490 681V792" class="arrow"/>
+  <polygon points="490,790 630,886 490,982 350,886" fill="#FFF4D8" stroke="#A98437" stroke-width="2.5"/>
+  <circle cx="490" cy="835" r="21" fill="#C89528"/>
+  <text x="490" y="842" text-anchor="middle" class="cn" font-size="19" font-weight="700" fill="#FFFFFF">5</text>
+  <text x="490" y="884" text-anchor="middle" class="cn boxTitle">择优保留</text>
+  <text x="490" y="920" text-anchor="middle" class="cn small">满足约束且具有增益？</text>
+  <text x="490" y="949" text-anchor="middle" class="cn small">否则保留当前基线</text>
+
+  <rect x="745" y="807" width="500" height="158" rx="12" fill="#EDF5EC" stroke="#6E9370" stroke-width="2"/>
+  <text x="995" y="850" text-anchor="middle" class="cn boxTitle">质量门控结果</text>
+  <text x="790" y="895" class="cn body">通过：写入扩充结果并更新当前基线</text>
+  <text x="790" y="935" class="cn body">未通过：舍弃候选并进入反馈优化</text>
+
+  <path d="M630 886H733" class="arrow"/>
+  <text x="655" y="868" class="cn small">判定</text>
+
+  <!-- cross-panel connections -->
+  <path d="M595 220H612" class="arrow"/>
+  <path d="M1015 400V418" class="arrow"/>
+  <path d="M1245 886H1418" class="arrow"/>
+  <text x="1305" y="867" class="cn small">通过门控</text>
+
+  <!-- bottom note -->
+  <rect x="85" y="1035" width="1160" height="103" rx="10" fill="#F4F6F7" stroke="#7A858B" stroke-width="1.8"/>
+  <text x="665" y="1075" text-anchor="middle" class="cn body">统一原则：生成模型负责提出候选，任务约束和可计算证据负责质量控制，</text>
+  <text x="665" y="1112" text-anchor="middle" class="cn body">验证结果持续反馈至下一轮生成，最终仅保留具有明确价值的扩充结果。</text>
+</svg>

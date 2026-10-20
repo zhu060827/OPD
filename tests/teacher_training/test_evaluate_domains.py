@@ -5,6 +5,7 @@ from unittest.mock import patch
 from teacher_training.evaluate_domains import (
     evaluate_row,
     corpus_metrics,
+    edit_scope_pass,
     extract_code,
     function_signatures,
     levenshtein_distance,
@@ -14,6 +15,32 @@ from teacher_training.evaluate_domains import (
 
 
 class DomainEvaluationTests(unittest.TestCase):
+    def test_edit_scope_accepts_only_declared_return_rewrite(self):
+        source = "def f(x):\n    keep = x + 1\n    return x * 2\n"
+        prediction = "def f(x):\n    keep = x + 1\n    computed_value = x * 2\n    return computed_value\n"
+        self.assertTrue(edit_scope_pass(source, prediction, {"start_line": 3, "end_line": 3}))
+
+    def test_edit_scope_rejects_change_outside_declared_return(self):
+        source = "def f(x):\n    keep = x + 1\n    return x * 2\n"
+        prediction = "def f(x):\n    retained = x + 1\n    computed_value = x * 2\n    return computed_value\n"
+        self.assertFalse(edit_scope_pass(source, prediction, {"start_line": 3, "end_line": 3}))
+
+    @patch("teacher_training.evaluate_domains.bleu_score", return_value=100.0)
+    @patch("teacher_training.evaluate_domains.codebleu_score", return_value=1.0)
+    def test_local_structure_scope_failure_fails_structural_gate(self, _codebleu, _bleu):
+        reference = {
+            "source_id": "hard-one", "domain": "local_structure", "language": "python",
+            "difficulty": "hard", "source_code": "def f(x):\n    keep = x + 1\n    return x * 2\n",
+            "target_code": "def f(x):\n    keep = x + 1\n    value = x * 2\n    return value\n",
+            "tests": [], "transformation_evidence": {"source_span": {"start_line": 3, "end_line": 3}},
+        }
+        prediction = {"prediction": "<code>\ndef f(x):\n    changed = x + 1\n    value = x * 2\n    return value\n</code>"}
+        result = evaluate_row(reference, prediction, 1, "prediction")
+        self.assertEqual("hard", result["difficulty"])
+        self.assertEqual(0.0, result["edit_scope_pass"])
+        self.assertEqual(0.0, result["structural_hard_gate_pass"])
+        self.assertIsNone(result["semantic_gate_pass"])
+
     def test_extracts_code_protocol(self):
         self.assertEqual("def f():\n    return 1", extract_code("<code>\ndef f():\n    return 1\n</code>"))
 

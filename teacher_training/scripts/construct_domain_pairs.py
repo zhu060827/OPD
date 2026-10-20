@@ -38,12 +38,14 @@ class RenameLocal(ast.NodeTransformer):
 
 
 def _base(row: dict[str, Any], domain: str, source: str, target: str, kind: str) -> dict[str, Any]:
-    original = str(row.get("problem_id") or row.get("source_id") or row.get("task_id") or row.get("id") or "")
+    # 一个 CodeContests problem_id 对应多个 solution；必须优先保留
+    # 适配阶段生成的 solution 级 source_id，避免不同样本被压成同一 ID。
+    original = str(row.get("source_id") or row.get("problem_id") or row.get("task_id") or row.get("id") or "")
     if not original:
         original = hashlib.sha256(target.encode()).hexdigest()[:16]
     result = {
         "source_id": f"{original}:{domain}:{kind}",
-        "problem_id": original,
+        "problem_id": str(row.get("problem_id") or original),
         "domain": domain,
         # Task 必须描述预注册变换，不直接用函数 docstring 充当指令。
         # 否则长 XML/示例 docstring 会压过改写目标并诱导模型输出文档片段。
@@ -307,6 +309,21 @@ def _finalize_local_structure_pair(result: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def _local_structure_difficulty(function: ast.AST, expression: str, code: str) -> tuple[str, list[str]]:
+    """标注容易诱发错误定位或路径语义变化的 Extract Variable 样本。"""
+    nodes = list(ast.walk(function))
+    reasons = []
+    if sum(isinstance(node, ast.Return) for node in nodes) > 1:
+        reasons.append("multiple_returns")
+    if any(isinstance(node, (ast.For, ast.AsyncFor, ast.While)) for node in nodes):
+        reasons.append("loop_state")
+    if any(isinstance(node, (ast.If, ast.IfExp, ast.Match)) for node in nodes):
+        reasons.append("multiple_paths")
+    if code.count(expression) > 1:
+        reasons.append("repeated_target_expression")
+    return ("hard" if reasons else "standard"), reasons
+
+
 def construct_local_structure(row: dict[str, Any], target: str) -> dict[str, Any] | None:
     def is_pure_expression(node: ast.AST) -> bool:
         """只内联无调用、无赋值、无 await/yield 的表达式，避免改变副作用顺序。"""
@@ -354,8 +371,10 @@ def construct_local_structure(row: dict[str, Any], target: str) -> dict[str, Any
                 temporary = assignment.targets[0].id
                 direct_return = isinstance(returned.value, ast.Name) and returned.value.id == temporary
                 rhs_is_pure = is_pure_expression(assignment.value)
-                # 有副作用的 RHS 只能在 `return temp` 中内联；此时执行位置与次数不变。
-                if not rhs_is_pure and not direct_return:
+                # 只有 `temp = expr; return temp` 能在不做全程数据流和别名分析的
+                # 情况下证明求值位置与次数不变。将 temp 内联到更大的 return
+                # 表达式会改变求值顺序，例如 values.pop() + temp。
+                if not direct_return:
                     continue
                 uses = [
                     node for node in ast.walk(returned.value)
@@ -384,10 +403,16 @@ def construct_local_structure(row: dict[str, Any], target: str) -> dict[str, Any
                 except SyntaxError:
                     continue
                 result = _base(row, "local_structure", source, target, "extract_variable")
+                difficulty, hard_reasons = _local_structure_difficulty(function, expression, source)
                 result.update({
-                    "task": "保持程序行为不变，将内联在 return 中的表达式恢复为 Extract Variable 形式。",
+                    "task": (
+                        f"保持程序行为不变。仅对函数 {function.name} 中第 {assignment.lineno} 行的 "
+                        f"return 表达式 `({expression})` 执行一次 Extract Variable：先将表达式赋给局部变量 "
+                        f"{temporary}，再返回该变量。除这一处外，不得修改其他语句、标识符、格式或控制流。"
+                    ),
                     "construction_method": "natgen_source_span_inline_variable",
-                    "constructor_version": "teacher-local-structure-constructor-v7",
+                    "constructor_version": "teacher-local-structure-constructor-v9",
+                    "difficulty": difficulty,
                     "transformation_evidence": {
                         "rule_id": "extract_variable",
                         "orientation": "inline_to_extract",
@@ -395,10 +420,12 @@ def construct_local_structure(row: dict[str, Any], target: str) -> dict[str, Any
                         "temporary_use_count": 1,
                         "rhs_side_effect_free": rhs_is_pure,
                         "direct_return": direct_return,
-                        "source_span": {
-                            "start_line": assignment.lineno,
-                            "end_line": returned.end_lineno,
-                        },
+                        "target_function": function.name,
+                        "target_expression": expression,
+                        "expected_edit_count": 1,
+                        "hard_case_reasons": hard_reasons,
+                        "source_span": {"start_line": assignment.lineno, "end_line": assignment.lineno},
+                        "target_span": {"start_line": assignment.lineno, "end_line": returned.end_lineno},
                         "formatting_outside_span_preserved": True,
                     },
                 })
@@ -408,6 +435,7 @@ def construct_local_structure(row: dict[str, Any], target: str) -> dict[str, Any
     all_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)} | {
         node.arg for node in ast.walk(tree) if isinstance(node, ast.arg)
     }
+    functions = [node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
     for returned in [node for node in ast.walk(tree) if isinstance(node, ast.Return) and node.value is not None]:
         if returned.lineno != returned.end_lineno or isinstance(returned.value, (ast.Name, ast.Constant)):
             continue
@@ -422,6 +450,13 @@ def construct_local_structure(row: dict[str, Any], target: str) -> dict[str, Any
         expression = ast.get_source_segment(target, returned.value)
         if not expression:
             continue
+        containing = [
+            function for function in functions
+            if function.lineno <= returned.lineno <= function.end_lineno
+        ]
+        if not containing:
+            continue
+        function = min(containing, key=lambda item: item.end_lineno - item.lineno)
         temporary = extracted_name(returned.value, all_names)
         indentation = return_line[: len(return_line) - len(return_line.lstrip(" \t"))]
         newline = "\n" if return_line.endswith("\n") else ""
@@ -436,16 +471,28 @@ def construct_local_structure(row: dict[str, Any], target: str) -> dict[str, Any
         except SyntaxError:
             continue
         result = _base(row, "local_structure", target, extracted_target, "extract_variable")
+        difficulty, hard_reasons = _local_structure_difficulty(function, expression, target)
         result.update({
-            "task": "保持程序行为不变，对 return 表达式执行 Extract Variable 局部重构。",
+            "task": (
+                f"保持程序行为不变。仅对函数 {function.name} 中第 {returned.lineno} 行的 "
+                f"return 表达式 `{expression}` "
+                f"执行一次 Extract Variable：先将表达式赋给局部变量 {temporary}，再返回该变量。"
+                "除这一处外，不得修改其他语句、标识符、格式或控制流。"
+            ),
             "construction_method": "fowler_extract_return_expression",
-            "constructor_version": "teacher-local-structure-constructor-v7",
+            "constructor_version": "teacher-local-structure-constructor-v9",
+            "difficulty": difficulty,
             "transformation_evidence": {
                 "rule_id": "extract_variable",
                 "orientation": "inline_to_extract",
                 "temporary_identifier": temporary,
                 "extracted_expression": expression,
+                "target_expression": expression,
+                "target_function": function.name,
+                "expected_edit_count": 1,
+                "hard_case_reasons": hard_reasons,
                 "source_span": {"start_line": returned.lineno, "end_line": returned.end_lineno},
+                "target_span": {"start_line": returned.lineno, "end_line": returned.end_lineno + 1},
                 "formatting_outside_span_preserved": True,
             },
         })
@@ -454,22 +501,8 @@ def construct_local_structure(row: dict[str, Any], target: str) -> dict[str, Any
 
 
 def construct_control_flow(row: dict[str, Any], target: str) -> dict[str, Any] | None:
-    """把自然 guard-clause target 确定性变为嵌套 source，训练方向为 source→target。"""
+    """构造 Conditional Rewrite；其他控制流变换暂不进入当前专家。"""
     tree = ast.parse(target)
-    for function in [node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]:
-        if len(function.body) == 2 and isinstance(function.body[0], ast.If) and not function.body[0].orelse:
-            guard, tail = function.body
-            if len(guard.body) == 1 and isinstance(guard.body[0], ast.Return) and isinstance(tail, ast.Return):
-                nested = ast.If(
-                    test=ast.UnaryOp(op=ast.Not(), operand=guard.test),
-                    body=[tail],
-                    orelse=[guard.body[0]],
-                )
-                function.body = [nested]
-                ast.fix_missing_locations(tree)
-                result = _base(row, "control_flow", ast.unparse(tree), target, "guard_clause")
-                result["transformation_evidence"] = {"rule_id": "guard_clause", "orientation": "nested_to_guard"}
-                return result
     # 竞赛解答多为顶层 stdin/stdout 程序；对有完整 else 的条件分支做可逆的分支交换。
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and node.orelse and not isinstance(node.orelse[0], ast.If):

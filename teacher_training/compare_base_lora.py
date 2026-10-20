@@ -8,8 +8,6 @@ import os
 import re
 from pathlib import Path
 
-import torch
-
 from .io_utils import read_jsonl
 
 
@@ -30,17 +28,19 @@ def _configure_font() -> bool:
     return False
 
 
-def _generation_limit(tokenizer, messages, configured_limit: int) -> int:
-    """代码改写输出应接近 gold 长度；保留 20% 余量和标签余量，避免固定生成 1024 token。"""
-    reference = str(messages[-1].get("content", "")) if messages else ""
-    reference_tokens = len(tokenizer(reference, add_special_tokens=False)["input_ids"])
-    return min(configured_limit, max(64, int(reference_tokens * 1.2) + 32))
+def _generation_limit(configured_limit: int) -> int:
+    """使用预先声明的固定上限，避免评估时从标准答案泄露长度信息。"""
+    if configured_limit <= 0:
+        raise ValueError("max_new_tokens 必须为正整数")
+    return configured_limit
 
 
 def _generate(model, tokenizer, messages, max_new_tokens: int, thinking: bool) -> tuple[str, int, int, bool]:
+    import torch
+
     prompt = tokenizer.apply_chat_template(messages[:-1], tokenize=False, add_generation_prompt=True, enable_thinking=thinking)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    generation_limit = _generation_limit(tokenizer, messages, max_new_tokens)
+    generation_limit = _generation_limit(max_new_tokens)
     with torch.no_grad():
         output = model.generate(
             **inputs,
@@ -167,6 +167,8 @@ def _result_row(row: dict, base_result: tuple[str, int, int, bool], lora_result:
 
 
 def main() -> None:
+    import torch
+
     from peft import PeftModel
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
@@ -205,7 +207,7 @@ def main() -> None:
         adapted.eval()
         for row in pending_rows:
             index = expected_ids.index(row["source_id"]) + 1
-            limit = _generation_limit(tokenizer, row["messages"], args.max_new_tokens)
+            limit = _generation_limit(args.max_new_tokens)
             print(f"[基座生成 {index}/{len(rows)}] source_id={row['source_id']} max_new_tokens={limit}", flush=True)
             with adapted.disable_adapter():
                 base_result = _generate(adapted, tokenizer, row["messages"], args.max_new_tokens, args.thinking)
