@@ -181,6 +181,12 @@ def prepare(input_path: str, output_dir: str, domain: str | None, seed: int, tra
         counts[split] = write_jsonl(root / f"{split}.jsonl", rows)
     write_jsonl(root / "rejected.jsonl", rejected)
     write_jsonl(root / "accepted.jsonl", normalized)
+    normalized_domains = sorted({item["domain"] for item in normalized})
+    manifest_system_prompt_version = (
+        SYSTEM_PROMPT_VERSIONS[normalized_domains[0]]
+        if len(normalized_domains) == 1
+        else None
+    )
     manifest = {
         "input": str(Path(input_path).resolve()),
         "domain_override": domain,
@@ -192,7 +198,7 @@ def prepare(input_path: str, output_dir: str, domain: str | None, seed: int, tra
         "rejected": len(rejected),
         "domains": dict(Counter(item["domain"] for item in normalized)),
         "output_schema_version": OUTPUT_SCHEMA_VERSION,
-        "system_prompt_version": SYSTEM_PROMPT_VERSIONS[domain],
+        "system_prompt_version": manifest_system_prompt_version,
         "formal_data_contract_required": formal,
         "formal_data_contract_passed": sum(item["formal_data_contract_pass"] for item in normalized),
         "token_length_policy": {
