@@ -40,6 +40,7 @@ class RoutingConfig:
         default_factory=lambda: ["method", "domain", "rewrite_method"]
     )
     calibration: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    calibration_method: str = "median_mad"
     shared_completion_source: str = "record_code"
     student_max_new_tokens: int = 512
     reward_weight: float = 0.55
@@ -82,7 +83,7 @@ class Stage1Config:
             schema_version=str(raw.get("schema_version", "1.0")),
             experiment_name=str(raw.get("experiment_name", "stage1_multi_expert")),
             seed=int(raw.get("seed", 0)),
-            expected_expert_count=int(raw.get("expected_expert_count", 5)),
+            expected_expert_count=int(raw.get("expected_expert_count", 4)),
             experts=[ExpertConfig(**item) for item in raw.get("experts", [])],
             generation_backend=BackendConfig(**_backend_dict(raw.get("generation_backend", {}))),
             trajectory_backend=BackendConfig(**_backend_dict(raw.get("trajectory_backend", {}))),
@@ -153,6 +154,10 @@ class Stage1Config:
         if not 0.0 < self.routing.fallback_opd_sample_weight <= 1.0:
             raise ValueError("fallback_opd_sample_weight must be in (0, 1]")
         if self.routing.policy == "three_tier":
+            if self.routing.calibration_method not in {"raw", "mean_std", "median_mad", "recal_style"}:
+                raise ValueError(
+                    "routing.calibration_method must be raw, mean_std, median_mad, or recal_style"
+                )
             missing = set(expert_ids) - set(self.routing.calibration)
             if missing:
                 raise ValueError(

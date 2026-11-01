@@ -13,7 +13,7 @@ from .teacher_prompts import prompt_metadata, teacher_prompt
 
 
 class LocalTransformersMultiExpertScorer(ExpertTrajectoryScorer):
-    """Score candidate tokens with one shared Student and five frozen Teachers.
+    """Score candidate tokens with one shared Student and four frozen Teachers.
 
     This backend is deliberately local-only. It never sends code or logits to an
     external service. Models are loaded once, Teacher forward passes run under

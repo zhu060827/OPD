@@ -1,6 +1,6 @@
 {
   "schema_version": "2.1",
-  "experiment_name": "code_five_teacher_open_mopd_from_stage1",
+  "experiment_name": "code_four_teacher_open_mopd_from_stage1",
   "open_mopd_backend": {
     "root": "/root/autodl-tmp/Open-MOPD",
     "expected_commit": "4809a96cf85a869106ff0ff3f37d0a51e12010ae"
@@ -8,18 +8,29 @@
   "models": {
     "student_path": "/root/autodl-tmp/models/qwen-student-base",
     "teachers": [
-      {"domain": "cot", "teacher_path": "/root/autodl-tmp/models/teacher-cot"},
-      {"domain": "style", "teacher_path": "/root/autodl-tmp/models/teacher-style"},
-      {"domain": "ast", "teacher_path": "/root/autodl-tmp/models/teacher-ast"},
-      {"domain": "variable", "teacher_path": "/root/autodl-tmp/models/teacher-variable"},
-      {"domain": "control_flow", "teacher_path": "/root/autodl-tmp/models/teacher-control-flow"}
+      {
+        "domain": "formatting",
+        "teacher_path": "/backup01/tangyafeng/zhuxiyao/teacher/experiments/formatting/formal_v1/training/checkpoint-900"
+      },
+      {
+        "domain": "identifier",
+        "teacher_path": "/backup01/tangyafeng/zhuxiyao/teacher/experiments/identifier/formal_v1/training/checkpoint-700"
+      },
+      {
+        "domain": "local_structure",
+        "teacher_path": "/backup01/tangyafeng/zhuxiyao/teacher/teacher-runs/teacher-local-structure-formal-v3/checkpoint-600"
+      },
+      {
+        "domain": "control_flow",
+        "teacher_path": "/backup01/tangyafeng/zhuxiyao/teacher/experiments/control_flow/formal_v1/training/checkpoint-500"
+      }
     ]
   },
   "data": {
     "train_file": "/root/autodl-tmp/data/mt_opd_handoff.parquet",
     "val_file": "/root/autodl-tmp/data/code_multi_expert_val.parquet"
   },
-  "output_dir": "/root/autodl-tmp/runs/code-five-teacher-open-mopd-stage1-route",
+  "output_dir": "/root/autodl-tmp/runs/code-four-teacher-open-mopd-stage1-route",
   "runtime": {
     "gpus": 1,
     "nodes": 1
@@ -30,11 +41,10 @@
     "token_share_balance": true,
     "reward_scale_balance": true,
     "target_gradient_shares": {
-      "cot": 0.2,
-      "style": 0.2,
-      "ast": 0.2,
-      "variable": 0.2,
-      "control_flow": 0.2
+      "formatting": 0.25,
+      "identifier": 0.25,
+      "local_structure": 0.25,
+      "control_flow": 0.25
     },
     "gap_following_alpha": 0.5,
     "reward_ema_decay": 0.9,

@@ -54,7 +54,7 @@ class MultiExpertStage1Pipeline:
             shared_candidate = RewriteCandidate(
                 code=record.code,
                 reasoning=list(record.reasoning),
-                rationale="Shared recorded completion used for aligned five-Teacher scoring.",
+                rationale="Shared recorded completion used for aligned four-Teacher scoring.",
                 strategy="shared_trajectory",
                 raw_response=record.code,
                 metadata={"provider": "record", "shared_across_teachers": True},

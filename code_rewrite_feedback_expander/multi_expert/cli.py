@@ -16,7 +16,7 @@ from .teacher_prompts import PROMPT_VERSION
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate auditable pseudo-routing labels for five code experts."
+        description="Generate auditable pseudo-routing labels for four code experts."
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     validate = subparsers.add_parser("validate-config", help="Validate canonical JSON config.")

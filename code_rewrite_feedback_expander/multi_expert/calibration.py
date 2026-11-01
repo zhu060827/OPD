@@ -44,6 +44,46 @@ def fit_robust_advantage_calibration(
     return result
 
 
+def fit_advantage_calibration(
+    records: Iterable[Dict[str, Any]],
+    expert_ids: Iterable[str],
+    method: str = "median_mad",
+    min_samples: int = 20,
+) -> Dict[str, Dict[str, float]]:
+    """Fit the selectable routing calibration used by the four-Teacher router.
+
+    ``raw`` is the no-calibration ablation, ``mean_std`` is a conventional
+    z-score, ``median_mad`` is the robust default, and ``recal_style`` applies
+    the same location/scale normalization while recording the method name for
+    a ReCal-style calibration ablation.
+    """
+    if method not in {"raw", "mean_std", "median_mad", "recal_style"}:
+        raise ValueError(f"Unknown calibration method: {method}")
+    values = {expert_id: [] for expert_id in expert_ids}
+    for record in records:
+        for item in record.get("expert_assessments", []):
+            expert_id = item.get("expert_id")
+            trajectory = item.get("trajectory", {})
+            if expert_id in values and trajectory.get("available"):
+                values[expert_id].append(float(trajectory["mean_teacher_student_nll_advantage"]))
+    result = {}
+    for expert_id, samples in values.items():
+        if len(samples) < min_samples:
+            raise ValueError(f"Need at least {min_samples} calibration samples for {expert_id}; found {len(samples)}")
+        if method == "raw":
+            location, scale = 0.0, 1.0
+        elif method == "mean_std":
+            location = statistics.fmean(samples)
+            scale = statistics.pstdev(samples)
+        else:
+            location = statistics.median(samples)
+            scale = 1.4826 * statistics.median(abs(value - location) for value in samples)
+        if scale <= 1e-8:
+            raise ValueError(f"Calibration scale collapsed for {expert_id}")
+        result[expert_id] = {"location": location, "scale": scale, "sample_count": len(samples), "estimator": method}
+    return result
+
+
 def read_jsonl_dicts(path: str | Path) -> list[Dict[str, Any]]:
     with Path(path).open("r", encoding="utf-8") as handle:
         return [json.loads(line) for line in handle if line.strip()]

@@ -90,7 +90,7 @@ Semantic equivalence:
 
 Quality:
 
-- The five paper-level primary metrics use literature or specification terminology: `cot -> maintainability_index`, `style -> style_violation_rate`, `ast -> codebleu_syntax_match`, `variable -> naming_convention_compliance`, and `control_flow -> cyclomatic_complexity`.
+- The current paper-level primary metrics are task-specific: formatting repair, identifier recovery, local-structure extraction, and control-flow test pass.
 - `style_violation_rate` is a PEP 8/pycodestyle-compatible metric: violations are counted and normalized by logical lines. Maintainability reports the SEI derivative raw MI and its 0-100 normalization. Cyclomatic complexity reports the raw McCabe number and a direction-normalized comparison score.
 - `naming_convention_compliance` follows the PEP 8 "Naming Conventions" terminology and is computed as the proportion of checked identifiers that conform.
 - `codebleu_syntax_match` follows the Syntax Match component name in CodeBLEU. The current implementation is still labelled `codebleu_compatible_fallback` until the official tree-sitter backend is installed.
@@ -120,20 +120,20 @@ python3 -m code_rewrite_feedback_expander.cli run \
   --opd-scorer-factory code_rewrite_feedback_expander.opd_main_adapter:create_opd_scorer \
   --max-iterations 3
 ```
-- `experiments.run_comparison_experiments` runs adaptive, random, and fixed-order selection plus five leave-one-method-out ablations.
+- The formal experiment compares the four task-specialized experts and their multi-teacher Student fusion.
 
 OPD strategy selection:
 
 - The existing code expander is treated as the student model.
 - The teacher does not generate a separate rewrite. The OPD platform scores the exact student-generated trajectory under both teacher and student distributions.
 - Production integration implements `OPDDistributionScorer.score_student_trajectory(...)` and returns aligned teacher/student top-k log-probabilities for each generated token.
-- The first OPD step tries all five rewrite strategies.
+- The formal OPD path uses one shared Student rollout and scores it with all four frozen Teachers.
 - After each OPD step, all candidate records are retained in `iteration_trace`; a feedback LLM converts those structured records into natural-language instructions for the next step.
 - Token attribution is structural: variable tokens use AST identifier and definition-use evidence; control-flow tokens use branch/loop keywords; AST tokens use structural operators; style tokens use formatting tokens; CoT tokens use comments/docstrings and reasoning alignment. Tokens may receive multiple normalized aspect weights.
 - Feedback is generated through a fixed schema `{preserve, fix, avoid, evidence}`. Invalid model output falls back to rule-based content. The trace stores the structured source records, rendered feedback, and the feedback input used by the next student call.
 - The next student call receives the previous round's `feedback_used`, and the generated text is stored as `generated_feedback` for auditability.
 - Token KL is `D_KL(P_teacher(.|x,y_<t) || P_student(.|x,y_<t))` on the same student prefix.
-- Token contributions are attributed to `cot`, `style`, `ast`, `variable`, and `control_flow`, producing one KL value per aspect.
+- Token contributions are attributed to the four current code-rewriting domains, producing one aligned KL value per domain.
 - Semantic validity is a hard feasibility filter and is not multiplied into a numerical utility score.
 - Each aspect independently reports forward KL, Total Variation distance, distribution overlap (`1 - TV`), and teacher-versus-student NLL reduction on the generated token.
 - Adaptive selection uses a transparent lexicographic order: larger forward KL, then larger token NLL reduction, then smaller Total Variation. No custom weighted or multiplicative score is calculated.
@@ -161,7 +161,7 @@ References used for the OPD framing:
 - [Hinton et al., 2015, Distilling the Knowledge in a Neural Network](https://arxiv.org/abs/1503.02531) for teacher-student distribution matching and soft-target distillation.
 - [Gibbs and Su, 2002, On Choosing and Bounding Probability Metrics](https://doi.org/10.1111/1467-9868.00362) for Total Variation and relationships among probability-distribution distances.
 
-Forward KL, Total Variation, distribution overlap, and token negative log-likelihood are established quantities. Their lexicographic use for rewrite-strategy selection, and the five-way token-to-aspect attribution, are project-level design choices that must be validated through ablation and attribution studies; they are not claimed as standard OPD formulas.
+Forward KL, Total Variation, distribution overlap, and token negative log-likelihood are established quantities. Routing calibration, token-share balancing, and reward refresh are project-level extensions that must be validated through ablation studies; they are not claimed as standard OPD formulas.
 
 Additional references used by the semantic checks:
 

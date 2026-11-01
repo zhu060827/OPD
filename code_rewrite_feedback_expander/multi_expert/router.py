@@ -30,7 +30,7 @@ class MultiExpertRouter:
             if expert_id:
                 return expert_id
             # Historical labels are provenance only. Unknown legacy values do
-            # not abort the canonical five-Teacher comparison.
+            # not abort the canonical four-Teacher comparison.
             continue
         return None
 
@@ -85,6 +85,8 @@ class MultiExpertRouter:
             stats = self.config.calibration[item.expert_id]
             location = float(stats.get("location", 0.0))
             scale = float(stats["scale"])
+            if self.config.calibration_method == "raw":
+                location, scale = 0.0, 1.0
             item.normalized_nll_advantage = (
                 item.trajectory.mean_teacher_student_nll_advantage - location
             ) / scale

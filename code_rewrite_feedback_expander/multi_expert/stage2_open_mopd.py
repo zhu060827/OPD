@@ -1,6 +1,6 @@
-"""Validated five-Teacher, no-SFT launcher for the project Open-MOPD backend.
+"""Validated four-Teacher, no-SFT launcher for the project Open-MOPD backend.
 
-This module does not emulate MT-OPD.  It validates five real local Teacher
+This module does not emulate MT-OPD.  It validates four real local Teacher
 checkpoints and delegates execution to a pinned checkout of Open-MOPD's
 ``scripts/local/mt_opd.sh`` entry point. Domain balancing is wired through
 real verl sampler and trainer extension points rather than unused ``mt_opd``
@@ -20,7 +20,7 @@ import subprocess
 from typing import Any, Iterable, Sequence
 
 
-EXPECTED_DOMAINS = ("cot", "style", "ast", "variable", "control_flow")
+EXPECTED_DOMAINS = ("formatting", "identifier", "local_structure", "control_flow")
 PINNED_OPEN_MOPD_COMMIT = "4809a96cf85a869106ff0ff3f37d0a51e12010ae"
 
 
@@ -55,6 +55,11 @@ class Stage2OpenMOPDConfig:
     prompt_sampling_balance: bool
     token_share_balance: bool
     reward_scale_balance: bool
+    top_k: int
+    top_k_strategy: str
+    gap_clip_low: float
+    gap_clip_high: float
+    routing_mode: str
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "Stage2OpenMOPDConfig":
@@ -96,6 +101,11 @@ class Stage2OpenMOPDConfig:
             prompt_sampling_balance=bool(method.get("prompt_sampling_balance", True)),
             token_share_balance=bool(method.get("token_share_balance", True)),
             reward_scale_balance=bool(method.get("reward_scale_balance", True)),
+            top_k=int(method.get("top_k", 16)),
+            top_k_strategy=str(method.get("top_k_strategy", "only_stu")),
+            gap_clip_low=float(method.get("gap_clip_low", -20.0)),
+            gap_clip_high=float(method.get("gap_clip_high", 20.0)),
+            routing_mode=str(method.get("routing_mode", "recorded_label")),
         )
         config.validate_static()
         return config
@@ -104,12 +114,12 @@ class Stage2OpenMOPDConfig:
         domains = tuple(item.domain for item in self.teachers)
         if domains != EXPECTED_DOMAINS:
             raise ValueError(
-                "Exactly five Teachers are required in canonical order: "
+                "Exactly four Teachers are required in canonical order: "
                 + ",".join(EXPECTED_DOMAINS)
             )
         paths = [str(item.teacher_path) for item in self.teachers]
         if len(set(paths)) != len(paths):
-            raise ValueError("The five Teacher checkpoint paths must be distinct")
+            raise ValueError("The four Teacher checkpoint paths must be distinct")
         if self.label_policy not in {
             "recorded_method",
             "stage1_handoff",
@@ -137,6 +147,19 @@ class Stage2OpenMOPDConfig:
             raise ValueError("token balance requires 0 < min_weight <= max_weight")
         if not 0.0 <= self.reward_ema_decay < 1.0:
             raise ValueError("reward_ema_decay must be in [0, 1)")
+        if self.top_k < 1:
+            raise ValueError("top_k must be positive")
+        if self.top_k_strategy not in {"only_stu", "only_tch", "intersection", "union", "union-intersection"}:
+            raise ValueError("Unsupported top_k_strategy")
+        if self.gap_clip_low > self.gap_clip_high:
+            raise ValueError("gap clip lower bound must not exceed upper bound")
+        if self.routing_mode not in {"recorded_label", "dynamic_same_rollout", "stage1_pseudo_router"}:
+            raise ValueError("routing_mode must be recorded_label, dynamic_same_rollout, or stage1_pseudo_router")
+        if self.routing_mode == "dynamic_same_rollout" and self.label_policy != "pseudo_router_ablation":
+            raise ValueError(
+                "dynamic_same_rollout requires label_policy=pseudo_router_ablation; "
+                "recorded labels are not dynamic MOPD routing"
+            )
 
 
 def load_stage2_config(path: str | Path) -> Stage2OpenMOPDConfig:
@@ -248,6 +271,12 @@ def build_open_mopd_command(
             "--extra",
             "actor_rollout_ref.actor.opd_refresh_advantage="
             + str(config.reward_refresh).lower(),
+            "--extra",
+            f"actor_rollout_ref.rollout.log_prob_top_k={config.top_k}",
+            "--extra",
+            f"actor_rollout_ref.rollout.top_k_strategy={config.top_k_strategy}",
+            "--extra",
+            f"+algorithm.opd_reward.gap_clip=[{config.gap_clip_low:g},{config.gap_clip_high:g}]",
         ]
     )
     if config.prompt_sampling_balance:
@@ -489,6 +518,50 @@ def _validate_open_mopd_commit(config: Stage2OpenMOPDConfig) -> None:
         )
 
 
+def build_run_manifest(
+    config: Stage2OpenMOPDConfig,
+    preflight_report: dict[str, Any],
+    command: Sequence[str],
+) -> dict[str, Any]:
+    """Create a reproducibility record before launching a costly run."""
+
+    def file_digest(path: Path) -> str | None:
+        if not path.is_file():
+            return None
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    tracked = {
+        "student": config.student_path,
+        "train": config.train_file,
+        "validation": config.val_file,
+        **{f"teacher_{item.domain}": item.teacher_path for item in config.teachers},
+    }
+    digest_paths = {
+        name: (
+            path / "adapter_model.safetensors"
+            if path.is_dir() and (path / "adapter_model.safetensors").is_file()
+            else path
+        )
+        for name, path in tracked.items()
+    }
+    return {
+        "schema": "four-teacher-open-mopd-run-v1",
+        "paths": {name: str(path) for name, path in tracked.items()},
+        "sha256": {name: file_digest(path) for name, path in digest_paths.items()},
+        "routing_mode": config.routing_mode,
+        "label_policy": config.label_policy,
+        "top_k": config.top_k,
+        "top_k_strategy": config.top_k_strategy,
+        "gap_clip": [config.gap_clip_low, config.gap_clip_high],
+        "preflight": preflight_report,
+        "command": list(command),
+    }
+
+
 def _hydra_list(values: Iterable[float]) -> str:
     return "[" + ",".join(f"{value:g}" for value in values) + "]"
 
@@ -505,6 +578,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.preflight_only:
         return 0
     command = build_open_mopd_command(config, execute=args.run)
+    manifest_path = config.output_dir / "run_manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        json.dumps(
+            build_run_manifest(config, report, command),
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    print(f"Run manifest: {manifest_path}")
     print("Open-MOPD command:")
     print(" ".join(command))
     if args.run:
