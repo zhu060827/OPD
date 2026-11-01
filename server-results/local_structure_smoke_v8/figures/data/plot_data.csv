@@ -1,7 +1,0 @@
-﻿panel,metric,method,mean,ci95_low,ci95_high,ci_method,n
-primary,Corpus CodeBLEU,Base,90.49840760846955,,,official corpus-level calc_codebleu,20
-primary,Corpus CodeBLEU,LoRA Teacher,94.25262583692775,,,official corpus-level calc_codebleu,20
-auxiliary-1,Corpus BLEU,Base,91.27856596263962,,,SacreBLEU corpus_bleu; tokenize=none,20
-auxiliary-1,Corpus BLEU,LoRA Teacher,92.74868145845132,,,SacreBLEU corpus_bleu; tokenize=none,20
-auxiliary-2,Exact match,Base,5.0,0.8881448800795375,23.6131193446742,Wilson score 95% CI,20
-auxiliary-2,Exact match,LoRA Teacher,0.0,1.3877787807814457e-15,16.11251580528193,Wilson score 95% CI,20
