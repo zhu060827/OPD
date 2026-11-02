@@ -185,6 +185,40 @@ MBPP test 保留为外部评测。数据必须对四专家全部 split 执行：
 - Student train/validation/test 隔离；
 - 四领域分布和 response-token share 审计。
 
+Student 数据本身可以不带人工领域标签。推荐先将统一代码样本写成
+`domain=unknown`，再运行 Stage-1 的动态路由：Student 对每个样本生成一次
+rollout，四个 Teacher 对同一条 rollout 计算 Teacher--Student advantage，使用
+独立 calibration split 的 median/MAD 校准后选 Top-1 Teacher。该结果写入
+`routing_label`、`teacher_id` 和 one-hot `teacher_weights`，再作为 Stage-2 的
+`stage1_handoff` 标签。低于 Top-1/Top-2 margin 的样本可 abstain，不应强行伪标注。
+
+示例流程：
+
+```bash
+# 第一次只用于收集共享 Student 轨迹；配置中使用 raw calibration
+PYTHONPATH=. python -m code_rewrite_feedback_expander.multi_expert \
+  run --config configs/stage1_multi_expert.four_domain.gpu.example.json \
+  --input data/student_unlabeled.jsonl --output-dir outputs/student-routing-round0
+
+# 用独立 validation 轨迹拟合每个 Teacher 的 median/MAD
+PYTHONPATH=. python -m code_rewrite_feedback_expander.multi_expert \
+  fit-calibration --config configs/stage1_multi_expert.four_domain.gpu.example.json \
+  --input outputs/student-routing-calibration/routing_labels.jsonl \
+  --output outputs/student-routing-calibration/median_mad.json
+
+# 应用校准并导出可供 Open-MOPD 使用的 handoff；低置信度样本不进入训练
+PYTHONPATH=. python -m code_rewrite_feedback_expander.multi_expert \
+  run --config configs/stage1_multi_expert.four_domain.gpu.example.json \
+  --calibration outputs/student-routing-calibration/median_mad.json \
+  --allow-abstain --input data/student_unlabeled.jsonl \
+  --output-dir outputs/student-routing-round1
+```
+
+`outputs/student-routing-round1/mt_opd_handoff.jsonl` 经过
+`convert_stage1_handoff_to_parquet` 转为 `mt_opd_handoff.parquet` 后，使用
+`configs/stage2_open_mopd_four_teacher_from_stage1.example.json` 训练。每轮 Student
+更新后应重新生成 rollout 和路由标签；伪标签不是永久的数据集标签。
+
 ## 论文实验要求
 
 至少报告：

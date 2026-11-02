@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import json
 from pathlib import Path
 from typing import Iterable
@@ -27,6 +28,15 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--input", required=True)
     run.add_argument("--output-dir", required=True)
     run.add_argument("--limit", type=int, default=0)
+    run.add_argument(
+        "--calibration",
+        help="JSON file produced by fit-calibration; overrides calibration in the config.",
+    )
+    run.add_argument(
+        "--allow-abstain",
+        action="store_true",
+        help="Keep low-confidence samples out of the handoff instead of failing the run.",
+    )
     calibrate = subparsers.add_parser(
         "fit-calibration", help="Fit robust per-Teacher advantage calibration."
     )
@@ -55,11 +65,42 @@ def main() -> None:
         write_calibration(args.output, calibration)
         print(f"Wrote robust Teacher calibration to {Path(args.output).resolve()}")
         return
-    run(config_path=args.config, input_path=args.input, output_dir=args.output_dir, limit=args.limit)
+    run(
+        config_path=args.config,
+        input_path=args.input,
+        output_dir=args.output_dir,
+        limit=args.limit,
+        calibration_path=args.calibration,
+        allow_abstain=args.allow_abstain,
+    )
 
 
-def run(config_path: str, input_path: str, output_dir: str, limit: int = 0) -> None:
+def run(
+    config_path: str,
+    input_path: str,
+    output_dir: str,
+    limit: int = 0,
+    calibration_path: str | None = None,
+    allow_abstain: bool = False,
+) -> None:
     config = load_config(config_path)
+    if calibration_path:
+        calibration = json.loads(Path(calibration_path).read_text(encoding="utf-8"))
+        if not isinstance(calibration, dict):
+            raise ValueError("Calibration file must contain a JSON object")
+        config = replace(
+            config,
+            routing=replace(
+                config.routing,
+                calibration=calibration,
+                abstain_on_low_confidence=allow_abstain,
+            ),
+        )
+    elif allow_abstain:
+        config = replace(
+            config,
+            routing=replace(config.routing, abstain_on_low_confidence=True),
+        )
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     records = read_jsonl(input_path)
@@ -87,16 +128,19 @@ def run(config_path: str, input_path: str, output_dir: str, limit: int = 0) -> N
         for result, item in zip(results, handoff, strict=True)
         if item is None
     ]
-    if missing:
+    if missing and not allow_abstain:
         raise RuntimeError(
             "Stage-1 full-label run produced no handoff for "
             f"{len(missing)} records (first task_ids: {missing[:10]}). "
             "Enable trajectory fallback or fix the scoring backend before training."
         )
     handoff_rows = [item for item in handoff if item is not None]
-    if len(handoff_rows) != len(results):
-        raise RuntimeError("Stage-1 handoff count does not match input count")
     write_jsonl(str(output / "mt_opd_handoff.jsonl"), handoff_rows)
+    if missing:
+        write_jsonl(
+            str(output / "abstained_routing.jsonl"),
+            [item.to_dict() for item in results if item.task_id in set(missing)],
+        )
     (output / "summary.json").write_text(
         json.dumps(build_summary(results), ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -109,6 +153,7 @@ def run(config_path: str, input_path: str, output_dir: str, limit: int = 0) -> N
                 "input": str(Path(input_path).resolve()),
                 "record_count": len(results),
                 "handoff_count": len(handoff_rows),
+                "abstained_count": len(missing),
                 "generation_backend": config.generation_backend.backend_type,
                 "trajectory_backend": config.trajectory_backend.backend_type,
                 "teacher_prompt_version": PROMPT_VERSION,
