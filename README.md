@@ -1,205 +1,201 @@
-# 大创结题版工程系统使用说明
+# Four-Expert Code Specialization and Open-MOPD Fusion
 
-本项目是“面向生成式模型的高质量数据特征扩充技术研究”的结题版工程化系统。
-它不是另起炉灶，而是在原 OCTree 表格特征扩充基础上，继续扩展 Math 和 Code 两类数据。
+本分支实现四个代码改写专家的训练、评测与 Student 融合。四个专家共享
+Qwen3-4B 基座，分别以 LoRA adapter 表示领域能力；Student 阶段使用固定版本
+Open-MOPD 在同一学生模型中融合四类能力。
 
-## Code 五教师 Open-MOPD 正式框架
+## 当前状态
 
-正式训练路径现在要求五个真实、互不相同的本地 Teacher checkpoint，并调用固定版本的
-Open-MOPD `mt_opd.sh`。训练数据的 `domain` 字段采用
-`cot/style/ast/variable/control_flow`，按标签 hard routing；token-share balancing、
-gap-following allocation 和 reward refresh 会作为显式训练参数传入。当前未执行 GPU
-训练，但不再使用单 Teacher `opd.sh` 冒充多教师训练。
+- 四个专家已完成正式训练、最佳 checkpoint 选择和独立 test split 评测。
+- Base/LoRA 推理、主指标、辅助指标和 hard-gate 图已生成。
+- Stage-2 已接入固定 commit 的 Open-MOPD 启动器。
+- Teacher reward worker 使用一份 Qwen3-4B base 和四个冻结 LoRA adapter，不生成四份完整合并模型。
+- Student 正式训练尚未开始；当前阻塞项是构造与专家训练集无泄漏的独立 Student 数据。
 
-- [English Stage-2 guide](docs/STAGE2_OPEN_MOPD_FIVE_TEACHER.md)
-- [中文 Stage-2 说明](docs/STAGE2_OPEN_MOPD_FIVE_TEACHER.zh-CN.md)
-- 配置模板：`configs/stage2_open_mopd_five_teacher.example.json`
-- Stage 1 交接模板：`configs/stage2_open_mopd_from_stage1.example.json`
+## 四个专家
 
-`verl_example/opd.sh` 继续保留，仅作为单 Teacher 对照组。
+| 专家 | 能力 | 数据来源 | 最佳 checkpoint | Base | LoRA |
+|---|---|---|---|---:|---:|
+| Formatting | 精确格式修复 | CommitPackFT | checkpoint-900 | 38.26% | 88.60% |
+| Identifier | 标识符精确恢复 | CodeSearchNet | checkpoint-700 | 24.73% | 51.79% |
+| Local Structure | 局部结构等价改写 | CodeSearchNet | checkpoint-600 | 84.42% | 99.78% |
+| Control Flow | 控制流语义保持改写 | DeepMind Code Contests | checkpoint-500 | 63.48% | 97.38% |
 
-## Code 多专家阶段一（可选路由消融）
-
-这个模块是 Open-MOPD 之前的可选路由层：有 `method/domain/rewrite_method`
-来源标签时直接 hard routing；只有无标签样本才让五个 Teacher 对同一条
-completion 做对齐 OPD advantage 评分，经各 Teacher 独立校准后选 Top-1。
-Top-1/Top-2 差距太小时默认拒绝伪标签。原先固定权重的 Reward+advantage
-逻辑仍保留为 `heuristic_ablation`，不再是默认方案。
-
-当前正式接口已将 Teacher 路由与代码验证拆开：语义失败的 Student 错误轨迹仍可由
-五个 Teacher 评分并进入 OPD handoff，但会标记为 `repair_or_negative`，不会进入正向
-扩增；无测试样本进入 `unverified_pool`。Stage 2 可用 `stage1_handoff` 策略严格验证
-one-hot Teacher 路由和这些质量字段，然后交给官方 `multi/mt_opd`。
-
-- [English design and run guide](docs/STAGE1_MULTI_EXPERT.md)
-- [中文设计与运行说明](docs/STAGE1_MULTI_EXPERT.zh-CN.md)
-
-本地无模型 smoke test：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/run_stage1_smoke.ps1
-```
-
-Mock 输出只用于验证工程闭环，文件中会明确标记 `formal_training_result=false`。
-
-## 三类数据分别扩充什么
-
-Tabular：扩充新特征列和特征生成代码。流程是 LLM 生成候选特征，沙盒检查，模型评估，再根据指标和决策树规则反馈下一轮。
-
-Math：扩充数学 CoT 的中间推理步骤。流程是切分原始解答，构建 Reasoning Graph，遮盖中间节点，让 LLM 恢复，再做质量评估。数学模块已经接入队友的 `Math/math_reasoning_expander/`，支持多遮盖点和同一节点多轮反馈优化。
-
-Code：现在支持两种模式。没有原始代码时，走“生成代码 -> 跑测试 -> 错误反馈 -> 修复”；有原始 code 和 reasoning 时，走队友的 rewrite 扩充流程，同步改写 reasoning 和 code，并做语义等价检查和质量评分。
-
-## 安装依赖
-
-在 VSCode 终端进入本目录：
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-## 启动网站
-
-```powershell
-python app.py
-```
-
-看到下面类似输出就说明后端已经启动：
+主指标依次为 Formatting Exact Repair、Identifier Exact Match、Local Structure
+Exact Match 和 Control Flow Pass@1。这些是 held-out test-set 生成指标，不是训练 token accuracy。
 
 ```text
-OCTree Flask backend is running.
-Open http://127.0.0.1:5000 in your browser.
+Qwen3-4B base
+├── Formatting LoRA
+├── Identifier LoRA
+├── Local Structure LoRA
+└── Control Flow LoRA
 ```
 
-然后浏览器打开：
+训练使用 assistant-only causal language-modeling loss，禁用 Qwen3 thinking。
+LoRA 参数为 `r=16`、`alpha=32`、`dropout=0.05`。
+
+## Student 融合方法
+
+Student 对每个 prompt 只 rollout 一次。冻结 Teacher 对 Student 实际生成的同一组
+token 计算 log-probability，token 级基础信号为：
 
 ```text
-http://127.0.0.1:5000
+log p_teacher(token | prefix) - log p_student(token | prefix)
 ```
 
-## 前后端关系
+正式更新使用 Open-MOPD 的 Student top-k 概率加权 token reward。本项目额外保留：
 
-`app.py` 是后端，负责运行 Python 算法、保存 outputs、返回 JSON。
+- prompt/domain sampling balance；
+- response-token share balance；
+- reward-scale/gap-following balance；
+- repeated-update reward refresh；
+- `raw`、`mean/std`、`median/MAD` 路由校准消融。
 
-`index.html` 是前端，负责页面展示、按钮点击、上传文件、把后端返回的结果显示出来。
+Open-MOPD 官方实验使用已知 domain 标签路由。本项目的 median/MAD 异构 Teacher
+校准是额外扩展，必须通过 validation 和消融实验评估，不宣称为 Open-MOPD 原始公式。
 
-前端点击按钮后，会调用这些接口：
+## 共享 base + LoRA Teacher 扩展
 
-- `/api/run/tabular`
-- `/api/run/math`
-- `/api/run/code`
-- `/api/run/all_demo`
+官方 `mt_opd.sh` 原生接受多个完整 Teacher 模型路径。本项目为固定版本
+Open-MOPD 的 reward worker 增加可选 `model.lora_adapter_path`：
 
-所以前端同学主要改 `index.html` 的样式和展示逻辑，不需要动算法代码。
+1. `model.path` 指向共享 Qwen3-4B base；
+2. reward worker 加载自己的冻结 PEFT adapter；
+3. 保留官方 multi-Teacher worker、domain routing 和 token reward 逻辑；
+4. 不向磁盘写出四份约 8 GB 的合并权重。
 
-## outputs 结果文件
+应用补丁：
 
-运行 demo 后会生成：
+```bash
+python scripts/patch_open_mopd_lora_teachers.py \
+  --open-mopd-root third_party/Open-MOPD
+```
 
-- `outputs/tabular_results.json`：表格特征扩充结果
-- `outputs/tabular_augmented.csv`：增强后的表格
-- `outputs/metrics.csv`：baseline / optimized / improvement 指标
-- `outputs/math_expanded.jsonl`：数学推理链扩充结果
-- `outputs/math_quality.svg`：数学质量图
-- `outputs/code_repair_traces.jsonl`：代码生成、修复或 rewrite 扩充轨迹
-- `outputs/code_quality.svg`：代码 rewrite 质量对比图
+补丁脚本仅允许应用到 commit：
 
-## Code 新增 rewrite 流程
+```text
+4809a96cf85a869106ff0ff3f37d0a51e12010ae
+```
 
-队友的代码包已经接入到 `code_rewrite_feedback_expander/`。
+## 目录
 
-如果输入里有：
+```text
+code_rewrite_feedback_expander/multi_expert/
+  calibration.py              # robust Teacher 校准
+  config.py                   # Stage-1 配置
+  pipeline.py                 # 路由标签/handoff 流程
+  router.py                   # 专家选择
+  opd_reward.py               # top-k token reward 参考实现
+  stage2_open_mopd.py         # Stage-2 配置、预检和启动器
+
+teacher_training/             # 专家数据、训练与评测
+configs/                      # 四专家 Stage-1/Stage-2 配置模板
+scripts/                      # Open-MOPD 获取、补丁和转换脚本
+tests/                        # 单元测试
+docs/FOUR_EXPERT_OPEN_MOPD.zh-CN.md
+```
+
+## 安装与验证
+
+环境需包含 PyTorch、Transformers、PEFT、Datasets 和 PyArrow。
+
+```bash
+python -m compileall -q code_rewrite_feedback_expander teacher_training scripts tests
+PYTHONPATH=. python tests/multi_expert/test_opd_reward.py
+PYTHONPATH=. python tests/multi_expert/test_stage2_lora_teachers.py
+```
+
+获取并固定 Open-MOPD：
+
+```bash
+bash scripts/fetch_open_mopd.sh third_party/Open-MOPD
+python scripts/patch_open_mopd_lora_teachers.py \
+  --open-mopd-root third_party/Open-MOPD
+```
+
+## 配置
+
+模板：
+
+- `configs/stage1_multi_expert.four_domain.gpu.example.json`
+- `configs/stage2_open_mopd_four_teacher.example.json`
+- `configs/stage2_open_mopd_four_teacher_from_stage1.example.json`
+
+Stage-2 关键字段：
 
 ```json
 {
-  "prompt": "...",
-  "reasoning": ["..."],
-  "code": "def ...",
-  "tests": ["assert ..."]
+  "models": {
+    "student_path": "/path/to/Qwen3-4B",
+    "teacher_base_path": "/path/to/Qwen3-4B",
+    "teachers": [
+      {
+        "domain": "formatting",
+        "adapter_path": "/path/to/formatting-adapter"
+      }
+    ]
+  }
 }
 ```
 
-就会走 rewrite 扩充：
+实际配置必须按以下顺序提供四个领域：
 
 ```text
-原始 code + reasoning
--> LLM Rewrite
--> 语义等价检查
--> 质量评分
--> 自然语言反馈
--> 再次 Rewrite
--> 有提升才保留
+formatting, identifier, local_structure, control_flow
 ```
 
-rewrite 策略包括：
+## 预检和运行
 
-- `cot`：让 reasoning 更清楚
-- `style`：改善代码风格
-- `ast`：做 AST 等价重构
-- `variable`：替换更清晰的变量名
-- `control_flow`：调整控制流
+Student 数据准备完成后：
 
-保留条件是：
+```bash
+PYTHONPATH=. python -m \
+  code_rewrite_feedback_expander.multi_expert.stage2_open_mopd \
+  --config configs/stage2_open_mopd_four_teacher.server.json \
+  --preflight-only
+```
+
+只在预检通过、GPU/内存/磁盘充足时启动：
+
+```bash
+PYTHONPATH=. python -u -m \
+  code_rewrite_feedback_expander.multi_expert.stage2_open_mopd \
+  --config configs/stage2_open_mopd_four_teacher.server.json \
+  --run
+```
+
+## Student 数据要求
+
+Student 原始数据必须独立于专家数据来源。已用于专家训练的来源为：
 
 ```text
-语义检查通过 + 质量分提升
+Formatting       CommitPackFT
+Identifier       CodeSearchNet
+Local Structure  CodeSearchNet
+Control Flow     DeepMind Code Contests
 ```
 
-语义检查包括 AST 解析、函数签名、危险调用过滤、单元测试、AST 相似度、CodeBLEU-like 相似度。
+候选正式数据为 APPS train split；MBPP train 仅用于小规模端到端 smoke test，
+MBPP test 保留为外部评测。数据必须对四专家全部 split 执行：
 
-质量评分包括可读性、复杂度、长度平衡、多样性和代码风格。
+- `problem_id` 去重；
+- normalized problem-text hash 去重；
+- source/target code hash 去重；
+- Student train/validation/test 隔离；
+- 四领域分布和 response-token share 审计。
 
-## Math 完整迭代流程
+## 论文实验要求
 
-队友的数学包保留在 `Math/math_reasoning_expander/`，主工程通过 `math_adapter.py` 调用，不需要单独启动 Math 目录。
+至少报告：
 
-```text
-原始题目 + 原始 CoT
--> 切分推理节点并构建 Reasoning Graph
--> 外层选择一个中间节点
--> 内层最多反馈改进 3 次
--> 生成节点质量高于原节点时保留并合入 CoT
--> 继续选择下一个节点
--> 输出扩充结果、每轮轨迹和质量图
-```
+- Base Student；
+- 单专家蒸馏；
+- 四专家 raw advantage；
+- mean/std 与 median/MAD 校准；
+- recorded-domain Open-MOPD；
+- dynamic/pseudo-router 消融；
+- token-share、reward-scale 和 reward-refresh 消融；
+- 95% 置信区间、paired win/loss/tie 和失败案例。
 
-默认配置是外层最多 10 个遮盖点、内层每个点最多 3 次、连续 2 个节点没有提升就提前停止。可以在 `.env` 中调整：
-
-```text
-MATH_MAX_MASK_ROUNDS=10
-MATH_MAX_REFINE_ROUNDS=3
-MATH_PATIENCE=2
-MATH_ACCEPT_THRESHOLD=0.80
-```
-
-真实 API 不可用时仍会自动使用 mock；完整数学包运行异常时会自动切回 `math_adapter.py` 的单轮兼容流程。
-
-## 常见问题
-
-1. `ModuleNotFoundError: No module named 'flask'`
-
-说明依赖没装到当前 Python 环境，重新运行：
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-2. 网站打不开
-
-先确认 `python app.py` 的终端没有关闭，然后打开：
-
-```text
-http://127.0.0.1:5000
-```
-
-3. LLM 调用失败
-
-项目会自动使用 mock 兜底，所以 demo 仍然能跑。正式使用时可以在 `.env` 里配置：
-
-```text
-OPENAI_API_KEY=你的key
-OPENAI_BASE_URL=你的base_url
-OPENAI_MODEL=模型名
-```
-
-可以先复制 `.env.example` 并改名为 `.env`，再填写自己的配置。`.env` 已被 `.gitignore` 排除，不要把完整 API Key 发到群里、写进截图或放进压缩包。
+不得将未完成的 Student GPU 训练或 mock 输出写成正式实验结果。
