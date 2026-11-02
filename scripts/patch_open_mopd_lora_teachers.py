@@ -30,6 +30,15 @@ def patch_checkout(root: Path) -> Path:
     if MARKER in source:
         return target
 
+    function_anchor = """    def _build_model(self, config):
+        # the following line is necessary
+        from torch.distributed.fsdp import CPUOffload
+        from transformers import AutoConfig, AutoModelForCausalLM
+"""
+    function_start = source.find(function_anchor)
+    if function_start < 0 or source.find(function_anchor, function_start + 1) >= 0:
+        raise RuntimeError("Unexpected Open-MOPD reward loader function anchor")
+
     anchor_path = "        local_path = copy_to_local(config.model.path, use_shm=use_shm)\n"
     replacement_path = anchor_path + (
         f"        {MARKER}\n"
@@ -38,9 +47,10 @@ def patch_checkout(root: Path) -> Path:
         "            copy_to_local(adapter_path, use_shm=use_shm) if adapter_path else None\n"
         "        )\n"
     )
-    if source.count(anchor_path) != 1:
+    path_index = source.find(anchor_path, function_start)
+    if path_index < 0:
         raise RuntimeError("Unexpected Open-MOPD reward loader path anchor")
-    source = source.replace(anchor_path, replacement_path, 1)
+    source = source[:path_index] + replacement_path + source[path_index + len(anchor_path) :]
 
     anchor_model = """            reward_module = AutoModelForCausalLM.from_pretrained(
                 pretrained_model_name_or_path=local_path,
@@ -71,9 +81,10 @@ def patch_checkout(root: Path) -> Path:
 
             apply_monkey_patch(
 """
-    if source.count(anchor_model) != 1:
+    model_index = source.find(anchor_model, path_index)
+    if model_index < 0:
         raise RuntimeError("Unexpected Open-MOPD reward loader model anchor")
-    source = source.replace(anchor_model, replacement_model, 1)
+    source = source[:model_index] + replacement_model + source[model_index + len(anchor_model) :]
     target.write_text(source, encoding="utf-8")
     return target
 
