@@ -24,6 +24,10 @@ Student 归一化 top-k 概率。路由权重是 one-hot 的 Teacher 选择，�
 - `configs/stage2_open_mopd_four_teacher.example.json`
 - `configs/stage2_open_mopd_four_teacher_from_stage1.example.json`
 
-在正式运行前，需将当前 LoRA adapter 合并成 Open-MOPD 可加载的完整 Teacher checkpoint，
-并把四个合并后的路径写入 Stage-2 配置。Stage-1 的 calibration 输出应来自独立 validation
-轨迹，随后才可生成 handoff 并启动 Open-MOPD。
+正式运行使用一份 Qwen3-4B Teacher base 和四个冻结 LoRA adapter。
+`scripts/patch_open_mopd_lora_teachers.py` 为固定版本 Open-MOPD 的 reward worker
+增加可选 `lora_adapter_path`：每个官方 reward worker 从共享磁盘路径加载
+同一 base，再在内存中加载对应 adapter。该扩展不修改 Open-MOPD 的路由、
+token reward 或训练更新公式，也不生成四份完整 Teacher 权重。
+Stage-1 的 calibration 输出应来自独立 validation 轨迹，随后才可生成
+handoff 并启动 Open-MOPD。

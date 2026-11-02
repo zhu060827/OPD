@@ -27,7 +27,7 @@ PINNED_OPEN_MOPD_COMMIT = "4809a96cf85a869106ff0ff3f37d0a51e12010ae"
 @dataclass(frozen=True)
 class ExpertTeacher:
     domain: str
-    teacher_path: Path
+    adapter_path: Path
 
 
 @dataclass(frozen=True)
@@ -35,6 +35,7 @@ class Stage2OpenMOPDConfig:
     open_mopd_root: Path
     expected_open_mopd_commit: str
     student_path: Path
+    teacher_base_path: Path
     teachers: tuple[ExpertTeacher, ...]
     train_file: Path
     val_file: Path
@@ -69,7 +70,7 @@ class Stage2OpenMOPDConfig:
         runtime = raw.get("runtime", {})
         method = raw.get("method", {})
         teachers = tuple(
-            ExpertTeacher(str(item["domain"]), Path(item["teacher_path"]))
+            ExpertTeacher(str(item["domain"]), Path(item["adapter_path"]))
             for item in model.get("teachers", [])
         )
         target = method.get("target_gradient_shares", {})
@@ -79,6 +80,7 @@ class Stage2OpenMOPDConfig:
                 backend.get("expected_commit", PINNED_OPEN_MOPD_COMMIT)
             ),
             student_path=Path(model.get("student_path", "")),
+            teacher_base_path=Path(model.get("teacher_base_path", "")),
             teachers=teachers,
             train_file=Path(data.get("train_file", "")),
             val_file=Path(data.get("val_file", "")),
@@ -117,9 +119,9 @@ class Stage2OpenMOPDConfig:
                 "Exactly four Teachers are required in canonical order: "
                 + ",".join(EXPECTED_DOMAINS)
             )
-        paths = [str(item.teacher_path) for item in self.teachers]
+        paths = [str(item.adapter_path) for item in self.teachers]
         if len(set(paths)) != len(paths):
-            raise ValueError("The four Teacher checkpoint paths must be distinct")
+            raise ValueError("The four Teacher adapter paths must be distinct")
         if self.label_policy not in {
             "recorded_method",
             "stage1_handoff",
@@ -192,11 +194,10 @@ def validate_real_run(config: Stage2OpenMOPDConfig) -> dict[str, Any]:
         raise FileNotFoundError(f"Official Open-MOPD launcher not found: {launcher}")
     _validate_open_mopd_commit(config)
     _validate_checkpoint(config.student_path, "Student")
+    _validate_checkpoint(config.teacher_base_path, "Teacher base")
     for teacher in config.teachers:
-        _validate_checkpoint(teacher.teacher_path, f"Teacher[{teacher.domain}]")
-    _validate_tokenizer_family(
-        [config.student_path, *(teacher.teacher_path for teacher in config.teachers)]
-    )
+        _validate_adapter(teacher.adapter_path, f"Teacher adapter[{teacher.domain}]")
+    _validate_tokenizer_family([config.student_path, config.teacher_base_path])
     for label, path in (("training data", config.train_file), ("validation data", config.val_file)):
         if not path.is_file():
             raise FileNotFoundError(f"{label} not found: {path}")
@@ -212,6 +213,7 @@ def validate_real_run(config: Stage2OpenMOPDConfig) -> dict[str, Any]:
         "open_mopd_launcher": str(launcher),
         "teacher_count": len(config.teachers),
         "teacher_domains": list(EXPECTED_DOMAINS),
+        "teacher_loading": "shared_base_with_peft_adapters",
         "training_domain_counts": dict(train_counts),
         "validation_domain_counts": dict(val_counts),
         "label_policy": config.label_policy,
@@ -232,8 +234,8 @@ def build_open_mopd_command(
         "--model",
         str(config.student_path),
     ]
-    for teacher in config.teachers:
-        command.extend(["--teacher", str(teacher.teacher_path)])
+    for _teacher in config.teachers:
+        command.extend(["--teacher", str(config.teacher_base_path)])
     command.extend(
         [
             "--domains",
@@ -279,6 +281,14 @@ def build_open_mopd_command(
             f"+algorithm.opd_reward.gap_clip=[{config.gap_clip_low:g},{config.gap_clip_high:g}]",
         ]
     )
+    for index, teacher in enumerate(config.teachers):
+        prefix = "reward_model" if index == 0 else f"mt_reward_model_{index}"
+        command.extend(
+            [
+                "--extra",
+                f"+{prefix}.model.lora_adapter_path={teacher.adapter_path}",
+            ]
+        )
     if config.prompt_sampling_balance:
         command.extend(
             [
@@ -477,6 +487,15 @@ def _validate_checkpoint(path: Path, label: str) -> None:
         raise FileNotFoundError(f"{label} has no model weight files: {path}")
 
 
+def _validate_adapter(path: Path, label: str) -> None:
+    if not path.is_dir():
+        raise FileNotFoundError(f"{label} directory not found: {path}")
+    for filename in ("adapter_config.json", "adapter_model.safetensors"):
+        artifact = path / filename
+        if not artifact.is_file() or artifact.stat().st_size == 0:
+            raise FileNotFoundError(f"{label} is missing {filename}: {path}")
+
+
 def _validate_tokenizer_family(paths: Sequence[Path]) -> None:
     configs = [json.loads((path / "config.json").read_text(encoding="utf-8")) for path in paths]
     signatures = {(item.get("model_type"), item.get("vocab_size")) for item in configs}
@@ -536,9 +555,10 @@ def build_run_manifest(
 
     tracked = {
         "student": config.student_path,
+        "teacher_base": config.teacher_base_path,
         "train": config.train_file,
         "validation": config.val_file,
-        **{f"teacher_{item.domain}": item.teacher_path for item in config.teachers},
+        **{f"teacher_adapter_{item.domain}": item.adapter_path for item in config.teachers},
     }
     digest_paths = {
         name: (

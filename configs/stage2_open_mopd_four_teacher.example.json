@@ -7,22 +7,23 @@
   },
   "models": {
     "student_path": "/root/autodl-tmp/models/qwen-student-base",
+    "teacher_base_path": "/root/autodl-tmp/models/Qwen3-4B",
     "teachers": [
       {
         "domain": "formatting",
-        "teacher_path": "/backup01/tangyafeng/zhuxiyao/teacher/experiments/formatting/formal_v1/training/checkpoint-900"
+        "adapter_path": "/backup01/tangyafeng/zhuxiyao/teacher/experiments/formatting/formal_v1/training/checkpoint-900"
       },
       {
         "domain": "identifier",
-        "teacher_path": "/backup01/tangyafeng/zhuxiyao/teacher/experiments/identifier/formal_v1/training/checkpoint-700"
+        "adapter_path": "/backup01/tangyafeng/zhuxiyao/teacher/experiments/identifier/formal_v1/training/checkpoint-700"
       },
       {
         "domain": "local_structure",
-        "teacher_path": "/backup01/tangyafeng/zhuxiyao/teacher/teacher-runs/teacher-local-structure-formal-v3/checkpoint-600"
+        "adapter_path": "/backup01/tangyafeng/zhuxiyao/teacher/teacher-runs/teacher-local-structure-formal-v3/checkpoint-600"
       },
       {
         "domain": "control_flow",
-        "teacher_path": "/backup01/tangyafeng/zhuxiyao/teacher/experiments/control_flow/formal_v1/training/checkpoint-500"
+        "adapter_path": "/backup01/tangyafeng/zhuxiyao/teacher/experiments/control_flow/formal_v1/training/checkpoint-500"
       }
     ]
   },
